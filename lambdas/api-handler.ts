@@ -1,3 +1,5 @@
+import { GameState } from './game-state';
+
 /**
  * A base class for REST API endpoints.
  */
@@ -11,80 +13,6 @@ class ApiEndpoint {
     constructor() {
         this.verbs = new Map<string, Function>();
     }
-
-}
-
-/**
- * Represents the current state of a game.
- */
-class GameState {
-
-    /**
-     * Id
-     */
-    id:string;
-
-    /**
-     * Name
-     */
-    name:string;
-
-    /**
-     * Public/Private
-     */
-    isPublic: boolean;
-
-    /**
-     * Waiting/In progress/Done
-     */
-    status: string;
-
-    /**
-     * Share URL
-     */
-    shareURL: string; // function?
-
-    /**
-     * Players (sign up or new each time?)
-        	Id
-        	Name/Handle
-            Hand
-        •	Discard Pile
-        •	In play
-        •	Score (customers)
-        •	Pillar ranks (I-V)
-        •	Total score (end game bonuses)
-        •	Last dice roll
-     */
-    players: any[]; // TODO
-
-    /**
-     * Pillar max (4, 5, or 6)
-     */
-    pillarMax: number;
-
-    /**
-     * Date time started
-     */
-    startDateTime: string;
-
-    /**
-     * Market stack
-     */
-    marketStack: any[]; // TODO
-
-    /**
-     * Retired Cards
-     */
-    retiredCards: any[]; // TODO
-
-    /**
-     * Trial Stacks
-        •	Phase
-        •	Face up/down
-        •	Top card showing/hidden
-     */
-    trialStacks: any[]; // TODO
 
 }
 
@@ -159,6 +87,12 @@ class ApiHandler {
     handlePath = async (path: string, verb:string, data:string): Promise<any> => {
 
         console.log(`handlePath got path ${path}, verb ${verb}`);
+
+        if (path.startsWith('/')) {
+            path = path.substr(1, path.length - 1);
+
+            console.log(`Stripped / from path: ${path}`);
+        }
 
         console.log(this.endpoints.keys());
 

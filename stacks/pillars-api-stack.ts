@@ -11,6 +11,8 @@ import { ProjectionType } from '@aws-cdk/aws-dynamodb';
  *  - DynamoDB Tables
  *  - Lambda Functions
  *  - API Gateways
+ *  - S3 Bucket for the web site
+ *  - CloudFront distro for the web site
  */
 export class PillarsApiStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -31,7 +33,7 @@ export class PillarsApiStack extends cdk.Stack {
     const apiLambda = new lambda.Function(this, 'ApiLambda', {
       runtime: lambda.Runtime.NODEJS_12_X, 
       code: lambda.Code.asset('lambdas'), 
-      handler: 'api_lambda.handler', 
+      handler: 'api-handler.handler', 
       memorySize: 1536, 
       timeout: cdk.Duration.minutes(1), 
       description: 'Pillars API',

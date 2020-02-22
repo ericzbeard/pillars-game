@@ -1,8 +1,8 @@
 import { expect as expectCDK, matchTemplate, MatchStyle } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
-import PillarsApi = require('../lib/pillars_api-stack');
+import PillarsApi = require('../stacks/pillars-api-stack');
 import { SynthUtils } from '@aws-cdk/assert';
-import apiLambda = require('../lambdas/api_lambda');
+import apiLambda = require('../lambdas/api-handler');
 
 /**
  * Upvote API Unit Tests.
@@ -35,8 +35,17 @@ test('I know how RegExp works', () => {
 });
 
 test('Lambda handles path', async () => {
-    const resp = await apiLambda.handler({ 
+    let resp = await apiLambda.handler({ 
         path: 'unittest', 
+        httpMethod: 'GET', 
+        body: 'abc'
+    });
+    console.log(resp);
+    expect(resp.statusCode).toBe(200);
+
+    // Handle with or without the /
+    resp = await apiLambda.handler({ 
+        path: '/unittest', 
         httpMethod: 'GET', 
         body: 'abc'
     });
