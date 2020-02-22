@@ -1,3 +1,5 @@
+import {Player} from './player';
+import {Card} from './card';
 
 /**
  * Represents the current state of a game.
@@ -31,17 +33,9 @@ export class GameState {
 
     /**
      * Players (sign up or new each time?)
-        	Id
-        	Name/Handle
-            Hand
-        •	Discard Pile
-        •	In play
-        •	Score (customers)
-        •	Pillar ranks (I-V)
-        •	Total score (end game bonuses)
-        •	Last dice roll
+       
      */
-    players: any[]; // TODO
+    players: Array<Player>; 
 
     /**
      * Pillar max (4, 5, or 6)
@@ -56,19 +50,45 @@ export class GameState {
     /**
      * Market stack
      */
-    marketStack: any[]; // TODO
+    marketStack: Array<Card>; 
 
     /**
      * Retired Cards
      */
-    retiredCards: any[]; // TODO
+    retiredCards: Array<Card>; 
 
     /**
      * Trial Stacks
+     *   [Phase 1, Phase 2, Phase 3]
         •	Phase
         •	Face up/down
         •	Top card showing/hidden
      */
-    trialStacks: any[]; // TODO
+    trialStacks: Array<TrialStack>; 
 
+    /**
+     * Constructor.
+     */
+    constructor() {
+        this.players = [];
+        this.marketStack = [];
+        this.retiredCards = [];
+        this.trialStacks = [];
+    }
+
+}
+
+/**
+ * A stack of trial cards.
+ */
+export class TrialStack {
+    phase: number;
+    used: Array<Card>;
+    notused: Array<Card>;
+    topShowing: boolean;
+
+    constructor() {
+        this.used = [];
+        this.notused = [];
+    }
 }

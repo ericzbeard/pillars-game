@@ -15,8 +15,9 @@
  * 
  * What about expansions?
  */
-const db = {
+export const cardDatabase = {
     version: "0.5",
+    set: "alpha",
     cards: [
         {
             name: "EC2 Instance",
@@ -145,7 +146,7 @@ const db = {
             subtype: "Phase 1",
             bigtext: "7",
             text: "",
-            success: "+1 Customer<br/>Promote II",
+            success: "+1 Customer<br/>Promote &#8546;",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -156,7 +157,7 @@ const db = {
             subtype: "Phase 1",
             bigtext: "7",
             text: "",
-            success: "+1 Customer<br/>Promote III",
+            success: "+1 Customer<br/>Promote &#8547;",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -167,7 +168,7 @@ const db = {
             subtype: "Phase 1",
             bigtext: "7",
             text: "",
-            success: "+1 Customer<br/>Promote &#8547;",
+            success: "+1 Customer<br/>Promote &#8548;",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -232,8 +233,8 @@ const db = {
             type: "Trial",
             subtype: "Phase 2",
             bigtext: "11",
-            text: "Add Creativity * &#8544; to your roll",
-            success: "+3 Customers<br/>Promote I",
+            text: "Add Creativity * &#8545; to your roll",
+            success: "+3 Customers<br/>Promote &#8545",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -243,8 +244,8 @@ const db = {
             type: "Trial",
             subtype: "Phase 2",
             bigtext: "11",
-            text: "Add Creativity * &#8545; to your roll",
-            success: "+3 Customers<br/>Promote II",
+            text: "Add Creativity * &#8544; to your roll",
+            success: "+3 Customers<br/>Promote &#8544;",
             fail: "-1 Customer",
             starter: false,
             copies: 1,
@@ -255,8 +256,8 @@ const db = {
             type: "Trial",
             subtype: "Phase 2",
             bigtext: "11",
-            text: "Add Creativity * &#8546; to your roll",
-            success: "+3 Customers<br />Promote III",
+            text: "Add Creativity * &#8547; to your roll",
+            success: "+3 Customers<br />Promote &#8547",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -266,8 +267,8 @@ const db = {
             type: "Trial",
             subtype: "Phase 2",
             bigtext: "11",
-            text: "Add Creativity * &#8547; to your roll",
-            success: "+3 Customers<br />Promote &#8547;",
+            text: "Add Creativity * &#8548; to your roll",
+            success: "+3 Customers<br />Promote &#8548;",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -277,8 +278,8 @@ const db = {
             type: "Trial",
             subtype: "Phase 2",
             bigtext: "11",
-            text: "Add Creativity * &#8548; to your roll",
-            success: "+3 Customers<br />Promote&#8548;",
+            text: "Add Creativity * &#8546; to your roll",
+            success: "+3 Customers<br />Promote&#8546;",
             fail: "-1 Customer",
             starter: false,
             copies: 1
@@ -332,7 +333,7 @@ const db = {
             type: "Trial",
             subtype: "Phase 3",
             bigtext: "12",
-            text: "Subtract 1 from your roll if your pillar &#8544; is not maxed",
+            text: "Subtract 1 from your roll if your pillar &#8545; is not maxed",
             success: "+4 Customers<br/>Promote Any",
             fail: "-2 Cusotomers<br/>Demote",
             starter: false,
@@ -343,7 +344,7 @@ const db = {
             type: "Trial",
             subtype: "Phase 3",
             bigtext: "12",
-            text: "Subtract 1 from your roll if your pillar &#8545; is not maxed",
+            text: "Subtract 1 from your roll if your pillar &#8544; is not maxed",
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
@@ -354,7 +355,7 @@ const db = {
             type: "Trial",
             subtype: "Phase 3",
             bigtext: "12",
-            text: "Subtract 1 from your roll if your pillar &#8546; is not maxed",
+            text: "Subtract 1 from your roll if your pillar &#8547; is not maxed",
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
@@ -365,7 +366,7 @@ const db = {
             type: "Trial",
             subtype: "Phase 3",
             bigtext: "12",
-            text: "Subtract 1 from your roll if your pillar &#8547; is not maxed",
+            text: "Subtract 1 from your roll if your pillar &#8548; is not maxed",
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
@@ -376,7 +377,7 @@ const db = {
             type: "Trial",
             subtype: "Phase 3",
             bigtext: "12",
-            text: "Subtract 1 from your roll if your pillar &#8548; is not maxed",
+            text: "Subtract 1 from your roll if your pillar &#8546; is not maxed",
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
@@ -416,7 +417,7 @@ const db = {
             copies: 1
         },
         {
-            name: "Security",
+            name: "Operational Excellence",
             type: "Pillar",
             subtype: "",
             bigtext: "&#8544;",
@@ -427,7 +428,7 @@ const db = {
             copies: 1
         },
         {
-            name: "Operational Excellence",
+            name: "Security",
             type: "Pillar",
             subtype: "",
             bigtext: "&#8545;",
@@ -438,7 +439,7 @@ const db = {
             copies: 1
         },
         {
-            name: "Performance Efficiency",
+            name: "Reliability",
             type: "Pillar",
             subtype: "",
             bigtext: "&#8546;",
@@ -449,7 +450,7 @@ const db = {
             copies: 1
         },
         {
-            name: "Cost Optimization",
+            name: "Performance Efficiency",
             type: "Pillar",
             subtype: "",
             bigtext: "&#8547;",
@@ -460,7 +461,7 @@ const db = {
             copies: 1
         },
         {
-            name: "Reliability",
+            name: "Cost Optimization",
             type: "Pillar",
             subtype: "",
             bigtext: "&#8548;",
@@ -495,7 +496,7 @@ const db = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8544;",
+            text: "Or Draw 2 if you have 4+ on pillar &#8545;",
             cost: "$T",
             starter: false,
             copies: 1
@@ -505,7 +506,7 @@ const db = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8545;",
+            text: "Or Draw 2 if you have 4+ on pillar &#8544;",
             cost: "$T",
             starter: false,
             copies: 1
@@ -515,7 +516,7 @@ const db = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8546;",
+            text: "Or Draw 2 if you have 4+ on pillar &#8547;",
             cost: "$T",
             starter: false,
             copies: 1
@@ -525,7 +526,7 @@ const db = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8547;",
+            text: "Or Draw 2 if you have 4+ on pillar &#8548;",
             cost: "$T",
             starter: false,
             copies: 1
@@ -535,7 +536,7 @@ const db = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8548;",
+            text: "Or Draw 2 if you have 4+ on pillar &#8546;",
             cost: "$T",
             starter: false,
             copies: 1
@@ -544,8 +545,8 @@ const db = {
             name: "Access Control List",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{$}*&#8544;",
-            text: "<em>(Provides Credits equal to your pillar &#8544;)</em>",
+            bigtext: "{$}*&#8545;",
+            text: "<em>(Provides Credits equal to your pillar &#8545;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1,
@@ -555,8 +556,8 @@ const db = {
             name: "Code Pipeline",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{$}*&#8545;",
-            text: "<em>(Provides Credits equal to your pillar &#8545;)</em>",
+            bigtext: "{$}*&#8544;",
+            text: "<em>(Provides Credits equal to your pillar &#8544;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1,
@@ -566,8 +567,8 @@ const db = {
             name: "Elasticache",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{$}*&#8546;",
-            text: "<em>(Provides Credits equal to your pillar &#8546;)</em>",
+            bigtext: "{$}*&#8547;",
+            text: "<em>(Provides Credits equal to your pillar &#8547;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1,
@@ -577,8 +578,8 @@ const db = {
             name: "Trusted Advisor",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{$}*&#8547;",
-            text: "<em>(Provides Credits equal to your pillar &#8547;)</em>",
+            bigtext: "{$}*&#8548;",
+            text: "<em>(Provides Credits equal to your pillar &#8548;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1,
@@ -588,8 +589,8 @@ const db = {
             name: "EBS Snapshots",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{$}*&#8548;",
-            text: "<em>(Provides Credits equal to your pillar &#8548;)</em>",
+            bigtext: "{$}*&#8546;",
+            text: "<em>(Provides Credits equal to your pillar &#8546;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1,
@@ -599,8 +600,8 @@ const db = {
             name: "Security Consultant",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{T}*&#8544;",
-            text: "<em>(Provides Talents equal to your pillar &#8544;)</em>",
+            bigtext: "{T}*&#8545;",
+            text: "<em>(Provides Talents equal to your pillar &#8545;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1
@@ -609,24 +610,14 @@ const db = {
             name: "Ops Manager",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{T}*&#8545;",
-            text: "<em>(Provides Talents equal to your pillar &#8545;)</em>",
+            bigtext: "{T}*&#8544;",
+            text: "<em>(Provides Talents equal to your pillar &#8544;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1
         },
         {
             name: "Assembly Expert",
-            type: "Resource",
-            subtype: "Human",
-            bigtext: "{T}*&#8546;",
-            text: "<em>(Provides Talents equal to your pillar &#8546;)</em>",
-            cost: "$$T",
-            starter: false,
-            copies: 1
-        },
-        {
-            name: "Finance Specialist",
             type: "Resource",
             subtype: "Human",
             bigtext: "{T}*&#8547;",
@@ -636,7 +627,7 @@ const db = {
             copies: 1
         },
         {
-            name: "Reliability Engineer",
+            name: "Finance Specialist",
             type: "Resource",
             subtype: "Human",
             bigtext: "{T}*&#8548;",
@@ -646,11 +637,21 @@ const db = {
             copies: 1
         },
         {
+            name: "Reliability Engineer",
+            type: "Resource",
+            subtype: "Human",
+            bigtext: "{T}*&#8546;",
+            text: "<em>(Provides Talents equal to your pillar &#8546;)</em>",
+            cost: "$$T",
+            starter: false,
+            copies: 1
+        },
+        {
             name: "KMS",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{Cr}*&#8544;",
-            text: "<em>(Provides Creativity equal to your pillar &#8544;)</em>",
+            bigtext: "{Cr}*&#8545;",
+            text: "<em>(Provides Creativity equal to your pillar &#8545;)</em>",
             cost: "$TT",
             starter: false,
             copies: 1,
@@ -660,8 +661,8 @@ const db = {
             name: "Fargate",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{Cr}*&#8545;",
-            text: "<em>(Provides Creativity equal to your pillar &#8545;)</em>",
+            bigtext: "{Cr}*&#8544;",
+            text: "<em>(Provides Creativity equal to your pillar &#8544;)</em>",
             cost: "$TT",
             starter: false,
             copies: 1,
@@ -671,8 +672,8 @@ const db = {
             name: "Database Administrator",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{Cr}*&#8546;",
-            text: "<em>(Provides Creativity equal to your pillar &#8546;)</em>",
+            bigtext: "{Cr}*&#8547;",
+            text: "<em>(Provides Creativity equal to your pillar &#8547;)</em>",
             cost: "$TT",
             starter: false,
             copies: 1
@@ -681,8 +682,8 @@ const db = {
             name: "Athena",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{Cr}*&#8547;",
-            text: "<em>(Provides Creativity equal to your pillar &#8547;)</em>",
+            bigtext: "{Cr}*&#8548;",
+            text: "<em>(Provides Creativity equal to your pillar &#8548;)</em>",
             cost: "$TT",
             starter: false,
             copies: 1,
@@ -692,8 +693,8 @@ const db = {
             name: "Automation Engineer",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{Cr}*&#8548;",
-            text: "<em>(Provides Creativity equal to your pillar &#8548;)</em>",
+            bigtext: "{Cr}*&#8546;",
+            text: "<em>(Provides Creativity equal to your pillar &#8546;)</em>",
             cost: "$TT",
             starter: false,
             copies: 1

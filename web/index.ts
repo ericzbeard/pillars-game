@@ -1,3 +1,8 @@
+import {cardDatabase} from '../lambdas/card-database';
+import {Card} from '../lambdas/card';
+import {Player} from '../lambdas/player';
+import {GameState, TrialStack} from '../lambdas/game-state';
+
 /**
  * Pillars game UI. Initialized from index.html.
  */
@@ -5,20 +10,56 @@ class PillarsGame {
 
     // Base width and height. Position everything as if it's this
     // size and then scale it to the actual size.
-    static readonly BW = 1920;
-    static readonly BH = 1080;
+    static readonly BW = 960;
+    static readonly BH = 540;
     static readonly PROPORTION = PillarsGame.BW / PillarsGame.BH;
 
+    /**
+     * The canvas we're drawing on.
+     */
     gameCanvas: HTMLCanvasElement;
+    
+    /**
+     * The canvas context.
+     */
     ctx: CanvasRenderingContext2D;
+    
+    /**
+     * Current mouse x, relative to base width and height.
+     */
     mx: number;
+
+    /**
+     * Current mouse x, relative to base width and height.
+     */ 
     my: number;
 
+    /**
+     * Credit png.
+     */
     creditImage: HTMLImageElement;
+    
+    /**
+     * Creativity png.
+     */
     creativityImage: HTMLImageElement;
+    
+    /**
+     * Talent png.
+     */
     talentImage: HTMLImageElement;
 
     clickAnimation: PillarsAnimation | null;
+
+    /**
+     * The current state of the game according to the back end.
+     */
+    gameState: GameState;
+
+    /**
+     * The 5 pillars of the Well-Architected Framework.
+     */
+    pillars: Array<Card>;
 
     /**
      * PillarsGame constructor.
@@ -26,6 +67,8 @@ class PillarsGame {
     constructor() {
 
         var self = this;
+
+        self.loadGameState();
 
         const cel = document.getElementById('gameCanvas');
         if (cel) {
@@ -59,6 +102,79 @@ class PillarsGame {
         self.gameCanvas.addEventListener('click', function (e) {
             self.handleClick(e);
         });
+
+    }
+
+    /**
+     * Play a local game against the AI with no connection to the back end.
+     */
+    startLocalGame() {
+        this.gameState = new GameState();
+
+        const gs = this.gameState;
+
+        this.pillars = [];
+
+        // Create players (1 human and 3 AI)
+        const human = new Player();
+        human.isHuman = true;
+        human.name = "Human";
+
+        gs.players.push(human);
+
+        for (let i = 0; i < 3; i++) {
+            const ai = new Player();
+            ai.isHuman = false;
+            ai.name = `AI${i + 1}`;
+            gs.players.push(ai);
+        }
+
+        // Load the card database
+        for (let i = 0; i < cardDatabase.cards.length; i++) {
+            const card = <Card>cardDatabase.cards[i];
+
+            switch (card.type) {
+                case 'Resource':
+                    if (card.starter) {
+                        // Put a copy in each player's hand
+                        for (let i = 0; i < gs.players.length; i++) {
+                            const player = gs.players[i];
+                            player.deck.push(<Card>Object.assign({}, card));
+                        }
+                    } else {
+                        gs.marketStack.push(<Card>Object.assign({}, card));
+                    }
+                    break;
+                case 'Trial':
+                    const c = <Card>Object.assign({}, card);
+                    switch (c.name) {
+                        case 'Phase I':
+                            gs.trialStacks[0].notused.push(c);
+                            break;
+                        case 'Phase II':
+                            gs.trialStacks[1].notused.push(c);
+                            break;
+                        case 'Phase III':
+                            gs.trialStacks[2].notused.push(c);
+                            break;
+                    }
+                    break;
+                case 'Pillar':
+                    this.pillars.push(<Card>Object.assign({}, card));
+                    break;
+            }
+        }
+
+        console.log(JSON.stringify(this.gameState));
+    }
+
+    /**
+     * Load game state from the server.
+     */
+    loadGameState() {
+        
+        // For now, let's do everything locally
+        this.startLocalGame();
     }
 
     /**
@@ -82,13 +198,35 @@ class PillarsGame {
         } else {
             throw Error(`${name} does not exist`);
         }
+    }   
+
+    /**
+     * Draw a card at the x and y coordinates.
+     */
+    drawCardAt(card:Card, x:number, y:number) {
+        const ctx = this.ctx;
+        
+        // Card border
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#000000';
+        ctx.fillStyle = '#000000';
+        ctx.strokeRect(x, y, 90, 150);
+
+        // Card Name
+        ctx.font = '9px Arial';
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+
+        ctx.strokeText(card.name, x + 50.5, y + 25);
+
+        // Reset alignment
+        ctx.textAlign = "left";
     }
 
     /**
      * Draw one of the 3 resource types with the total currently available.
      */
-    drawResourceWithTotal(img: HTMLImageElement,
-        x: number, y: number, total: number) {
+    drawResource(img: HTMLImageElement, x: number, y: number, total: number) {
 
         const ctx = this.ctx;
 
@@ -107,6 +245,9 @@ class PillarsGame {
         ctx.fillText(total.toString(), x + 78, y + 86);
     }
 
+    /**
+     * Practice with animation.
+     */
     drawCircleInTheMiddle() {
 
         const ctx = this.ctx;
@@ -148,37 +289,42 @@ class PillarsGame {
         ctx.strokeRect(0, 0, w, h);
 
         // Scale the context to match the window size
-        ctx.scale(s, s);
+        ctx.scale(s * window.devicePixelRatio, s * window.devicePixelRatio);
 
         // Background
         ctx.fillStyle = "#CCCCCC";
         ctx.fillRect(0, 0, PillarsGame.BW, PillarsGame.BH);
 
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(200, 200, 150, 75);
-
-        // Squares in the corners
-        ctx.fillStyle = "#FF3333";
-        ctx.fillRect(0, 0, 100, 100);
-        ctx.fillRect(1820, 0, 100, 100);
-        ctx.fillRect(0, 980, 100, 100);
-        ctx.fillRect(1820, 980, 100, 100);
+        // // Squares in the corners
+        // ctx.fillStyle = "#FF3333";
+        // ctx.fillRect(0, 0, 100, 100);
+        // ctx.fillRect(PillarsGame.BW - 100, 0, 100, 100);
+        // ctx.fillRect(0, PillarsGame.BH - 100, 100, 100);
+        // ctx.fillRect(PillarsGame.BW - 100, PillarsGame.BH - 100, 100, 100);
 
         // A circle in the middle
-        this.drawCircleInTheMiddle();
+        //this.drawCircleInTheMiddle();
 
-        // Credits image
-        this.drawResourceWithTotal(this.creditImage, 1400, 900, 2);
-        this.drawResourceWithTotal(this.creativityImage, 1550, 900, 4);
-        this.drawResourceWithTotal(this.talentImage, 1700, 900, 1);
+        const me: Player = this.gameState.players[0];
 
+        // Credits, Creativity, and Talent
+        this.drawResource(this.creditImage, 620, 420, me.numCredits);
+        this.drawResource(this.creativityImage, 720, 420, me.numCreativity);
+        this.drawResource(this.talentImage, 820, 420, me.numTalents);
+
+        // Pillars
+        this.drawCardAt(this.pillars[0], 150, 100);
+        this.drawCardAt(this.pillars[1], 250, 100);
+        this.drawCardAt(this.pillars[2], 350, 100);
+        this.drawCardAt(this.pillars[3], 450, 100);
+        this.drawCardAt(this.pillars[4], 550, 100);
 
         // Debugging data
-        ctx.font = "20px Arial";
-        ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
-            `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
-            `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
-            `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}`, 30, 50);
+        // ctx.font = "10px Arial";
+        // ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
+        //     `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
+        //     `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
+        //     `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}`, 30, 50);
 
     }
 
@@ -197,8 +343,16 @@ class PillarsGame {
             h = window.innerHeight - 40;
             w = h * PillarsGame.PROPORTION;
         }
+
         this.gameCanvas.width = w;
         this.gameCanvas.height = h;
+
+        // Try to adjust for pixel ration to reduce blurriness.. ?
+        this.gameCanvas.width = w * window.devicePixelRatio;
+        this.gameCanvas.height = h * window.devicePixelRatio;
+        this.gameCanvas.style.width = w + 'px';
+        this.gameCanvas.style.height = h + 'px';
+
         this.draw(w, h);
 
         // Call this every time the browser decides to redraw the screen, 
@@ -228,8 +382,11 @@ class PillarsGame {
      */
     static init() {
         const game = new PillarsGame();
-        window.addEventListener('resize', game.resizeCanvas, false);
+        window.addEventListener('resize', function(e) {
+            game.resizeCanvas.call(game); 
+        }, false);
         game.resizeCanvas();
+
     }
 }
 
@@ -240,4 +397,6 @@ class PillarsAnimation {
     timeStarted: number;
 }
 
-
+// Start the game
+console.log('Starting the game...');
+PillarsGame.init();

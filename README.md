@@ -1,14 +1,14 @@
-# Welcome to your CDK TypeScript project!
+# Pillars of AWS Game (aka AWS Build)
 
-This is a blank project for TypeScript development with CDK.
+This project has the backend and a web canvas UI for the AWS Deck Building game "AWS Build", codename "Pillars".
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+It uses CDK for infrastructure deployment, Typescript as the default language, Lambda and API Gateway for the REST API, and DynamoDB for data storage.
 
-## Useful commands
+This project is a prototype, with everything in one repo. Eventually we'll want to split out the web project and figure out what to do with shared resources like cards and game-state.
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+npm install -g aws-cdk
+npm install -g typescript
+npm install -g browserify
+
+
+
