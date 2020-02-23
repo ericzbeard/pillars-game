@@ -10,8 +10,8 @@ class PillarsGame {
 
     // Base width and height. Position everything as if it's this
     // size and then scale it to the actual size.
-    static readonly BW = 960;
-    static readonly BH = 540;
+    static readonly BW = 1920;
+    static readonly BH = 1080;
     static readonly PROPORTION = PillarsGame.BW / PillarsGame.BH;
 
     /**
@@ -49,6 +49,11 @@ class PillarsGame {
      */
     talentImage: HTMLImageElement;
 
+    /**
+     * Logo png.
+     */
+    logoImage: HTMLImageElement;
+
     clickAnimation: PillarsAnimation | null;
 
     /**
@@ -62,11 +67,23 @@ class PillarsGame {
     pillars: Array<Card>;
 
     /**
+     * True when we are ready to draw after loading images.
+     */
+    isDoneLoading: boolean = false;
+
+    /**
+     * Keeps track of loaded images.
+     */
+    imagesLoaded: Map<string, boolean>;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
 
         var self = this;
+
+        self.imagesLoaded = new Map<string, boolean>();
 
         self.loadGameState();
 
@@ -87,9 +104,14 @@ class PillarsGame {
         this.mx = 0;
         this.my = 0;
 
-        this.creditImage = this.loadImg('credits');
-        this.creativityImage = this.loadImg('creativity');
-        this.talentImage = this.loadImg('talent');
+        this.creditImage = this.loadImg('img/credits100x100.png');
+        this.creativityImage = this.loadImg('img/creativity100x100.png');
+        this.talentImage = this.loadImg('img/talent100x100.png');
+        this.logoImage = this.loadImg('img/logo.png');
+
+        setTimeout(function(e) {
+            self.checkImagesLoaded.call(self);
+        }, 10);
 
         self.gameCanvas.addEventListener('mousemove', function (e) {
             const poz = self.getMousePos(self.gameCanvas, e);
@@ -103,6 +125,20 @@ class PillarsGame {
             self.handleClick(e);
         });
 
+    }
+
+    checkImagesLoaded() {
+        // Iterate images to see if they are loaded
+        let allLoaded: boolean = true;
+        for (const [key, value] of this.imagesLoaded.entries()) {
+            if (!value) allLoaded = false;
+        }
+        if (!allLoaded) {
+            setTimeout(this.checkImagesLoaded, 10);
+        } else {
+            this.isDoneLoading = true;
+            this.resizeCanvas();
+        }
     }
 
     /**
@@ -172,7 +208,6 @@ class PillarsGame {
      * Load game state from the server.
      */
     loadGameState() {
-        
         // For now, let's do everything locally
         this.startLocalGame();
     }
@@ -191,9 +226,15 @@ class PillarsGame {
      * once it is loaded.
      */
     loadImg(name: string): HTMLImageElement {
-        let img = document.getElementById(name);
+        //let img = document.getElementById(name);
+        const img = new Image();
+        img.src = name;
+        var self = this;
         if (img) {
-            img.addEventListener("load", this.resizeCanvas, false);
+            this.imagesLoaded.set(name, false);
+            img.addEventListener("load", function(e) {
+                self.imagesLoaded.set(name, true);
+            }, false);
             return <HTMLImageElement>img;
         } else {
             throw Error(`${name} does not exist`);
@@ -266,7 +307,6 @@ class PillarsGame {
         ctx.beginPath();
         ctx.arc(PillarsGame.BW / 2, PillarsGame.BH / 2, radius, 0, 2 * Math.PI);
         ctx.stroke();
-
     }
 
     /**
@@ -295,6 +335,16 @@ class PillarsGame {
         ctx.fillStyle = "#CCCCCC";
         ctx.fillRect(0, 0, PillarsGame.BW, PillarsGame.BH);
 
+        // Logo
+        if (this.isDoneLoading) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(50, 50, 50, 0, Math.PI * 2, false);
+            ctx.clip();
+            ctx.drawImage(this.logoImage, 0, 0);
+            ctx.restore();
+        }
+
         // // Squares in the corners
         // ctx.fillStyle = "#FF3333";
         // ctx.fillRect(0, 0, 100, 100);
@@ -308,16 +358,22 @@ class PillarsGame {
         const me: Player = this.gameState.players[0];
 
         // Credits, Creativity, and Talent
-        this.drawResource(this.creditImage, 620, 420, me.numCredits);
-        this.drawResource(this.creativityImage, 720, 420, me.numCreativity);
-        this.drawResource(this.talentImage, 820, 420, me.numTalents);
+        if (this.isDoneLoading) {
+            const bw = PillarsGame.BW;
+            const bh = PillarsGame.BH;
+            const xo = 400;
+            const yo = 150;
+            this.drawResource(this.creditImage, bw - xo, bh - yo, me.numCredits);
+            this.drawResource(this.creativityImage, bw - xo + 100, bh - yo, me.numCreativity);
+            this.drawResource(this.talentImage, bw - xo + 200, bh - yo, me.numTalents);
+        }
 
         // Pillars
-        this.drawCardAt(this.pillars[0], 150, 100);
-        this.drawCardAt(this.pillars[1], 250, 100);
-        this.drawCardAt(this.pillars[2], 350, 100);
-        this.drawCardAt(this.pillars[3], 450, 100);
-        this.drawCardAt(this.pillars[4], 550, 100);
+        this.drawCardAt(this.pillars[0], 5, 200);
+        this.drawCardAt(this.pillars[1], 5, 350);
+        this.drawCardAt(this.pillars[2], 5, 500);
+        this.drawCardAt(this.pillars[3], 5, 650);
+        this.drawCardAt(this.pillars[4], 5, 800);
 
         // Debugging data
         // ctx.font = "10px Arial";
