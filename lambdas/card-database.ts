@@ -425,7 +425,9 @@ export const cardDatabase = {
             cost: "",
             pillar: true,
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
         },
         {
             name: "Security",
@@ -436,7 +438,9 @@ export const cardDatabase = {
             cost: "",
             pillar: true,
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
             name: "Reliability",
@@ -447,7 +451,9 @@ export const cardDatabase = {
             cost: "",
             pillar: true,
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
             name: "Performance Efficiency",
@@ -458,7 +464,9 @@ export const cardDatabase = {
             cost: "",
             pillar: true,
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
         },
         {
             name: "Cost Optimization",
@@ -469,7 +477,9 @@ export const cardDatabase = {
             cost: "",
             pillar: true,
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Planning Session",

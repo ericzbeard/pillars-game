@@ -1,7 +1,8 @@
-import {cardDatabase} from '../lambdas/card-database';
-import {Card} from '../lambdas/card';
-import {Player} from '../lambdas/player';
-import {GameState, TrialStack} from '../lambdas/game-state';
+import { cardDatabase } from '../lambdas/card-database';
+import { Card } from '../lambdas/card';
+import { Player } from '../lambdas/player';
+import { GameState, TrialStack } from '../lambdas/game-state';
+import { CanvasUtil } from './canvas-util';
 
 /**
  * Pillars game UI. Initialized from index.html.
@@ -18,12 +19,12 @@ class PillarsGame {
      * The canvas we're drawing on.
      */
     gameCanvas: HTMLCanvasElement;
-    
+
     /**
      * The canvas context.
      */
     ctx: CanvasRenderingContext2D;
-    
+
     /**
      * Current mouse x, relative to base width and height.
      */
@@ -31,19 +32,19 @@ class PillarsGame {
 
     /**
      * Current mouse x, relative to base width and height.
-     */ 
+     */
     my: number;
 
     /**
      * Credit png.
      */
     creditImage: HTMLImageElement;
-    
+
     /**
      * Creativity png.
      */
     creativityImage: HTMLImageElement;
-    
+
     /**
      * Talent png.
      */
@@ -54,7 +55,10 @@ class PillarsGame {
      */
     logoImage: HTMLImageElement;
 
-    clickAnimation: PillarsAnimation | null;
+    /**
+     * Background png.
+     */
+    bgImage: HTMLImageElement;
 
     /**
      * The current state of the game according to the back end.
@@ -77,15 +81,33 @@ class PillarsGame {
     imagesLoaded: Map<string, boolean>;
 
     /**
+     * Dice colors. 
+     */
+    playerDiceColors: Array<string>;
+
+    /**
+     * Currently running animations.
+     */
+    animations: Map<string, PillarsAnimation>;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
 
         var self = this;
 
-        self.imagesLoaded = new Map<string, boolean>();
+        this.animations = new Map<string, PillarsAnimation>();
 
-        self.loadGameState();
+        this.playerDiceColors = [];
+        this.playerDiceColors[0] = '#FFD700'; // gold
+        this.playerDiceColors[1] = '#9370DB'; // mediumpurple
+        this.playerDiceColors[2] = '#00FF00'; // lime
+        this.playerDiceColors[3] = '#00BFFF'; // deepskyblue
+
+        this.imagesLoaded = new Map<string, boolean>();
+
+        this.loadGameState();
 
         const cel = document.getElementById('gameCanvas');
         if (cel) {
@@ -108,10 +130,11 @@ class PillarsGame {
         this.creativityImage = this.loadImg('img/creativity100x100.png');
         this.talentImage = this.loadImg('img/talent100x100.png');
         this.logoImage = this.loadImg('img/logo.png');
+        this.bgImage = this.loadImg('img/bg.png');
 
-        setTimeout(function(e) {
+        setTimeout(function (e) {
             self.checkImagesLoaded.call(self);
-        }, 10);
+        }, 100);
 
         self.gameCanvas.addEventListener('mousemove', function (e) {
             const poz = self.getMousePos(self.gameCanvas, e);
@@ -122,16 +145,27 @@ class PillarsGame {
         });
 
         self.gameCanvas.addEventListener('click', function (e) {
-            self.handleClick(e);
+            self.handleClick.call(self, e);
         });
 
     }
 
+    /**
+     * Check to see if images are loaded. Calls itself until true.
+     */
     checkImagesLoaded() {
         // Iterate images to see if they are loaded
+
         let allLoaded: boolean = true;
-        for (const [key, value] of this.imagesLoaded.entries()) {
-            if (!value) allLoaded = false;
+        if (this.imagesLoaded) {
+            for (const [key, value] of this.imagesLoaded.entries()) {
+                if (!value) allLoaded = false;
+            }
+        } else {
+
+            console.log(`checkImagesLoaded imagesLoaded null? this: ${JSON.stringify(this)}`);
+
+            allLoaded = false;
         }
         if (!allLoaded) {
             setTimeout(this.checkImagesLoaded, 10);
@@ -201,7 +235,7 @@ class PillarsGame {
             }
         }
 
-        console.log(JSON.stringify(this.gameState));
+        //console.log(JSON.stringify(this.gameState));
     }
 
     /**
@@ -213,12 +247,49 @@ class PillarsGame {
     }
 
     /**
+     * Register a running animation.
+     */
+    registerAnimation(animation: PillarsAnimation) {
+        animation.timeStarted = new Date().getTime();
+        this.animations.set(`Die`, animation);
+    }
+
+    /**
+     * Returns true if there are any animations running.
+     */
+    isAnimating(): boolean {
+        return (this.animations && this.animations.size > 0);
+    }
+
+    /**
      * Handle mouse clicks.
      */
     handleClick(e: MouseEvent) {
-        this.clickAnimation = {
-            timeStarted: new Date().getTime()
-        }
+        console.log('click');
+        const poz = this.getMousePos(this.gameCanvas, e);
+        const mx = poz.x;
+        const my = poz.y;
+
+        // Testing animation of a die
+        const d: DieAnimation = new DieAnimation();
+        d.playerIndex = 0;
+        d.pillarIndex = 0;
+        this.registerAnimation(d);
+
+        // Animate each click location
+        const click: ClickAnimation = new ClickAnimation();
+        click.x = mx;
+        click.y = my;
+        this.registerAnimation(click);
+
+        this.resizeCanvas();
+    }
+
+    /**
+     * Delete an animation when it is complete.
+     */
+    deleteAnimation(key: string) {
+        this.animations.delete(key);
     }
 
     /**
@@ -232,33 +303,103 @@ class PillarsGame {
         var self = this;
         if (img) {
             this.imagesLoaded.set(name, false);
-            img.addEventListener("load", function(e) {
+            img.addEventListener("load", function (e) {
                 self.imagesLoaded.set(name, true);
             }, false);
             return <HTMLImageElement>img;
         } else {
             throw Error(`${name} does not exist`);
         }
-    }   
+    }
+
+
 
     /**
      * Draw a card at the x and y coordinates.
      */
-    drawCardAt(card:Card, x:number, y:number) {
+    drawCardAt(card: Card, x: number, y: number) {
         const ctx = this.ctx;
-        
+
+        const cw = 110;
+        const ch = 165;
+
         // Card border
         ctx.lineWidth = 1;
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = '#000000';
-        ctx.strokeRect(x, y, 90, 150);
+        CanvasUtil.roundRect(this.ctx, x, y, cw, ch, 5, false, true, '#000000', '#000000');
 
         // Card Name
-        ctx.font = '9px Arial';
+        ctx.font = '9pt Arial';
         ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
 
-        ctx.strokeText(card.name, x + 50.5, y + 25);
+        ctx.fillText(card.name, x + cw / 2, y + 20);
+
+        switch (card.type) {
+            case "Pillar":
+
+                const pidx: number = card.pillarIndex || 0;
+
+                // Draw the roman numeral
+                ctx.font = '24pt Arial';
+                ctx.fillStyle = 'blue';
+                ctx.fillText(card.pillarNumeral || '', x + cw / 2, y + ch / 2 + 20);
+                ctx.strokeStyle = 'black';
+                ctx.strokeText(card.pillarNumeral || '', x + cw / 2, y + ch / 2 + 20);
+
+                // Draw player rank dice
+
+                const dw = 40; // Die Width
+
+                const p: Array<any> = [];
+                p[0] = { x: 5, y: 30 };
+                p[1] = { x: cw - 50, y: 30 };
+                p[2] = { x: 5, y: ch - 50 };
+                p[3] = { x: cw - 50, y: ch - 50 };
+
+                for (let i = 0; i < this.gameState.players.length; i++) {
+
+                    ctx.font = '16pt Arial';
+                    ctx.fillStyle = 'black';
+
+                    const player = this.gameState.players[i];
+
+                    let cdw = dw;
+                    let cx = p[i].x;
+                    let cy = p[i].y;
+                    let dieBorder: string = '#000000';
+
+                    const animKey = DieAnimation.GetKey(i, pidx);
+                    const a = this.animations.get(animKey);
+
+                    if (a) {
+                        const da = <DieAnimation>a;
+                        const pct = da.percentComplete;
+                        const t = da.getElapsedTime();
+                        cdw = cdw + 4;
+                        cx = cx - 2;
+                        cy = cy - 2;
+                        ctx.font = '18pt Arial';
+                        ctx.fillStyle = 'white';
+                        if (t % 1000 < 250) {
+                            dieBorder = '#FFFFFF';
+                        } else if (t % 1000 < 500) {
+                            dieBorder = 'yellow';
+                        }
+                    }
+
+                    // Draw the player's die
+                    CanvasUtil.roundRect(this.ctx, x + cx, y + cy, cdw, cdw, 3, true, true,
+                        dieBorder, this.playerDiceColors[i]);
+
+                    // Draw their current rank
+                    const rank = player.pillarRanks[pidx];
+                    ctx.fillText('' + rank, x + cx + cdw / 2, y + cy + cdw / 2 + 5);
+                }
+
+                break;
+        }
 
         // Reset alignment
         ctx.textAlign = "left";
@@ -286,28 +427,33 @@ class PillarsGame {
         ctx.fillText(total.toString(), x + 78, y + 86);
     }
 
-    /**
-     * Practice with animation.
-     */
-    drawCircleInTheMiddle() {
+    // /**
+    //  * Practice with animation.
+    //  */
+    // animate() {
 
-        const ctx = this.ctx;
+    //     const ctx = this.ctx;
 
-        let radius = 100;
-        if (this.clickAnimation) {
-            const curTime = new Date().getTime();
-            const elapsed = curTime - this.clickAnimation.timeStarted;
-            if (elapsed / 1000 > 3) {
-                this.clickAnimation = null;
-            } else {
-                radius = 100 * (elapsed / 3000);
-            }
-        }
-        ctx.fillStyle = "#336699";
-        ctx.beginPath();
-        ctx.arc(PillarsGame.BW / 2, PillarsGame.BH / 2, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
+    //     let radius = 100;
+    //     if (this.clickAnimation) {
+    //         const curTime = new Date().getTime();
+    //         const elapsed = curTime - this.clickAnimation.timeStarted;
+    //         if (elapsed / 1000 > 3) {
+    //             this.clickAnimation = null;
+    //         } else {
+    //             radius = 100 * (elapsed / 3000);
+    //         }
+    //     }
+
+    //     // Draw an expanding circle in the middle
+    //     ctx.fillStyle = "#336699";
+    //     ctx.beginPath();
+    //     ctx.arc(PillarsGame.BW / 2, PillarsGame.BH / 2, radius, 0, 2 * Math.PI);
+    //     ctx.stroke();
+
+    //     // Highlight a die
+
+    // }
 
     /**
      * Draw the canvas, scaling by width.
@@ -335,6 +481,12 @@ class PillarsGame {
         ctx.fillStyle = "#CCCCCC";
         ctx.fillRect(0, 0, PillarsGame.BW, PillarsGame.BH);
 
+        if (this.isDoneLoading) {
+            ctx.globalAlpha = 0.3;
+            ctx.drawImage(this.bgImage, 0, 0);
+            ctx.globalAlpha = 1;
+        }
+
         // Logo
         if (this.isDoneLoading) {
             ctx.save();
@@ -344,16 +496,6 @@ class PillarsGame {
             ctx.drawImage(this.logoImage, 0, 0);
             ctx.restore();
         }
-
-        // // Squares in the corners
-        // ctx.fillStyle = "#FF3333";
-        // ctx.fillRect(0, 0, 100, 100);
-        // ctx.fillRect(PillarsGame.BW - 100, 0, 100, 100);
-        // ctx.fillRect(0, PillarsGame.BH - 100, 100, 100);
-        // ctx.fillRect(PillarsGame.BW - 100, PillarsGame.BH - 100, 100, 100);
-
-        // A circle in the middle
-        //this.drawCircleInTheMiddle();
 
         const me: Player = this.gameState.players[0];
 
@@ -369,19 +511,27 @@ class PillarsGame {
         }
 
         // Pillars
-        this.drawCardAt(this.pillars[0], 5, 200);
-        this.drawCardAt(this.pillars[1], 5, 350);
-        this.drawCardAt(this.pillars[2], 5, 500);
-        this.drawCardAt(this.pillars[3], 5, 650);
-        this.drawCardAt(this.pillars[4], 5, 800);
+        this.drawCardAt(this.pillars[0], 5, 135);
+        this.drawCardAt(this.pillars[1], 5, 315);
+        this.drawCardAt(this.pillars[2], 5, 495);
+        this.drawCardAt(this.pillars[3], 5, 675);
+        this.drawCardAt(this.pillars[4], 5, 855);
 
         // Debugging data
-        // ctx.font = "10px Arial";
-        // ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
-        //     `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
-        //     `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
-        //     `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}`, 30, 50);
+        ctx.font = "10pt Arial";
+        ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
+            `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
+            `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
+            `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}, ` +
+            `a:${this.isAnimating()}`, 500, 50);
 
+        // Run animation logic
+        for (const [key, value] of this.animations.entries()) {
+            var self = this;
+            value.animate(this.ctx, function() {
+                self.deleteAnimation.call(self, key);
+            });
+        }
     }
 
     /**
@@ -413,7 +563,7 @@ class PillarsGame {
 
         // Call this every time the browser decides to redraw the screen, 
         // while we are animating something.
-        if (this.clickAnimation) {
+        if (this.isAnimating()) {
             window.requestAnimationFrame(function (e) {
                 self.resizeCanvas.call(self);
             });
@@ -438,8 +588,8 @@ class PillarsGame {
      */
     static init() {
         const game = new PillarsGame();
-        window.addEventListener('resize', function(e) {
-            game.resizeCanvas.call(game); 
+        window.addEventListener('resize', function (e) {
+            game.resizeCanvas.call(game);
         }, false);
         game.resizeCanvas();
 
@@ -451,6 +601,75 @@ class PillarsGame {
  */
 class PillarsAnimation {
     timeStarted: number;
+    percentComplete: number;
+    getKey() { return ''; }
+    getElapsedTime() {
+        return new Date().getTime() - this.timeStarted;
+    }
+    animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) { }
+}
+
+/**
+ * A die animation. Highlight the die when it changes.
+ */
+class DieAnimation extends PillarsAnimation {
+    playerIndex: number;
+    pillarIndex: number;
+
+    constructor() {
+        super();
+    }
+
+    static GetKey(playerIndex: number, pillarIndex: number) {
+        return `Die_${playerIndex}_${pillarIndex}`;
+    }
+
+    getKey() {
+        return DieAnimation.GetKey(this.playerIndex, this.pillarIndex);
+    }
+
+    animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
+        const elapsed = this.getElapsedTime();
+        if (elapsed / 1000 > 3) {
+            deleteSelf(this.getKey());
+        } else {
+            this.percentComplete = elapsed / 3000;
+
+            // Animation happens in draw()
+        }
+    }
+}
+
+/**
+ * Animate mouse clicks.
+ */
+class ClickAnimation extends PillarsAnimation {
+    x: number;
+    y: number;
+
+    static GetKey(x: number, y: number) {
+        return `Click_${x}_${y}`;
+    }
+
+    getKey() {
+        return ClickAnimation.GetKey(this.x, this.y);
+    }
+
+    animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
+        const elapsed = this.getElapsedTime();
+        const end = 200;
+        if (elapsed >= end) {
+            deleteSelf(this.getKey());
+        } else {
+            this.percentComplete = elapsed / end;
+            const radius = 15 * this.percentComplete;
+            ctx.fillStyle = "#336699";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, radius, 0, 2 * Math.PI);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
 }
 
 // Start the game

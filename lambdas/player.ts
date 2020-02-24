@@ -74,8 +74,8 @@ export class Player {
         this.hand = [];
         this.discardPile = [];
         this.inPlay = [];
-        this.pillarRanks = [];
-        this.lastDiceRoll = [2];
+        this.pillarRanks = [1, 2, 3, 4, 5];
+        this.lastDiceRoll = [1, 1];
         this.numCustomers = 0;
         this.numTalents = 0;
         this.numCredits = 0;

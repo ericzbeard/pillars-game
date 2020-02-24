@@ -3,7 +3,7 @@
  */
 export class Card {
 
-    name:string;
+    name: string;
     type: string;
     subtype: string;
     bigtext: string;
@@ -17,7 +17,9 @@ export class Card {
     fail?: string;
     cost?: string;
     auction?: string;
+    pillarIndex?: number;
+    pillarNumeral?: string
 
-    constructor() {}
+    constructor() { }
 
 }
