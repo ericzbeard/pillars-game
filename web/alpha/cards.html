@@ -1,0 +1,428 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="cards.css">
+
+    <script id="summaryTableTemplate" type="x-tmpl-mustache">
+    <div>
+            <table>
+                <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Subtype</th>
+                    <th>Big Text</th>
+                    <th>Small Text</th>
+                    <th>Cost</th>
+                    <th>Auction</th>
+                    <th>Starter?</th>
+                    <th>Copies</th>
+                    <th>Category</th>
+                    <th>Success</th>
+                    <th>Fail</th>
+                    <th>Flavor</th>
+                </thead>
+                <tbody>
+
+                    {{#cards}}
+                    <tr>
+                        <td>{{name}}</td>
+                        <td>{{type}}</td>
+                        <td>{{subtype}}</td>
+                        <td>{{{rawbigtext}}}</td>
+                        <td>{{{rawtext}}}</td>
+                        <td>{{{rawCost}}}</td>
+                        <td>{{{auction}}}</td>
+                        <td>{{starter}}</td>
+                        <td>{{copies}}</td>
+                        <td>{{category}}</td>
+                        <td>{{{rawsuccess}}}</td>
+                        <td>{{{rawfail}}}</td>
+                        <td>{{flavor}}</td>
+                    </tr>
+                    {{/cards}}
+            
+                </tbody>
+            </table>
+        </div>
+    </script>
+</head>
+
+<body>
+    <h3>*NOTE* - Scroll down past the summary to see the rendered cards!</h3>
+    <div id="summary"></div>
+    <div id="cards"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+
+    <div id="template" style="display:none">
+        <div class="cardPage">
+            {{#cards}}
+            <div class="card">
+                <div class="cardInner">
+                    <div class="header">
+                        <div class="cardTitle">
+                            <strong>{{name}}</strong></div>
+                        <div class="cardStarter">
+                            {{#starter}}
+                            <span class="starterS">S</span>
+                            {{/starter}}
+                        </div>
+                    </div>
+                    <div class="cardTypes">
+                        {{type}}{{#subtype}}&mdash;{{subtype}}{{/subtype}}
+                    </div>
+                    <div class="cardContent">
+                    
+                        <div class="cardBigText">
+                            {{{bigtext}}}
+                        </div>
+                        <div class="cardText">
+                            <div class="cardTextText">
+                                {{{text}}}
+                            </div>
+                           
+                        </div>
+
+                        {{#flavor}}
+                        <div class="flavorText">
+                            "{{flavor}}"
+                        </div>
+                        {{/flavor}}
+                        
+                    </div>
+
+                    {{#category}}
+                    <div class="category">
+                        <div class="categoryImage">
+                            <img src="img/{{category}}.png" width="30" height="30">
+                        </div>
+                        <div class="categoryName">
+                            {{category}}
+                        </div>
+                    </div>
+                    {{/category}}
+
+                    {{#success}}
+                    <div class="successFail">
+
+
+                        <div class="success">
+                            <div class="successTitle">
+                                Success
+                            </div>
+                            <div class="successText">
+                                {{{success}}}
+                            </div>
+                        </div>
+
+                        <div class="fail">
+                            <div class="failTitle">
+                                Fail
+                            </div>
+                            <div class="failText">
+                                {{{fail}}}
+                            </div>
+                        </div>
+
+
+                    </div>
+                    {{/success}}
+
+                    <div class="footer">
+                        <div class="cardInfo">
+                            
+                                                       
+                            <div class="cardNumber">
+                                    {{uniqueIndex}}/{{numUniqueCards}}-{{copies}}
+                                <!--
+                                p{{printIndex}}/{{numTotalCards}}
+                                -->
+                                
+                            </div>
+                        </div>
+
+                        <div class="awsLogo">
+                                <img src="img/aws.png" width="30" height="20"/>
+                        </div>
+
+                        {{#cost}}
+                        {{^starter}}
+                        <div class="cardCost">
+                            {{#auction}}
+                            <span class="auction">Auction {{auction}}</span>
+                            {{/auction}}
+                            {{^auction}}&nbsp;{{/auction}}
+                            <div class="cardCostBorder">&nbsp;{{{cost}}}&nbsp;</div>
+                        </div>
+                        {{/starter}}
+                        {{/cost}}
+
+                    </div>
+                    
+                </div>
+            </div>
+            {{/cards}}
+        </div>
+    </div>
+
+    <div id="summaryTemplate" style="display:none">
+        <ul>
+            <li>Version: {{version}}</li>
+            <li>Total Unique Cards: {{numUnique}}</li>
+            <li>Unique Names: {{numNames}}</li>
+            <li>Repeat Names: {{repeatNames}}</li>
+            <li>Total Printed Cards: {{numPrinted}}</li>
+            <li>Types: 
+                <ul>
+                    <li>Pillar: {{numPillars}}</li>
+                    <li>Trial: {{numTrials}}</li>
+                    <li>Resource: {{numResources}}
+                        <ul>
+                            <li>Action: {{numActions}}</li>
+                            <li>Event: {{numEvents}}</li>
+                            <li>Bug: {{numBugs}}</li>
+                            <li>Cloud: {{numClouds}}
+                                <ul>
+                                    {{#categories}}
+                                    <li>{{category}}: {{count}}</li>
+                                    {{/categories}}
+                                </ul>
+                            </li>
+                            <li>Human: {{numHumans}}</li>
+                        </ul>
+                    </li>
+                    <li>Reference: {{numReferences}}</li>
+                </ul>
+            </li>
+            
+        </ul>
+
+        <div>
+           
+            {{#cards}}
+                <div>
+                    {{rawCost}} 
+                    {{#starter}}(Starter){{/starter}}
+                    {{#success}}(Trial {{subtype}}){{/success}}
+                    {{#pillar}}(Pillar){{/pillar}}
+                        {{#auction}}({{auction}}){{/auction}}  &mdash;
+                {{name}}
+                </div>
+            {{/cards}}
+            
+        </div>
+    </div>
+
+    <script>var exports = {};</script>
+    <script src="../../lambdas/card-database.js"></script>
+
+    <script>
+        var db = exports.cardDatabase;
+
+        const numUniqueCards = db.cards.length
+        
+        // Keep track of stats
+        let summary = {}
+        summary.names = []
+        summary.repeatNames = []
+        summary.numPillars = 0
+        summary.numTrials = 0
+        summary.numResources = 0
+        summary.numActions = 0
+        summary.numHumans = 0
+        summary.numEvents = 0
+        summary.numClouds = 0
+        summary.categories = []
+        summary.numAugmentClouds = 0
+        summary.numAugmentHumans = 0
+        summary.numBugs = 0
+        summary.version = db.version
+        summary.numReferences = 0
+
+        // Create a database with one of each physical card
+
+        var finalDb = { cards: [] }
+
+        let uniqueIndex = 0;
+        let printIndex = 0
+        db.cards.forEach((card) => {
+            uniqueIndex++
+            card.uniqueIndex = uniqueIndex            
+
+            if (summary.names.includes(card.name)) {
+                summary.repeatNames.push(card.name)
+            } else {
+                summary.names.push(card.name)
+            }
+
+            function escapeRegExp(str) {
+                return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+            }
+            
+            function replaceAll(str, find, replace) {
+                return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+            }
+
+            function replaceBr(str) {
+                let retval = "";
+                if (str) {
+                    retval = replaceAll(str, "<br />", ". ")
+                    retval = replaceAll(retval, "<br/>", ". ")
+                }
+                return retval;
+            }
+
+            // Replace resource types with icons
+
+            card.rawbigtext = replaceBr(card.bigtext);
+            card.rawtext = replaceBr(card.text);
+            card.rawsuccess = replaceBr(card.success);
+            card.rawfail = replaceBr(card.fail);
+
+            const talentImg = "<img src='img/Talent.png' width='50' height='50'/>"
+            card.bigtext = replaceAll(card.bigtext, "{T}", talentImg)
+            
+            // const customerImg = "<img src='img/Customer.png' width='50' height='50'/>"
+            // card.bigtext = card.bigtext.replace("{Cu}", customerImg)
+            
+            const creativityImg = "<img src='img/Creativity.png' width='50' height='50'/>"
+            card.bigtext = replaceAll(card.bigtext, "{Cr}", creativityImg)
+            
+            const creditImg = "<img src='img/Credit.png' width='50' height='50'/>"
+            card.bigtext = replaceAll(card.bigtext, "{$}", creditImg)
+
+            // Replace costs with small icons
+
+            card.rawCost = card.cost
+            card.cc = card.cost ? card.cost.length : 0
+            
+            if (card.cost) {
+                const talentImgSmall = "<img src='img/Talent.png' width='20' height='20'/>"
+                card.cost = replaceAll(card.cost, "T", talentImgSmall)
+                
+                const creditImgSmall = "<img src='img/Credit.png' width='20' height='20'/>"
+                card.cost = replaceAll(card.cost, "$", creditImgSmall)
+            }
+
+            // Clone duplicate cards
+            for (let i = 0; i < card.copies; i++) {
+                let clone = JSON.parse(JSON.stringify(card))
+                printIndex++
+                clone.printIndex = printIndex
+                finalDb.cards.push(clone)
+            }
+        })
+
+        summary.numNames = summary.names.length
+
+        const numTotalCards = finalDb.cards.length
+
+        let render = function (cardPage) {
+            var template = $('#template').html();
+            Mustache.parse(template);
+            var rendered = Mustache.render(template, cardPage);
+            $('#cards').append(rendered);
+        }
+
+
+        // Make 9-card pages for printing
+        let cardPage = { cards: [] }
+        for (let i = 0; i < finalDb.cards.length; i++) {
+
+            let card = finalDb.cards[i]
+            card.numTotalCards = numTotalCards
+            card.numUniqueCards = numUniqueCards
+            switch (card.type) {
+                case "Pillar": summary.numPillars++
+                    break
+                case "Resource": summary.numResources++
+                    break
+                case "Trial": summary.numTrials++
+                    break
+                case "Reference": summary.numReferences++
+                    break
+            } 
+            switch (card.subtype) {
+                case "Human": summary.numHumans++
+                    break
+                case "Cloud": summary.numClouds++
+                    break
+                case "Event": summary.numEvents++
+                    break
+                case "Action": summary.numActions++
+                    break
+                case "Augment Cloud": summary.numAugmentClouds++
+                    break
+                case "Augment Human": summary.numAugmentHumans++
+                    break
+                case "Bug": summary.numBugs++
+                    break
+            }
+
+            if (card.category) {
+                let c = null
+                summary.categories.forEach((category) => {
+                    if (category.category == card.category) {
+                        c = category
+                    }
+                })
+                if (c) {
+                    c.count += 1
+                } else {
+                    summary.categories.push({category: card.category, count: 1})
+                }
+            }
+
+            if (card.subtype == "Cloud" && !card.category) {
+                console.log(card.name)
+            }
+
+            cardPage.cards.push(card)
+
+            if ((i + 1) % 9 == 0) {
+                render(cardPage)
+                cardPage = { cards: [] }
+            }
+        }
+
+        if (cardPage.cards.length > 0) {
+            render(cardPage)
+        }
+
+        summary.numUnique = numUniqueCards
+        summary.numPrinted = numTotalCards
+        
+        db.cards.sort((a, b) => {
+
+            if (a.cc > b.cc) {
+                return 1
+            }
+
+            if (b.cc > a.cc) {
+                return -1
+            }
+
+            return 0
+        })
+
+        summary.cards = db.cards
+
+        // Render the summary
+
+        var template = $('#summaryTemplate').html();
+        Mustache.parse(template);
+        var rendered = Mustache.render(template, summary);
+        $('#summary').append(rendered);
+
+        // var tblTemplate = $('#summaryTableTemplate').html();
+        // Mustache.parse(template);
+        // var tblRendered = Mustache.render(tblTemplate, summary);
+        // $('#summary').append(tblRendered);
+
+    </script>
+
+</body>
+
+</html>

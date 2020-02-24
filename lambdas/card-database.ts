@@ -138,7 +138,9 @@ export const cardDatabase = {
             success: "+1 Customer<br/>Promote &#8544;",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
         },
         {
             name: "Bug Reports",
@@ -149,7 +151,9 @@ export const cardDatabase = {
             success: "+1 Customer<br/>Promote &#8546;",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
             name: "Slow Website",
@@ -160,7 +164,9 @@ export const cardDatabase = {
             success: "+1 Customer<br/>Promote &#8547;",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
         },
         {
             name: "License Fee Increase",
@@ -171,7 +177,9 @@ export const cardDatabase = {
             success: "+1 Customer<br/>Promote &#8548;",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Competitive Threat",
@@ -229,17 +237,6 @@ export const cardDatabase = {
             copies: 1
         },
         {
-            name: "Security Incident",
-            type: "Trial",
-            subtype: "Phase 2",
-            bigtext: "11",
-            text: "Add Creativity * &#8545; to your roll",
-            success: "+3 Customers<br/>Promote &#8545",
-            fail: "-1 Customer",
-            starter: false,
-            copies: 1
-        },
-        {
             name: "Fire at HQ",
             type: "Trial",
             subtype: "Phase 2",
@@ -249,7 +246,22 @@ export const cardDatabase = {
             fail: "-1 Customer",
             starter: false,
             copies: 1,
-            flavor: "I told you that was my red stapler."
+            flavor: "I told you that was my red stapler.", 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
+        },
+        {
+            name: "Security Incident",
+            type: "Trial",
+            subtype: "Phase 2",
+            bigtext: "11",
+            text: "Add Creativity * &#8545; to your roll",
+            success: "+3 Customers<br/>Promote &#8545",
+            fail: "-1 Customer",
+            starter: false,
+            copies: 1, 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
             name: "Latency",
@@ -260,7 +272,9 @@ export const cardDatabase = {
             success: "+3 Customers<br />Promote &#8547",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
         },
         {
             name: "Cash Flow Issues",
@@ -271,7 +285,9 @@ export const cardDatabase = {
             success: "+3 Customers<br />Promote &#8548;",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Server Crash",
@@ -282,7 +298,9 @@ export const cardDatabase = {
             success: "+3 Customers<br />Promote&#8546;",
             fail: "-1 Customer",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
             name: "Data Center Migration",
@@ -315,7 +333,9 @@ export const cardDatabase = {
             success: "+3 Customers<br/>Promote&#8548;",
             fail: "-2 Customers",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Bad Press",
@@ -329,17 +349,6 @@ export const cardDatabase = {
             copies: 1
         },
         {
-            name: "Rogue Employee",
-            type: "Trial",
-            subtype: "Phase 3",
-            bigtext: "12",
-            text: "Subtract 1 from your roll if your pillar &#8545; is not maxed",
-            success: "+4 Customers<br/>Promote Any",
-            fail: "-2 Cusotomers<br/>Demote",
-            starter: false,
-            copies: 1
-        },
-        {
             name: "Failed Rollback",
             type: "Trial",
             subtype: "Phase 3",
@@ -348,7 +357,22 @@ export const cardDatabase = {
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
+        },
+        {
+            name: "Rogue Employee",
+            type: "Trial",
+            subtype: "Phase 3",
+            bigtext: "12",
+            text: "Subtract 1 from your roll if your pillar &#8545; is not maxed",
+            success: "+4 Customers<br/>Promote Any",
+            fail: "-2 Cusotomers<br/>Demote",
+            starter: false,
+            copies: 1, 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
             name: "Deadlocks",
@@ -359,7 +383,9 @@ export const cardDatabase = {
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
         },
         {
             name: "Service Limits",
@@ -370,7 +396,9 @@ export const cardDatabase = {
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Segmentation Fault",
@@ -381,7 +409,9 @@ export const cardDatabase = {
             success: "+4 Customers<br/>Promote Any",
             fail: "-1 Cusotomer<br/>Demote",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
             name: "Unpatched OS",
@@ -502,16 +532,6 @@ export const cardDatabase = {
             copies: 3
         },
         {
-            name: "Security Workshop",
-            type: "Resource",
-            subtype: "Event",
-            bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8545;",
-            cost: "$T",
-            starter: false,
-            copies: 1
-        },
-        {
             name: "Ops Workshop",
             type: "Resource",
             subtype: "Event",
@@ -519,27 +539,21 @@ export const cardDatabase = {
             text: "Or Draw 2 if you have 4+ on pillar &#8544;",
             cost: "$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
         },
         {
-            name: "Performance Workshop",
+            name: "Security Workshop",
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8547;",
+            text: "Or Draw 2 if you have 4+ on pillar &#8545;",
             cost: "$T",
             starter: false,
-            copies: 1
-        },
-        {
-            name: "Budget Workshop",
-            type: "Resource",
-            subtype: "Event",
-            bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8548;",
-            cost: "$T",
-            starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
             name: "Reliability Workshop",
@@ -549,18 +563,33 @@ export const cardDatabase = {
             text: "Or Draw 2 if you have 4+ on pillar &#8546;",
             cost: "$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
-            name: "Access Control List",
+            name: "Performance Workshop",
             type: "Resource",
-            subtype: "Cloud",
-            bigtext: "{$}*&#8545;",
-            text: "<em>(Provides Credits equal to your pillar &#8545;)</em>",
-            cost: "$$T",
+            subtype: "Event",
+            bigtext: "Draw 1",
+            text: "Or Draw 2 if you have 4+ on pillar &#8547;",
+            cost: "$T",
             starter: false,
-            copies: 1,
-            category: "Networking"
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
+        },
+        {
+            name: "Budget Workshop",
+            type: "Resource",
+            subtype: "Event",
+            bigtext: "Draw 1",
+            text: "Or Draw 2 if you have 4+ on pillar &#8548;",
+            cost: "$T",
+            starter: false,
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Code Pipeline",
@@ -571,29 +600,22 @@ export const cardDatabase = {
             cost: "$$T",
             starter: false,
             copies: 1,
-            category: "Development"
+            category: "Development", 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
         },
         {
-            name: "Elasticache",
+            name: "Access Control List",
             type: "Resource",
             subtype: "Cloud",
-            bigtext: "{$}*&#8547;",
-            text: "<em>(Provides Credits equal to your pillar &#8547;)</em>",
+            bigtext: "{$}*&#8545;",
+            text: "<em>(Provides Credits equal to your pillar &#8545;)</em>",
             cost: "$$T",
             starter: false,
             copies: 1,
-            category: "Database"
-        },
-        {
-            name: "Trusted Advisor",
-            type: "Resource",
-            subtype: "Cloud",
-            bigtext: "{$}*&#8548;",
-            text: "<em>(Provides Credits equal to your pillar &#8548;)</em>",
-            cost: "$$T",
-            starter: false,
-            copies: 1,
-            category: "Management"
+            category: "Networking", 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
             name: "EBS Snapshots",
@@ -604,17 +626,35 @@ export const cardDatabase = {
             cost: "$$T",
             starter: false,
             copies: 1,
-            category: "Storage"
+            category: "Storage", 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
-            name: "Security Consultant",
+            name: "Elasticache",
             type: "Resource",
-            subtype: "Human",
-            bigtext: "{T}*&#8545;",
-            text: "<em>(Provides Talents equal to your pillar &#8545;)</em>",
+            subtype: "Cloud",
+            bigtext: "{$}*&#8547;",
+            text: "<em>(Provides Credits equal to your pillar &#8547;)</em>",
             cost: "$$T",
             starter: false,
-            copies: 1
+            copies: 1,
+            category: "Database", 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
+        },
+        {
+            name: "Trusted Advisor",
+            type: "Resource",
+            subtype: "Cloud",
+            bigtext: "{$}*&#8548;",
+            text: "<em>(Provides Credits equal to your pillar &#8548;)</em>",
+            cost: "$$T",
+            starter: false,
+            copies: 1,
+            category: "Management", 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Ops Manager",
@@ -624,27 +664,21 @@ export const cardDatabase = {
             text: "<em>(Provides Talents equal to your pillar &#8544;)</em>",
             cost: "$$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
         },
         {
-            name: "Assembly Expert",
+            name: "Security Consultant",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{T}*&#8547;",
-            text: "<em>(Provides Talents equal to your pillar &#8547;)</em>",
+            bigtext: "{T}*&#8545;",
+            text: "<em>(Provides Talents equal to your pillar &#8545;)</em>",
             cost: "$$T",
             starter: false,
-            copies: 1
-        },
-        {
-            name: "Finance Specialist",
-            type: "Resource",
-            subtype: "Human",
-            bigtext: "{T}*&#8548;",
-            text: "<em>(Provides Talents equal to your pillar &#8548;)</em>",
-            cost: "$$T",
-            starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
             name: "Reliability Engineer",
@@ -654,18 +688,33 @@ export const cardDatabase = {
             text: "<em>(Provides Talents equal to your pillar &#8546;)</em>",
             cost: "$$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
-            name: "KMS",
+            name: "Assembly Expert",
             type: "Resource",
-            subtype: "Cloud",
-            bigtext: "{Cr}*&#8545;",
-            text: "<em>(Provides Creativity equal to your pillar &#8545;)</em>",
-            cost: "$TT",
+            subtype: "Human",
+            bigtext: "{T}*&#8547;",
+            text: "<em>(Provides Talents equal to your pillar &#8547;)</em>",
+            cost: "$$T",
             starter: false,
-            copies: 1,
-            category: "Security"
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
+        },
+        {
+            name: "Finance Specialist",
+            type: "Resource",
+            subtype: "Human",
+            bigtext: "{T}*&#8548;",
+            text: "<em>(Provides Talents equal to your pillar &#8548;)</em>",
+            cost: "$$T",
+            starter: false,
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Fargate",
@@ -676,7 +725,34 @@ export const cardDatabase = {
             cost: "$TT",
             starter: false,
             copies: 1,
-            category: "Compute"
+            category: "Compute", 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
+        },
+        {
+            name: "KMS",
+            type: "Resource",
+            subtype: "Cloud",
+            bigtext: "{Cr}*&#8545;",
+            text: "<em>(Provides Creativity equal to your pillar &#8545;)</em>",
+            cost: "$TT",
+            starter: false,
+            copies: 1,
+            category: "Security", 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
+        },
+        {
+            name: "Automation Engineer",
+            type: "Resource",
+            subtype: "Human",
+            bigtext: "{Cr}*&#8546;",
+            text: "<em>(Provides Creativity equal to your pillar &#8546;)</em>",
+            cost: "$TT",
+            starter: false,
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
             name: "Database Administrator",
@@ -686,7 +762,9 @@ export const cardDatabase = {
             text: "<em>(Provides Creativity equal to your pillar &#8547;)</em>",
             cost: "$TT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
         },
         {
             name: "Athena",
@@ -697,17 +775,9 @@ export const cardDatabase = {
             cost: "$TT",
             starter: false,
             copies: 1,
-            category: "Analytics"
-        },
-        {
-            name: "Automation Engineer",
-            type: "Resource",
-            subtype: "Human",
-            bigtext: "{Cr}*&#8546;",
-            text: "<em>(Provides Creativity equal to your pillar &#8546;)</em>",
-            cost: "$TT",
-            starter: false,
-            copies: 1
+            category: "Analytics", 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Predictive Autoscaling",
@@ -731,54 +801,64 @@ export const cardDatabase = {
             copies: 1
         },
         {
-            name: "Security Bootcamp",
+            name: "Ops Bootcamp",
             type: "Resource",
             subtype: "Event",
             bigtext: "Promote<br/>&#8544;",
             text: "",
             cost: "$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 0, 
+            pillarNumeral: 'I'
         },
         {
-            name: "Ops Bootcamp",
+            name: "Security Bootcamp",
             type: "Resource",
             subtype: "Event",
             bigtext: "Promote<br/>&#8545;",
             text: "",
             cost: "$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 1, 
+            pillarNumeral: 'II'
         },
         {
-            name: "Performance Bootcamp",
+            name: "Reliability Bootcamp",
             type: "Resource",
             subtype: "Event",
             bigtext: "Promote<br/>&#8546;",
             text: "",
             cost: "$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
         },
         {
-            name: "Cost Bootcamp",
+            name: "Performance Bootcamp",
             type: "Resource",
             subtype: "Event",
             bigtext: "Promote<br/>&#8547;",
             text: "",
             cost: "$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 3, 
+            pillarNumeral: 'IV'
         },
         {
-            name: "Reliability Bootcamp",
+            name: "Cost Bootcamp",
             type: "Resource",
             subtype: "Event",
             bigtext: "Promote<br/>&#8548;",
             text: "",
             cost: "$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            pillarIndex: 4, 
+            pillarNumeral: 'V'
         },
         {
             name: "Kinesis Stream",

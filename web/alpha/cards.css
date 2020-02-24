@@ -1,0 +1,214 @@
+body {
+    font-family: Amazon Ember;
+}
+
+#cards {
+    width: 8.5in;
+    margin: 0;
+}
+
+.cardPage {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-image: url("./Design/backdrop.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 239px 335px;
+    position: relative;
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 2.5in;
+    height: 3.5in;
+    margin: 0.1in;
+    -webkit-print-color-adjust: exact;
+}
+
+.cardInner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header {
+    /*flex: 1;*/
+    display: flex;
+    flex-direction: row;
+    height: 0.5in;
+    width: 100%;
+}
+
+.headerSpacer {
+    height: 0.2in;
+}
+
+.cardTitle {
+    font-size: medium;
+    margin: 0.2in;
+}
+
+.cardStarter {
+    flex: 1;
+    text-align: right;
+    margin: 0.1in;
+}
+
+.starterS {
+    border: 1px solid blue;
+    margin: 1px;
+    color: white;
+    background-color: blue;
+}
+
+.cardTypes {
+    margin-left: 0.2in;
+    font-size: small;
+    flex:1;
+}
+
+.cardContent {
+    vertical-align: middle;
+    flex:2;
+    margin-top:10px;
+}
+
+.cardText {
+    margin: auto;
+    text-align: center;
+    flex: 3;
+}
+
+.cardText em {
+    font-size: 8pt;
+    color: gray;
+}
+
+.category {
+    text-align: center;
+    width: 60px;
+    margin-left: 10px;
+}
+
+.categoryImage {
+    margin-top:25px;
+    opacity: 0.7;
+}
+
+.categoryName {
+    text-align:center;
+    font-size: 8pt;
+    color: gray;
+}
+
+.cardBigText {
+    margin: auto;
+    text-align: center;
+    flex: 1;
+    font-size: 28pt;
+}
+
+.cardBigText img {
+    vertical-align: bottom;
+}
+
+.flavorText {
+    flex:1;
+    font-style: italic;
+    opacity: 0.75;
+    margin:auto;
+    text-align: center;
+    margin-top:15px;
+    font-family: Amazon Ember CD;
+}
+
+.footer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 0.6in;
+}
+
+.cardInfo {
+    font-size: 8pt;
+    text-align: left;
+    flex: 1;
+    margin-top: 30px;
+    margin-left: 5px;
+    color: gray;
+}
+
+.awsLogo {
+    flex:1;
+    margin-top:30px;
+    opacity: 0.70;
+}
+
+.auction {
+    font-size: small;
+    font-weight: bold;
+}
+
+.cardCost {}
+
+.cardCostBorder {
+    background-color: lightyellow;
+    color: white;
+    border: 1px solid black;
+    border-radius: 10px;
+    text-align: right;
+    margin-right: 0.1in;
+    font-size: large;
+    padding-top:4px;
+}
+
+.successFail {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 1.0in;
+    text-align: center;
+    margin-top:20px;
+}
+
+.success {
+    flex: 1;
+    font-size: 16pt;
+    border-right: 1px solid black;
+}
+
+.fail {
+    flex: 1;
+    font-size: 16pt;
+}
+
+.successTitle {
+    text-align: center;
+}
+
+.successText {
+    border-top: 1px solid black;
+    font-size: small;
+    padding: 2px;
+}
+
+.failTitle {
+    text-align: center;
+}
+
+.failText {
+    border-top: 1px solid black;
+    font-size: small;
+    padding: 2px;
+}
+
+@media print {
+    .cardPage {
+        page-break-after: always;
+    }
+    #summary {
+        page-break-after: always;
+    }
+}

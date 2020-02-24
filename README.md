@@ -6,6 +6,8 @@ It uses CDK for infrastructure deployment, Typescript as the default language, L
 
 This project is a prototype, with everything in one repo. Eventually we'll want to split out the web project and figure out what to do with shared resources like cards and game-state.
 
+## A few things you should install globally
+
 npm install -g aws-cdk
 npm install -g typescript
 npm install -g browserify

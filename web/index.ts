@@ -91,6 +91,11 @@ class PillarsGame {
     animations: Map<string, PillarsAnimation>;
 
     /**
+     * Clickable regions.
+     */
+    clickables: Array<Clickable>;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -98,6 +103,7 @@ class PillarsGame {
         var self = this;
 
         this.animations = new Map<string, PillarsAnimation>();
+        this.clickables = [];
 
         this.playerDiceColors = [];
         this.playerDiceColors[0] = '#FFD700'; // gold
@@ -132,10 +138,12 @@ class PillarsGame {
         this.logoImage = this.loadImg('img/logo.png');
         this.bgImage = this.loadImg('img/bg.png');
 
+        // Wait for images to load
         setTimeout(function (e) {
             self.checkImagesLoaded.call(self);
         }, 100);
 
+        // Listen to mouse moves
         self.gameCanvas.addEventListener('mousemove', function (e) {
             const poz = self.getMousePos(self.gameCanvas, e);
             self.mx = poz.x;
@@ -144,9 +152,25 @@ class PillarsGame {
             self.resizeCanvas();
         });
 
+        // Listen for clicks
         self.gameCanvas.addEventListener('click', function (e) {
             self.handleClick.call(self, e);
         });
+
+         // A button
+         const button = new Clickable();
+         button.x = PillarsGame.BW / 2;
+         button.y = PillarsGame.BH / 2;
+         button.w = 100;
+         button.h = 50;
+         button.onclick = function() {
+             self.promote(0, 0);
+         };
+         button.draw = function() {
+             CanvasUtil.roundRect(self.ctx, button.x, button.y, button.w, button.h, 
+                 5, false, true, 'black', 'black');
+         };
+         this.clickables.push(button); 
 
     }
 
@@ -182,6 +206,7 @@ class PillarsGame {
         this.gameState = new GameState();
 
         const gs = this.gameState;
+        gs.pillarMax = 6;
 
         this.pillars = [];
 
@@ -251,7 +276,7 @@ class PillarsGame {
      */
     registerAnimation(animation: PillarsAnimation) {
         animation.timeStarted = new Date().getTime();
-        this.animations.set(`Die`, animation);
+        this.animations.set(animation.getKey(), animation);
     }
 
     /**
@@ -265,22 +290,25 @@ class PillarsGame {
      * Handle mouse clicks.
      */
     handleClick(e: MouseEvent) {
-        console.log('click');
         const poz = this.getMousePos(this.gameCanvas, e);
         const mx = poz.x;
         const my = poz.y;
-
-        // Testing animation of a die
-        const d: DieAnimation = new DieAnimation();
-        d.playerIndex = 0;
-        d.pillarIndex = 0;
-        this.registerAnimation(d);
 
         // Animate each click location
         const click: ClickAnimation = new ClickAnimation();
         click.x = mx;
         click.y = my;
         this.registerAnimation(click);
+
+        // Look at clickables
+        for (let i = 0; i < this.clickables.length; i++) {
+            const c = this.clickables[i];
+            if (mx >= c.x && mx <= c.x + c.w && 
+                    my >= c.y && my <= c.y + c.h) {
+                
+                c.onclick();
+            }
+        }
 
         this.resizeCanvas();
     }
@@ -290,6 +318,10 @@ class PillarsGame {
      */
     deleteAnimation(key: string) {
         this.animations.delete(key);
+        var self = this;
+        setTimeout(function(e) {
+            self.resizeCanvas();
+        }, 5);
     }
 
     /**
@@ -297,7 +329,6 @@ class PillarsGame {
      * once it is loaded.
      */
     loadImg(name: string): HTMLImageElement {
-        //let img = document.getElementById(name);
         const img = new Image();
         img.src = name;
         var self = this;
@@ -311,8 +342,6 @@ class PillarsGame {
             throw Error(`${name} does not exist`);
         }
     }
-
-
 
     /**
      * Draw a card at the x and y coordinates.
@@ -427,33 +456,25 @@ class PillarsGame {
         ctx.fillText(total.toString(), x + 78, y + 86);
     }
 
-    // /**
-    //  * Practice with animation.
-    //  */
-    // animate() {
+    /**
+     * Promote a pillar rank die.
+     */
+    promote(playerIndex:number, pillarIndex:number) {
 
-    //     const ctx = this.ctx;
+        // Modify game state
+        const r = this.gameState.players[playerIndex].pillarRanks[pillarIndex];
+        if (r < this.gameState.pillarMax) {
+            this.gameState.players[playerIndex].pillarRanks[pillarIndex]++;
+        }
 
-    //     let radius = 100;
-    //     if (this.clickAnimation) {
-    //         const curTime = new Date().getTime();
-    //         const elapsed = curTime - this.clickAnimation.timeStarted;
-    //         if (elapsed / 1000 > 3) {
-    //             this.clickAnimation = null;
-    //         } else {
-    //             radius = 100 * (elapsed / 3000);
-    //         }
-    //     }
+        // Animate
+        const d: DieAnimation = new DieAnimation();
+        d.playerIndex = playerIndex;
+        d.pillarIndex = pillarIndex;
+        this.registerAnimation(d);
 
-    //     // Draw an expanding circle in the middle
-    //     ctx.fillStyle = "#336699";
-    //     ctx.beginPath();
-    //     ctx.arc(PillarsGame.BW / 2, PillarsGame.BH / 2, radius, 0, 2 * Math.PI);
-    //     ctx.stroke();
-
-    //     // Highlight a die
-
-    // }
+        // TODO - Game end?
+    }
 
     /**
      * Draw the canvas, scaling by width.
@@ -516,6 +537,11 @@ class PillarsGame {
         this.drawCardAt(this.pillars[2], 5, 495);
         this.drawCardAt(this.pillars[3], 5, 675);
         this.drawCardAt(this.pillars[4], 5, 855);
+
+        // Clickables
+        for (let i = 0; i < this.clickables.length; i++) {
+            this.clickables[i].draw();
+        }
 
         // Debugging data
         ctx.font = "10pt Arial";
@@ -600,12 +626,35 @@ class PillarsGame {
  * Used to track the progress of animations.
  */
 class PillarsAnimation {
+
+    /**
+     * Time in ms that the animation started.
+     */
     timeStarted: number;
+
+    /**
+     * Animation percent complete.
+     */
     percentComplete: number;
+
+    /**
+     * Get the key used to look up the animation.
+     */
     getKey() { return ''; }
+
+    /**
+     * How much time in ms has elapsed since the animation started.
+     */
     getElapsedTime() {
         return new Date().getTime() - this.timeStarted;
     }
+
+    /**
+     * Called each time the canvas is drawn. 
+     * 
+     * This function can actually do the drawing or set variables that 
+     * are used in PillarsGame.draw.
+     */
     animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) { }
 }
 
@@ -630,10 +679,11 @@ class DieAnimation extends PillarsAnimation {
 
     animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
         const elapsed = this.getElapsedTime();
-        if (elapsed / 1000 > 3) {
+        const end = 1000;
+        if (elapsed >= end) {
             deleteSelf(this.getKey());
         } else {
-            this.percentComplete = elapsed / 3000;
+            this.percentComplete = elapsed / end;
 
             // Animation happens in draw()
         }
@@ -670,6 +720,18 @@ class ClickAnimation extends PillarsAnimation {
             ctx.stroke();
         }
     }
+}
+
+/**
+ * A clickable area and the function to call when it is clicked.
+ */
+class Clickable {
+    x:number;
+    y:number;
+    w:number;
+    h:number;
+    onclick: Function;
+    draw:Function;
 }
 
 // Start the game
