@@ -1051,7 +1051,7 @@ export const cardDatabase = {
             copies: 1
         },
         {
-            name: "Lambda",
+            name: "AWS Lambda",
             type: "Resource",
             subtype: "Cloud",
             bigtext: "+1 Customer",

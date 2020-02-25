@@ -3,6 +3,8 @@ import { Card } from '../lambdas/card';
 import { Player } from '../lambdas/player';
 import { GameState, TrialStack } from '../lambdas/game-state';
 import { CanvasUtil } from './canvas-util';
+import {Howl, Howler} from 'howler';
+import {PillarsWebConfig} from './web-config';
 
 /**
  * Pillars game UI. Initialized from index.html.
@@ -36,29 +38,9 @@ class PillarsGame {
     my: number;
 
     /**
-     * Credit png.
+     * Image files.
      */
-    creditImage: HTMLImageElement;
-
-    /**
-     * Creativity png.
-     */
-    creativityImage: HTMLImageElement;
-
-    /**
-     * Talent png.
-     */
-    talentImage: HTMLImageElement;
-
-    /**
-     * Logo png.
-     */
-    logoImage: HTMLImageElement;
-
-    /**
-     * Background png.
-     */
-    bgImage: HTMLImageElement;
+    images: Map<string, HTMLImageElement>;
 
     /**
      * The current state of the game according to the back end.
@@ -78,7 +60,7 @@ class PillarsGame {
     /**
      * Keeps track of loaded images.
      */
-    imagesLoaded: Map<string, boolean>;
+    loadedImages: Map<string, boolean>;
 
     /**
      * Dice colors. 
@@ -96,6 +78,16 @@ class PillarsGame {
     clickables: Array<Clickable>;
 
     /**
+     * Sound files. (Using howler)
+     */
+    sounds: Map<string, Howl>;
+
+    /**
+     * All cards in the database keyed by card name.
+     */
+    cards: Map<string, Card>;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -104,6 +96,9 @@ class PillarsGame {
 
         this.animations = new Map<string, PillarsAnimation>();
         this.clickables = [];
+        this.sounds = new Map<string, Howl>();
+        this.images = new Map<string, HTMLImageElement>();
+        this.cards = new Map<string, Card>();
 
         this.playerDiceColors = [];
         this.playerDiceColors[0] = '#FFD700'; // gold
@@ -111,7 +106,7 @@ class PillarsGame {
         this.playerDiceColors[2] = '#00FF00'; // lime
         this.playerDiceColors[3] = '#00BFFF'; // deepskyblue
 
-        this.imagesLoaded = new Map<string, boolean>();
+        this.loadedImages = new Map<string, boolean>();
 
         this.loadGameState();
 
@@ -132,11 +127,21 @@ class PillarsGame {
         this.mx = 0;
         this.my = 0;
 
-        this.creditImage = this.loadImg('img/credits100x100.png');
-        this.creativityImage = this.loadImg('img/creativity100x100.png');
-        this.talentImage = this.loadImg('img/talent100x100.png');
-        this.logoImage = this.loadImg('img/logo.png');
-        this.bgImage = this.loadImg('img/bg.png');
+        const imageNames = [
+            PillarsImages.IMG_CREDITS,
+            PillarsImages.IMG_CREATIVITY,
+            PillarsImages.IMG_TALENT,
+            PillarsImages.IMG_LOGO,
+            PillarsImages.IMG_BG,
+            PillarsImages.IMG_BACK_GREEN,
+            PillarsImages.IMG_BACK_ORANGE,
+            PillarsImages.IMG_BACK_PINK,
+            PillarsImages.IMG_BACK_BLUE
+        ];
+
+        for (let i = 0; i < imageNames.length; i++) {
+            this.loadImg(imageNames[i]);
+        }
 
         // Wait for images to load
         setTimeout(function (e) {
@@ -157,21 +162,20 @@ class PillarsGame {
             self.handleClick.call(self, e);
         });
 
-         // A button
-         const button = new Clickable();
-         button.x = PillarsGame.BW / 2;
-         button.y = PillarsGame.BH / 2;
-         button.w = 100;
-         button.h = 50;
-         button.onclick = function() {
-             self.promote(0, 0);
-         };
-         button.draw = function() {
-             CanvasUtil.roundRect(self.ctx, button.x, button.y, button.w, button.h, 
-                 5, false, true, 'black', 'black');
-         };
-         this.clickables.push(button); 
-
+        // A button
+        const button = new Clickable();
+        button.x = PillarsGame.BW / 2;
+        button.y = PillarsGame.BH / 2;
+        button.w = 100;
+        button.h = 50;
+        button.onclick = function () {
+            self.promote(0, 0);
+        };
+        button.draw = function () {
+            CanvasUtil.roundRect(self.ctx, button.x, button.y, button.w, button.h,
+                5, false, true, 'black', 'black');
+        };
+        this.clickables.push(button);
     }
 
     /**
@@ -181,18 +185,18 @@ class PillarsGame {
         // Iterate images to see if they are loaded
 
         let allLoaded: boolean = true;
-        if (this.imagesLoaded) {
-            for (const [key, value] of this.imagesLoaded.entries()) {
-                if (!value) allLoaded = false;
+
+        if (this.loadedImages) {
+            for (const [key, value] of this.loadedImages.entries()) {
+                if (!value === true) allLoaded = false;
             }
         } else {
-
-            console.log(`checkImagesLoaded imagesLoaded null? this: ${JSON.stringify(this)}`);
-
             allLoaded = false;
         }
+
         if (!allLoaded) {
-            setTimeout(this.checkImagesLoaded, 10);
+            var self = this;
+            setTimeout(() => { self.checkImagesLoaded.call(self); }, 100);
         } else {
             this.isDoneLoading = true;
             this.resizeCanvas();
@@ -227,6 +231,8 @@ class PillarsGame {
         // Load the card database
         for (let i = 0; i < cardDatabase.cards.length; i++) {
             const card = <Card>cardDatabase.cards[i];
+
+            this.cards.set(card.name, card);
 
             switch (card.type) {
                 case 'Resource':
@@ -303,14 +309,43 @@ class PillarsGame {
         // Look at clickables
         for (let i = 0; i < this.clickables.length; i++) {
             const c = this.clickables[i];
-            if (mx >= c.x && mx <= c.x + c.w && 
-                    my >= c.y && my <= c.y + c.h) {
-                
+            if (mx >= c.x && mx <= c.x + c.w &&
+                my >= c.y && my <= c.y + c.h) {
+
                 c.onclick();
             }
         }
 
+        // We have to wait for user interaction to load sounds
+        if (this.sounds.entries.length == 0) {
+            this.addSound('swoosh.wav');
+            this.addSound('menuselect.wav');
+        }
+
+        this.playSound('menuselect.wav');
+
         this.resizeCanvas();
+    }
+
+    /**
+     * Add a sound.
+     */
+    addSound(name:string) {
+        const baseUrl = PillarsWebConfig.AudioUrl;
+        const h = new Howl({src: [`${baseUrl}${name}`]});
+        this.sounds.set(name, h);
+    }
+
+    /**
+     * Play a sound.
+     */
+    playSound(name:string) {
+        if (this.sounds) {
+            const s = this.sounds.get(name);
+            if (s) {
+                s.play();
+            }
+        }
     }
 
     /**
@@ -319,7 +354,7 @@ class PillarsGame {
     deleteAnimation(key: string) {
         this.animations.delete(key);
         var self = this;
-        setTimeout(function(e) {
+        setTimeout(function (e) {
             self.resizeCanvas();
         }, 5);
     }
@@ -328,19 +363,73 @@ class PillarsGame {
      * Get the image element and add an event listener to redraw 
      * once it is loaded.
      */
-    loadImg(name: string): HTMLImageElement {
+    loadImg(name: string) {
         const img = new Image();
         img.src = name;
         var self = this;
         if (img) {
-            this.imagesLoaded.set(name, false);
+            this.images.set(name, <HTMLImageElement>img);
+            this.loadedImages.set(name, false);
             img.addEventListener("load", function (e) {
-                self.imagesLoaded.set(name, true);
+                self.loadedImages.set(name, true);
+                self.resizeCanvas();
             }, false);
-            return <HTMLImageElement>img;
         } else {
             throw Error(`${name} does not exist`);
         }
+    }
+
+    /**
+     * Get a loaded image. (Does not load the image)
+     */
+    getImg(name:string):HTMLImageElement {
+        const img = this.images.get(name);
+        if (img) {
+            return img;
+        } else {
+            throw Error(`No such image: ${name}`);
+        }
+    }
+
+    /**
+     * Draw the back of a card.
+     */
+    drawCardBackAt(name:string, x:number, y:number) {
+
+        if (!this.isDoneLoading) {
+            return;
+        }
+
+        const ctx = this.ctx;
+
+        ctx.save();
+
+        // Draw a mask
+        const radius = 20;
+        
+        const width = 172;
+        const height = 237;
+        const radii = { tl: radius, tr: radius, br: radius, bl: radius };
+
+        ctx.beginPath();
+        ctx.moveTo(x + radii.tl, y);
+        ctx.lineTo(x + width - radii.tr, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radii.tr);
+        ctx.lineTo(x + width, y + height - radii.br);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radii.br, y + height);
+        ctx.lineTo(x + radii.bl, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radii.bl);
+        ctx.lineTo(x, y + radii.tl);
+        ctx.quadraticCurveTo(x, y, x + radii.tl, y);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.clip();
+
+        // Draw the image in the mask
+        ctx.drawImage(this.getImg(name), x - 14.5, y - 14.5);
+
+        ctx.restore();
     }
 
     /**
@@ -349,14 +438,21 @@ class PillarsGame {
     drawCardAt(card: Card, x: number, y: number) {
         const ctx = this.ctx;
 
-        const cw = 110;
-        const ch = 165;
+        let cw = 110;
+        let ch = 165;
+        let radius = 5;
+
+        if (card.type != 'Pillar') {
+            radius = 20;
+            cw = 172;
+            ch = 237;
+        }
 
         // Card border
         ctx.lineWidth = 1;
         ctx.strokeStyle = '#000000';
         ctx.fillStyle = '#000000';
-        CanvasUtil.roundRect(this.ctx, x, y, cw, ch, 5, false, true, '#000000', '#000000');
+        CanvasUtil.roundRect(this.ctx, x, y, cw, ch, radius, false, true, '#000000', '#000000');
 
         // Card Name
         ctx.font = '9pt Arial';
@@ -441,7 +537,10 @@ class PillarsGame {
 
         const ctx = this.ctx;
 
-        ctx.drawImage(img, x, y);
+        if (this.isDoneLoading) {
+            ctx.drawImage(img, x, y);
+        }
+
         ctx.fillStyle = '#222222';
         ctx.strokeStyle = '#000000';
 
@@ -459,7 +558,7 @@ class PillarsGame {
     /**
      * Promote a pillar rank die.
      */
-    promote(playerIndex:number, pillarIndex:number) {
+    promote(playerIndex: number, pillarIndex: number) {
 
         // Modify game state
         const r = this.gameState.players[playerIndex].pillarRanks[pillarIndex];
@@ -472,6 +571,8 @@ class PillarsGame {
         d.playerIndex = playerIndex;
         d.pillarIndex = pillarIndex;
         this.registerAnimation(d);
+
+        this.playSound('swoosh.wav');
 
         // TODO - Game end?
     }
@@ -504,7 +605,7 @@ class PillarsGame {
 
         if (this.isDoneLoading) {
             ctx.globalAlpha = 0.3;
-            ctx.drawImage(this.bgImage, 0, 0);
+            ctx.drawImage(this.getImg(PillarsImages.IMG_BG), 0, 0);
             ctx.globalAlpha = 1;
         }
 
@@ -512,9 +613,9 @@ class PillarsGame {
         if (this.isDoneLoading) {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(50, 50, 50, 0, Math.PI * 2, false);
+            ctx.arc(60, 60, 50, 0, Math.PI * 2, false);
             ctx.clip();
-            ctx.drawImage(this.logoImage, 0, 0);
+            ctx.drawImage(this.getImg(PillarsImages.IMG_LOGO), 10, 10);
             ctx.restore();
         }
 
@@ -526,9 +627,12 @@ class PillarsGame {
             const bh = PillarsGame.BH;
             const xo = 400;
             const yo = 150;
-            this.drawResource(this.creditImage, bw - xo, bh - yo, me.numCredits);
-            this.drawResource(this.creativityImage, bw - xo + 100, bh - yo, me.numCreativity);
-            this.drawResource(this.talentImage, bw - xo + 200, bh - yo, me.numTalents);
+            this.drawResource(this.getImg(PillarsImages.IMG_CREDITS), 
+                bw - xo, bh - yo, me.numCredits);
+            this.drawResource(this.getImg(PillarsImages.IMG_CREATIVITY), 
+                bw - xo + 100, bh - yo, me.numCreativity);
+            this.drawResource(this.getImg(PillarsImages.IMG_TALENT), 
+                bw - xo + 200, bh - yo, me.numTalents);
         }
 
         // Pillars
@@ -543,19 +647,71 @@ class PillarsGame {
             this.clickables[i].draw();
         }
 
+        // Player deck
+        this.drawCardBackAt(PillarsImages.IMG_BACK_BLUE, 250, PillarsGame.BH - 250);
+        this.drawCardBackAt(PillarsImages.IMG_BACK_BLUE, 255, PillarsGame.BH - 255);
+
+        // Marketplace
+        let markety = 100;
+        CanvasUtil.roundRect(this.ctx, 200, 50, 1000, 700, 30, 
+            false, true, 'black', 'black');
+
+        this.drawCardBackAt(PillarsImages.IMG_BACK_BLUE, 220, markety);
+        this.drawCardBackAt(PillarsImages.IMG_BACK_BLUE, 225, markety - 5);
+
+        // Test the marketplace
+        const market = [
+            'Reliability Bootcamp', 
+            'Crappy Coders', 
+            'Talented Jerk', 
+            'AWS Lambda', 
+            'Stack Overflow', 
+            'Sagemaker', 
+            'EBS Snapshots'
+        ];
+
+        let curx = 415;
+        let cw = 205;
+        for (let i = 0; i < market.length; i++) {
+            const card = this.cards.get(market[i]);
+            if (i == 3) {
+                // 2nd row
+                markety = 350;
+                curx = 210;
+            }
+            if (card) {
+                this.drawCardAt(card, curx, markety);
+            }
+            curx += cw;
+        }
+
+        // Trials
+        const trialx = PillarsGame.BW - 250;
+
+        // Phase 1
+        this.drawCardBackAt(PillarsImages.IMG_BACK_GREEN, trialx, 50);
+        this.drawCardBackAt(PillarsImages.IMG_BACK_GREEN, trialx + 5, 45);
+
+        // Phase 2
+        this.drawCardBackAt(PillarsImages.IMG_BACK_ORANGE, trialx, 310);
+        this.drawCardBackAt(PillarsImages.IMG_BACK_ORANGE, trialx + 5, 305);
+
+        // Phase 3
+        this.drawCardBackAt(PillarsImages.IMG_BACK_PINK, trialx, 570);
+        this.drawCardBackAt(PillarsImages.IMG_BACK_PINK, trialx + 5, 565);
+
         // Debugging data
         ctx.font = "10pt Arial";
         ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
             `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
             `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
             `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}, ` +
-            `a:${this.isAnimating()}`, 500, 50);
+            `a:${this.isAnimating()}, d:${this.isDoneLoading}`, 500, 50);
 
         // Run animation logic
         for (const [key, value] of this.animations.entries()) {
-            var self = this;
-            value.animate(this.ctx, function() {
-                self.deleteAnimation.call(self, key);
+            value.animate(this.ctx, () => {
+                this.deleteAnimation(key);
             });
         }
     }
@@ -726,12 +882,24 @@ class ClickAnimation extends PillarsAnimation {
  * A clickable area and the function to call when it is clicked.
  */
 class Clickable {
-    x:number;
-    y:number;
-    w:number;
-    h:number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
     onclick: Function;
-    draw:Function;
+    draw: Function;
+}
+
+class PillarsImages {
+    static readonly IMG_CREDITS = 'img/credits-100x100.png';
+    static readonly IMG_CREATIVITY = 'img/creativity-100x100.png';
+    static readonly IMG_TALENT = 'img/talent-100x100.png';
+    static readonly IMG_LOGO = 'img/logo.png';
+    static readonly IMG_BG = 'img/bg.png';
+    static readonly IMG_BACK_BLUE = 'img/back-blue-200x265.png';
+    static readonly IMG_BACK_GREEN = 'img/back-green-200x265.png';
+    static readonly IMG_BACK_ORANGE = 'img/back-orange-200x265.png';
+    static readonly IMG_BACK_PINK = 'img/back-pink-200x265.png';
 }
 
 // Start the game
