@@ -7,12 +7,9 @@ export class CanvasUtil {
      * Draw a rounded rectangle
      */
     static roundRect(ctx:CanvasRenderingContext2D, x: number, y: number, width: number,
-        height: number, radius: number, fill: boolean, stroke: boolean,
-        strokeStyle: string, fillStyle: string) {
+        height: number, radius: number, fill: boolean, stroke: boolean) {
 
         ctx.save();
-        ctx.fillStyle = fillStyle;
-        ctx.strokeStyle = strokeStyle;
         if (typeof stroke === 'undefined') {
             stroke = true;
         }

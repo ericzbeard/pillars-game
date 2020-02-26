@@ -67,6 +67,11 @@ export class GameState {
     trialStacks: Array<TrialStack>; 
 
     /**
+     * The currently active player.
+     */
+    currentPlayer: Player;
+
+    /**
      * Constructor.
      */
     constructor() {

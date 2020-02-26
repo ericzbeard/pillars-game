@@ -1,3 +1,3 @@
 export class PillarsWebConfig {
-    public static readonly AudioUrl = 'http://10.94.33.82:8080/';
+    public static readonly AudioUrl = 'http://localhost:8080/';
 }

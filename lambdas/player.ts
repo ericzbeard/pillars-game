@@ -69,6 +69,11 @@ export class Player {
      */
     numCredits: number;
 
+    /**
+     * The player's array index. Play order.
+     */
+    index: number;
+
     constructor() {
         this.deck = [];
         this.hand = [];
@@ -81,5 +86,6 @@ export class Player {
         this.numCredits = 0;
         this.numCreativity = 0;
         this.isHuman = false;
+        this.index = 0;
     }
 }
