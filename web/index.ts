@@ -200,10 +200,17 @@ class PillarsGame {
 
             // Draw a second copy unobstructed when hovering
             m.onhover = () => {
+
+                console.log('Hand hover');
+
                 const h = new MouseableCard(card);
                 h.x = 500;
                 h.y = PillarsGame.BH - 500;
-                this.drawCard(h);
+                this.mouseables.push(h);
+                // TODO Then we need to delete it onmouseout
+                h.draw = () => {
+                    this.drawCard(h);
+                }
             };
 
             m.draw = () => {
@@ -771,14 +778,6 @@ class PillarsGame {
         const currentPlayer = this.gameState.currentPlayer;
         const currentColor = this.playerDiceColors[currentPlayer.index];
 
-        // Mouseables
-        for (let i = 0; i < this.mouseables.length; i++) {
-            const m = this.mouseables[i];
-            if (m.draw) {
-                m.draw();
-            }
-        }
-
         // In Play
         const inplayx = 10;
         const inplayy = PillarsGame.MARKETY;
@@ -835,6 +834,24 @@ class PillarsGame {
         this.drawDie(trialx + 10, 840, 'black', currentColor, 1);
         this.drawDie(trialx + 60, 890, 'black', currentColor, 1);
 
+        // Mouseables
+        for (let i = 0; i < this.mouseables.length; i++) {
+            const m = this.mouseables[i];
+
+            // TODO zindex?
+
+            if (m.draw) {
+                m.draw();
+            }
+        }
+
+        // Run animation logic
+        for (const [key, value] of this.animations.entries()) {
+            value.animate(this.ctx, () => {
+                this.deleteAnimation(key);
+            });
+        }
+
         // Debugging data
         ctx.font = "10pt Arial";
         ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
@@ -844,13 +861,6 @@ class PillarsGame {
             `a:${this.isAnimating()}, d:${this.isDoneLoading}, ` +
             `FRa:${FrameRate.avg.toFixed(1)}, FRc:${FrameRate.cur.toFixed(1)}`,
             1200, PillarsGame.BH - 10);
-
-        // Run animation logic
-        for (const [key, value] of this.animations.entries()) {
-            value.animate(this.ctx, () => {
-                this.deleteAnimation(key);
-            });
-        }
     }
 
     /**
