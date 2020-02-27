@@ -77,7 +77,7 @@ class PillarsGame {
     /**
      * Interactive regions.
      */
-    mouseables: Array<Mouseable>;
+    mouseables: Map<string, Mouseable>;
 
     /**
      * Sound files. (Using howler)
@@ -102,16 +102,16 @@ class PillarsGame {
         var self = this;
 
         this.animations = new Map<string, PillarsAnimation>();
-        this.mouseables = [];
+        this.mouseables = new Map<string, Mouseable>();
         this.sounds = new Map<string, Howl>();
         this.images = new Map<string, HTMLImageElement>();
         this.cards = new Map<string, Card>();
 
         this.playerDiceColors = [];
-        this.playerDiceColors[0] = '#FFD700'; // gold
-        this.playerDiceColors[1] = '#9370DB'; // mediumpurple
-        this.playerDiceColors[2] = '#00FF00'; // lime
-        this.playerDiceColors[3] = '#00BFFF'; // deepskyblue
+        this.playerDiceColors[0] = 'orange';
+        this.playerDiceColors[1] = 'blue';
+        this.playerDiceColors[2] = 'green';
+        this.playerDiceColors[3] = 'yellow';
 
         this.loadedImages = new Map<string, boolean>();
 
@@ -145,6 +145,13 @@ class PillarsGame {
             PillarsImages.IMG_BACK_PINK,
             PillarsImages.IMG_BACK_BLUE
         ];
+
+        for (let i = 0; i < this.playerDiceColors.length; i++) {
+            for (let j = 1; j < 7; j++) {
+                const dieName = this.getDieName(i, j);
+                imageNames.push(dieName);
+            }
+        }
 
         for (let i = 0; i < imageNames.length; i++) {
             this.loadImg(imageNames[i]);
@@ -187,7 +194,7 @@ class PillarsGame {
             CanvasUtil.roundRect(self.ctx, button.x, button.y, button.w, button.h,
                 5, true, true);
         };
-        this.mouseables.push(button);
+        this.mouseables.set('testbutton', button);
 
         // Hand
         const handx = 280;
@@ -196,18 +203,23 @@ class PillarsGame {
             const m = new MouseableCard(card);
             m.x = handx + (i * 200);
             m.y = PillarsGame.BH - 250;
-            this.mouseables.push(m);
+            this.mouseables.set('hand_' + i, m);
+
+            const hoverKey = 'hand_hover_' + i;
+
+            m.onmouseout = () => {
+                this.mouseables.delete(hoverKey);
+            };
 
             // Draw a second copy unobstructed when hovering
             m.onhover = () => {
 
-                console.log('Hand hover');
-
                 const h = new MouseableCard(card);
                 h.x = 500;
                 h.y = PillarsGame.BH - 500;
-                this.mouseables.push(h);
-                // TODO Then we need to delete it onmouseout
+
+                this.mouseables.set(hoverKey, h);
+
                 h.draw = () => {
                     this.drawCard(h);
                 }
@@ -230,7 +242,7 @@ class PillarsGame {
             m.draw = () => {
                 this.drawCard(m);
             }
-            this.mouseables.push(m);
+            this.mouseables.set('pillar_' + i, m);
         }
 
         // Test the marketplace
@@ -263,7 +275,7 @@ class PillarsGame {
                 m.draw = () => {
                     this.drawCard(m);
                 };
-                this.mouseables.push(m);
+                this.mouseables.set('market_' + i, m);
             }
             curx += cw;
         }
@@ -407,7 +419,7 @@ class PillarsGame {
         this.mx = poz.x;
         this.my = poz.y;
 
-        for (const m of this.mouseables) {
+        for (const [key, m] of this.mouseables.entries()) {
             if (m.hitTest(this.mx, this.my)) {
                 if (m.onmouseover) {
                     m.onmouseover();
@@ -444,10 +456,9 @@ class PillarsGame {
         this.registerAnimation(click);
 
         // Look at mouseables
-        for (let i = 0; i < this.mouseables.length; i++) {
-            const c = this.mouseables[i];
-            if (c.onclick && c.hitTest(mx, my)) {
-                c.onclick();
+        for (const [key, m] of this.mouseables.entries()) {
+            if (m.onclick && m.hitTest(mx, my)) {
+                m.onclick();
             }
         }
 
@@ -568,46 +579,69 @@ class PillarsGame {
     }
 
     /**
+     * Get the die name for the player and rank.
+     */
+    getDieName(i: number, r:number) {
+        return `img/die-${this.playerDiceColors[i]}-${r}-50x50.png`;
+    }
+
+    /**
      * Draw a 6-sided die.
      */
-    drawDie(x: number, y: number, dieStroke: string, dieFill: string,
-        rank: number, a?: PillarsAnimation) {
-
-        const dw = 50; // Die Width
-
-        let cdw = dw;
-        let cx = x;
-        let cy = y;
-
-        let rankFill = 'black';
-
+    drawDie(x: number, y: number, playerIndex: number, rank: number,
+        a?: PillarsAnimation) {
+        const img = this.getImg(this.getDieName(playerIndex, rank));
         if (a) {
-            const da = <DieAnimation>a;
-            const pct = da.percentComplete;
-            const t = da.getElapsedTime();
-            cdw = cdw + 4;
-            cx = cx - 2;
-            cy = cy - 2;
-            this.ctx.font = '18pt Arial';
-            this.ctx.fillStyle = 'white';
-            if (t % 1000 < 250) {
-                dieStroke = 'white';
-                rankFill = 'white';
-            } else if (t % 1000 < 500) {
-                dieStroke = 'yellow';
-                rankFill = 'yellow';
-            }
+            x += 2;
+            y += 2;
         }
-
-        // Draw the player's die
-        this.ctx.strokeStyle = dieStroke;
-        this.ctx.fillStyle = dieFill;
-        CanvasUtil.roundRect(this.ctx, cx, cy, cdw, cdw, 3, true, true);
-
-        // Draw their current rank
-        this.ctx.fillStyle = rankFill;
-        this.ctx.fillText('' + rank, cx + cdw / 2, cy + cdw / 2 + 5);
+        if (img) {
+            this.ctx.drawImage(img, x, y);
+        }
     }
+
+    // /**
+    //  * Draw a 6-sided die.
+    //  */
+    // drawDie(x: number, y: number, dieStroke: string, dieFill: string,
+    //     rank: number, a?: PillarsAnimation) {
+
+
+    //     const dw = 50; // Die Width
+
+    //     let cdw = dw;
+    //     let cx = x;
+    //     let cy = y;
+
+    //     let rankFill = 'black';
+
+    //     if (a) {
+    //         const da = <DieAnimation>a;
+    //         const pct = da.percentComplete;
+    //         const t = da.getElapsedTime();
+    //         cdw = cdw + 4;
+    //         cx = cx - 2;
+    //         cy = cy - 2;
+    //         this.ctx.font = '18pt Arial';
+    //         this.ctx.fillStyle = 'white';
+    //         if (t % 1000 < 250) {
+    //             dieStroke = 'white';
+    //             rankFill = 'white';
+    //         } else if (t % 1000 < 500) {
+    //             dieStroke = 'yellow';
+    //             rankFill = 'yellow';
+    //         }
+    //     }
+
+    //     // Draw the player's die
+    //     this.ctx.strokeStyle = dieStroke;
+    //     this.ctx.fillStyle = dieFill;
+    //     CanvasUtil.roundRect(this.ctx, cx, cy, cdw, cdw, 3, true, true);
+
+    //     // Draw their current rank
+    //     this.ctx.fillStyle = rankFill;
+    //     this.ctx.fillText('' + rank, cx + cdw / 2, cy + cdw / 2 + 5);
+    // }
 
     /**
      * Draw a card.
@@ -674,8 +708,7 @@ class PillarsGame {
                     const animKey = DieAnimation.GetKey(i, pidx);
                     const a = <PillarsAnimation>this.animations.get(animKey);
 
-                    this.drawDie(x + p[i].x, y + p[i].y, 'black',
-                        this.playerDiceColors[i], player.pillarRanks[pidx], a);
+                    this.drawDie(x + p[i].x, y + p[i].y, i, player.pillarRanks[pidx], a);
                 }
 
                 break;
@@ -831,12 +864,13 @@ class PillarsGame {
 
         // Dice rolling area
         ctx.strokeRect(trialx, 825, 150, 150);
-        this.drawDie(trialx + 10, 840, 'black', currentColor, 1);
-        this.drawDie(trialx + 60, 890, 'black', currentColor, 1);
+        this.drawDie(trialx + 10, 840, 
+                currentPlayer.index, currentPlayer.lastDiceRoll[0]);
+        this.drawDie(trialx + 60, 890, 
+                currentPlayer.index, currentPlayer.lastDiceRoll[1]);
 
         // Mouseables
-        for (let i = 0; i < this.mouseables.length; i++) {
-            const m = this.mouseables[i];
+        for (const [key, m] of this.mouseables.entries()) {
 
             // TODO zindex?
 
@@ -1103,15 +1137,15 @@ class FrameRate {
         var now = (new Date()).getTime();
         FrameRate.delta = now - FrameRate.lastTime;
         FrameRate.lastTime = now;
-        FrameRate.totalTime+=FrameRate.delta;
+        FrameRate.totalTime += FrameRate.delta;
         FrameRate.frames++;
-        FrameRate.updateTime+=FrameRate.delta;
+        FrameRate.updateTime += FrameRate.delta;
         FrameRate.updateFrames++;
-        if(FrameRate.updateTime > 1000) {
-            FrameRate.avg = (1000*FrameRate.frames/FrameRate.totalTime);
-            FrameRate.cur = (1000*FrameRate.updateFrames/FrameRate.updateTime);
+        if (FrameRate.updateTime > 1000) {
+            FrameRate.avg = (1000 * FrameRate.frames / FrameRate.totalTime);
+            FrameRate.cur = (1000 * FrameRate.updateFrames / FrameRate.updateTime);
             FrameRate.updateTime = 0;
-            FrameRate.updateFrames =0;
+            FrameRate.updateFrames = 0;
         }
     }
 }
