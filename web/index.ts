@@ -463,7 +463,7 @@ class PillarsGame {
         }
 
         // We have to wait for user interaction to load sounds
-        if (this.sounds.entries.length == 0) {
+        if (this.sounds.size == 0) {
             this.addSound('swoosh.wav');
             this.addSound('menuselect.wav');
         }
@@ -518,7 +518,6 @@ class PillarsGame {
             this.loadedImages.set(name, false);
             img.addEventListener("load", function (e) {
                 self.loadedImages.set(name, true);
-                self.resizeCanvas();
             }, false);
         } else {
             throw Error(`${name} does not exist`);
@@ -576,6 +575,7 @@ class PillarsGame {
         ctx.drawImage(this.getImg(name), x - 14.5, y - 14.5);
 
         ctx.restore();
+
     }
 
     /**
@@ -892,6 +892,7 @@ class PillarsGame {
             `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
             `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
             `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}, ` +
+            `as:${this.animations.size}, ` + 
             `a:${this.isAnimating()}, d:${this.isDoneLoading}, ` +
             `FRa:${FrameRate.avg.toFixed(1)}, FRc:${FrameRate.cur.toFixed(1)}`,
             1200, PillarsGame.BH - 10);
