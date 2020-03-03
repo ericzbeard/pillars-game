@@ -72,6 +72,11 @@ export class GameState {
     currentPlayer: Player;
 
     /**
+     * The current face up 7 market cards.
+     */
+    currentMarket: Array<Card>;
+
+    /**
      * Constructor.
      */
     constructor() {
@@ -79,6 +84,79 @@ export class GameState {
         this.marketStack = [];
         this.retiredCards = [];
         this.trialStacks = [];
+        this.currentMarket = [];
+    }
+
+    
+    /**
+     * Randomly shuffle an array.
+     * 
+     * https://stackoverflow.com/a/2450976/1293256
+     * 
+     */
+    static shuffle(array: Array<any>) {
+
+        var currentIndex = array.length;
+        var temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+
+    /**
+     * Draw a card for the current player from their deck.
+     */
+    drawOne() {
+
+        const player = this.currentPlayer;
+
+        if (player.deck.length == 0 && player.discardPile.length == 0) {
+            console.log('No cards in deck or discard pile');
+
+            // This might happen in a very lean deck with lots of draw
+
+            return; // TODO - Alert?
+        }
+
+        // If the player is out of cards, shuffle the discard pile
+        if (player.deck.length == 0) {
+            player.deck = player.discardPile;
+            player.discardPile = [];
+            GameState.shuffle(player.deck);
+        }
+
+        player.hand.push(<Card>player.deck.pop());
+
+    }
+
+    /**
+     * Put the max number of cards back in the market.
+     */
+    refillMarket() {
+
+        let max = 7;
+        if (this.marketStack.length < 7) {
+            max = this.marketStack.length;
+        }
+
+        if (this.currentMarket.length < max) {
+            const numEmpty = max - this.currentMarket.length;
+            for (let i = 0; i < numEmpty; i++) {
+                this.currentMarket.push(<Card>this.marketStack.pop());
+            }
+        }
+
     }
 
 }

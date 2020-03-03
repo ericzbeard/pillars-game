@@ -79,8 +79,8 @@ export class Player {
         this.hand = [];
         this.discardPile = [];
         this.inPlay = [];
-        this.pillarRanks = [1, 2, 3, 4, 5];
-        this.lastDiceRoll = [1, 1];
+        this.pillarRanks = [1, 1, 1, 1, 1];
+        this.lastDiceRoll = [];
         this.numCustomers = 0;
         this.numTalents = 0;
         this.numCredits = 0;
@@ -88,4 +88,17 @@ export class Player {
         this.isHuman = false;
         this.index = 0;
     }
+
+    /**
+     * Get the total of the last dice roll.
+     */
+    getLastRollTotal() {
+        if (!this.lastDiceRoll) return 0;
+        let t = 0;
+        for (let i = 0; i < this.lastDiceRoll.length; i++) {
+            t += this.lastDiceRoll[i];
+        }
+        return t;
+    }
+
 }
