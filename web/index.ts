@@ -101,6 +101,7 @@ class PillarsGame {
 
         var self = this;
 
+        this.pillars = [];
         this.animations = new Map<string, PillarsAnimation>();
         this.mouseables = new Map<string, Mouseable>();
         this.sounds = new Map<string, Howl>();
@@ -317,7 +318,6 @@ class PillarsGame {
         const gs = this.gameState;
         gs.pillarMax = 6;
 
-        this.pillars = [];
 
         // Create players (1 human and 3 AI)
         const human = new Player();
