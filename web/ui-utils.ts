@@ -117,6 +117,11 @@ export class Mouseable {
     draw: Function;
     hovering: boolean;
 
+    /**
+     * Width for hit testing can be overridden when we overlap cards.
+     */
+    hitWidth?: number;
+
     constructor() {
 
     }
@@ -125,7 +130,11 @@ export class Mouseable {
      * Check to see if they coordinates overlap.
      */
     hitTest(x: number, y: number): boolean {
-        const hit = x >= this.x && x <= this.x + this.w &&
+        let hw = this.w;
+        if (this.hitWidth) {
+            hw = this.hitWidth;
+        }
+        const hit = x >= this.x && x <= this.x + hw &&
             y >= this.y && y <= this.y + this.h;
         return hit;
     }
@@ -160,6 +169,7 @@ export class PillarsImages {
     static readonly IMG_BACK_GREEN = 'img/back-green-200x265.png';
     static readonly IMG_BACK_ORANGE = 'img/back-orange-200x265.png';
     static readonly IMG_BACK_PINK = 'img/back-pink-200x265.png';
+    static readonly IMG_HUMAN_RESOURCE = 'img/HumanResource-400x530.png';
 }
 
 export class FrameRate {
