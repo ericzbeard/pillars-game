@@ -18,7 +18,14 @@ export class Card {
     cost?: string;
     auction?: string;
     pillarIndex?: number;
-    pillarNumeral?: string
+    pillarNumeral?: string;
+
+    /**
+     * Each copy of a card used in the game is given a unique index.
+     * 
+     * E.g. each Junior Developer will have its own index.
+     */
+    uniqueIndex: number;
 
     constructor() { }
 

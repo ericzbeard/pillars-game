@@ -115,11 +115,9 @@ export class GameState {
     }
 
     /**
-     * Draw a card for the current player from their deck.
+     * Draw a card for the player from their deck.
      */
-    drawOne() {
-
-        const player = this.currentPlayer;
+    drawOne(player:Player) {
 
         if (player.deck.length == 0 && player.discardPile.length == 0) {
             console.log('No cards in deck or discard pile');
