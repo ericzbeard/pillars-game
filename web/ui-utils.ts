@@ -147,7 +147,7 @@ export class MouseableCard extends Mouseable {
 
     static readonly CARD_WIDTH = 172;
     static readonly CARD_HEIGHT = 237;
-    static readonly CARD_RADIUS = 20;
+    static readonly CARD_RADIUS = 15;
 
     card: Card;
 
@@ -165,11 +165,10 @@ export class PillarsImages {
     static readonly IMG_TALENT = 'img/talent-100x100.png';
     static readonly IMG_LOGO = 'img/logo.png';
     static readonly IMG_BG = 'img/bg.png';
-    static readonly IMG_BACK_BLUE = 'img/back-blue-200x265.png';
-    static readonly IMG_BACK_GREEN = 'img/back-green-200x265.png';
-    static readonly IMG_BACK_ORANGE = 'img/back-orange-200x265.png';
-    static readonly IMG_BACK_PINK = 'img/back-pink-200x265.png';
-    static readonly IMG_HUMAN_RESOURCE = 'img/HumanResource-400x530.png';
+    static readonly IMG_BACK_BLUE = 'img/back-blue-800x1060.png';
+    static readonly IMG_BACK_GREEN = 'img/back-green-800x1060.png';
+    static readonly IMG_BACK_ORANGE = 'img/back-orange-800x1060.png';
+    static readonly IMG_BACK_PINK = 'img/back-pink-800x1060.png';
 }
 
 export class FrameRate {

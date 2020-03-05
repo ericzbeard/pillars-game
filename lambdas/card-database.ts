@@ -39,7 +39,7 @@ export const cardDatabase = {
             copies: 12
         },
         {
-            name: "Cloud Support",
+            name: "AWS Support",
             type: "Resource",
             subtype: "Human",
             bigtext: "{Cr}",

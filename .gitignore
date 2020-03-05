@@ -1,4 +1,6 @@
 *.js
+!config/copy-config.js
+
 !jest.config.js
 *.d.ts
 node_modules
@@ -7,4 +9,5 @@ node_modules
 .cdk.staging
 cdk.out
 
-config.ts
+config/pillars-config.ts
+dist

@@ -5,33 +5,41 @@
     "pillars_api": "bin/pillars_api.js"
   },
   "scripts": {
-    "build": "tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/bundle.js",
+    "build": "cross-env SUBDOMAIN=local node config/copy-config.js && tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/bundle.js && node web/copy-dist.js",
+    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard node config/copy-config.js && tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/bundle.js && node web/copy-dist.js",
     "watch": "tsc -w",
     "test": "jest --group=unit",
     "integration-test": "jest --group=integration",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "clean": "node web/clean-dist.js", 
+    "synth-ezbeard": "cdk synth -c subdomain=ezbeard", 
+    "deploy-ezbeard": "cdk deploy -c subdomain=ezbeard"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "^1.25.0",
-    "@types/aws-lambda": "^8.10.44",
+    "@aws-cdk/assert": "^1.27.0",
+    "@aws-cdk/aws-s3-deployment": "^1.27.0",
+    "@types/aws-lambda": "^8.10.46",
     "@types/howler": "^2.1.2",
     "@types/jest": "^25.1.3",
-    "@types/node": "^13.7.4",
-    "aws-cdk": "^1.25.0",
+    "@types/node": "^13.7.7",
+    "aws-cdk": "^1.27.0",
+    "cross-env": "^7.0.1",
     "howler": "^2.1.3",
     "jest": "^25.1.0",
     "jest-runner-groups": "^1.1.1",
     "ts-jest": "^25.2.1",
     "ts-node": "^8.6.2",
     "tsify": "^4.0.1",
-    "typescript": "~3.8.2",
+    "typescript": "^3.8.3",
     "web-audio-daw": "^4.7.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.25.0",
-    "@aws-cdk/aws-dynamodb": "^1.25.0",
-    "@aws-cdk/aws-lambda": "^1.25.0",
-    "@aws-cdk/core": "^1.25.0",
+    "@aws-cdk/aws-apigateway": "^1.27.0",
+    "@aws-cdk/aws-dynamodb": "^1.27.0",
+    "@aws-cdk/aws-lambda": "^1.27.0",
+    "@aws-cdk/core": "^1.27.0",
+    "@types/fs-extra": "^8.1.0",
+    "fs-extra": "^8.1.0",
     "source-map-support": "^0.5.16"
   }
 }

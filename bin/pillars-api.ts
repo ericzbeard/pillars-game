@@ -4,4 +4,4 @@ import * as cdk from '@aws-cdk/core';
 import { PillarsApiStack } from '../stacks/pillars-api-stack';
 
 const app = new cdk.App();
-new PillarsApiStack(app, 'PillarsApiStack');
+new PillarsApiStack(app, 'Pillars-ezbeard', { env: { account: '916662284357', region: 'us-east-1' } });
