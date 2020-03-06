@@ -3,6 +3,11 @@ import * as cdk from '@aws-cdk/core';
 import PillarsApi = require('../stacks/pillars-api-stack');
 import { SynthUtils } from '@aws-cdk/assert';
 import apiLambda = require('../lambdas/api-handler');
+import {Card} from '../lambdas/card';
+import { cardDatabase } from '../lambdas/card-database';
+import { GameState } from '../lambdas/game-state';
+import {Player} from '../lambdas/player';
+import {LocalGame} from '../web/local-game';
 
 /**
  * Upvote API Unit Tests.
@@ -51,6 +56,30 @@ test('Lambda handles path', async () => {
     });
     console.log(resp);
     expect(resp.statusCode).toBe(200);
+});
+
+test('Game State Initializes', () => {
+    const gameState = new GameState();
+    gameState.initializeCards();
+
+    expect(gameState.marketStack.length).toBeGreaterThan(0);
+    expect(gameState.currentMarket.length).toBeGreaterThan(0);
+    expect(gameState.pillars.length).toBeGreaterThan(0);
+
+});
+
+test('Card costs work', () => {
+    const gameState = new GameState();
+    gameState.initializeCards();
+
+    const accountManager = gameState.cardMasters.get("Account Manager");
+    expect(accountManager).toBeDefined();
+    const conv = accountManager?.convertCost();
+    expect(conv?.get(Card.TALENTS)).toBe(1);
+    expect(conv?.get(Card.CREDITS)).toBe(1);
+    expect(accountManager?.canAcquire(0, 0)).toBeFalsy();
+    expect(accountManager?.canAcquire(1, 1)).toBeTruthy();
+    expect(accountManager?.canAcquire(2, 2)).toBeTruthy();
 });
 
 // See integration.test.ts where we actually test the running API post-deployment.

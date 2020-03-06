@@ -27,7 +27,10 @@ export const cardDatabase = {
             text: "<em>(Provides 1 Credit)</em>",
             starter: true,
             copies: 12,
-            category: "Compute"
+            category: "Compute", 
+            provides: { 
+                "Credit": 1
+            }
         },
         {
             name: "Junior Developer",
@@ -36,7 +39,10 @@ export const cardDatabase = {
             bigtext: "{T}",
             text: "<em>(Provides 1 Talent)</em>",
             starter: true,
-            copies: 12
+            copies: 12, 
+            provides: { 
+                "Talent": 1
+            }
         },
         {
             name: "AWS Support",
@@ -46,7 +52,10 @@ export const cardDatabase = {
             text: "<em>(Provides 1 Creativity)</em>",
             starter: true,
             copies: 8,
-            flavor: "You do have a support contract, don't you?"
+            flavor: "You do have a support contract, don't you?", 
+            provides: { 
+                "Creativity": 1
+            }
         },
         {
             name: "Sandbox Credit",
@@ -55,7 +64,11 @@ export const cardDatabase = {
             bigtext: "{$}",
             text: "<em>(Provides 1 Credit)</em><br/>You must have a cloud resource to play this card",
             starter: true,
-            copies: 4
+            copies: 4, 
+            provides: { 
+                "Credit": 1
+            }, 
+            augments: "Cloud"
         },
         {
             name: "Training",
@@ -64,7 +77,11 @@ export const cardDatabase = {
             bigtext: "{T}",
             text: "<em>(Provides 1 Talent)</em><br/>You must have a human resource to play this card",
             starter: true,
-            copies: 4
+            copies: 4, 
+            provides: { 
+                "Talent": 1
+            }, 
+            augments: "Human"
         },
         {
             name: "Decommision",
@@ -73,7 +90,10 @@ export const cardDatabase = {
             bigtext: "Retire 1",
             text: "<em>(Retire 1 from your hand)</em><br/>Or Retire this card and add one Credit",
             starter: true,
-            copies: 4
+            copies: 4, 
+            action: {
+                "Retire": 1
+            }
         },
         {
             name: "Get Certified",
@@ -82,7 +102,10 @@ export const cardDatabase = {
             bigtext: "Promote",
             text: "<em>(Roll a d6 and promote that pillar. On a 6, you choose.)</em>",
             starter: true,
-            copies: 4
+            copies: 4, 
+            action: {
+                "Promote": 6
+            }
         },
         {
             name: "DDoS Attack",
@@ -519,7 +542,10 @@ export const cardDatabase = {
             text: "",
             cost: "TTT",
             starter: false,
-            copies: 2
+            copies: 2, 
+            action: {
+                "Draw": 2
+            }
         },
         {
             name: "Account Manager",
@@ -529,7 +555,10 @@ export const cardDatabase = {
             text: "<em>(Provides 2 Credits)</em>",
             cost: "$T",
             starter: false,
-            copies: 3
+            copies: 3, 
+            provides: {
+                "Credit": 2
+            }
         },
         {
             name: "Ops Workshop",
@@ -541,7 +570,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 0, 
-            pillarNumeral: 'I'
+            pillarNumeral: 'I', 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Security Workshop",
@@ -553,7 +585,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 1, 
-            pillarNumeral: 'II'
+            pillarNumeral: 'II', 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Reliability Workshop",
@@ -565,7 +600,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
-            pillarNumeral: 'III'
+            pillarNumeral: 'III', 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Performance Workshop",
@@ -577,7 +615,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
-            pillarNumeral: 'IV'
+            pillarNumeral: 'IV', 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Budget Workshop",
@@ -589,7 +630,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
-            pillarNumeral: 'V'
+            pillarNumeral: 'V', 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Code Pipeline",
@@ -602,7 +646,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Development", 
             pillarIndex: 0, 
-            pillarNumeral: 'I'
+            pillarNumeral: 'I', 
+            provides: {
+                "CreditByPillar": 0
+            }
         },
         {
             name: "Access Control List",
@@ -615,7 +662,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Networking", 
             pillarIndex: 1, 
-            pillarNumeral: 'II'
+            pillarNumeral: 'II', 
+            provides: {
+                "CreditByPillar": 1
+            }
         },
         {
             name: "EBS Snapshots",
@@ -628,7 +678,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Storage", 
             pillarIndex: 2, 
-            pillarNumeral: 'III'
+            pillarNumeral: 'III', 
+            provides: {
+                "CreditByPillar": 2
+            }
         },
         {
             name: "Elasticache",
@@ -641,7 +694,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Database", 
             pillarIndex: 3, 
-            pillarNumeral: 'IV'
+            pillarNumeral: 'IV', 
+            provides: {
+                "CreditByPillar": 3
+            }
         },
         {
             name: "Trusted Advisor",
@@ -654,7 +710,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Management", 
             pillarIndex: 4, 
-            pillarNumeral: 'V'
+            pillarNumeral: 'V', 
+            provides: {
+                "CreditByPillar": 4
+            }
         },
         {
             name: "Ops Manager",
@@ -666,7 +725,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 0, 
-            pillarNumeral: 'I'
+            pillarNumeral: 'I', 
+            provides: {
+                "TalentByPillar": 0
+            }
         },
         {
             name: "Security Consultant",
@@ -678,7 +740,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 1, 
-            pillarNumeral: 'II'
+            pillarNumeral: 'II', 
+            provides: {
+                "TalentByPillar": 1
+            }
         },
         {
             name: "Reliability Engineer",
@@ -690,7 +755,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
-            pillarNumeral: 'III'
+            pillarNumeral: 'III', 
+            provides: {
+                "TalentByPillar": 2
+            }
         },
         {
             name: "Assembly Expert",
@@ -702,7 +770,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
-            pillarNumeral: 'IV'
+            pillarNumeral: 'IV', 
+            provides: {
+                "TalentByPillar": 3
+            }
         },
         {
             name: "Finance Specialist",
@@ -714,7 +785,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
-            pillarNumeral: 'V'
+            pillarNumeral: 'V', 
+            provides: {
+                "TalentByPillar": 4
+            }
         },
         {
             name: "Fargate",
@@ -727,7 +801,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Compute", 
             pillarIndex: 0, 
-            pillarNumeral: 'I'
+            pillarNumeral: 'I', 
+            provides: {
+                "CreativityByPillar": 0
+            }
         },
         {
             name: "KMS",
@@ -740,7 +817,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Security", 
             pillarIndex: 1, 
-            pillarNumeral: 'II'
+            pillarNumeral: 'II', 
+            provides: {
+                "CreativityByPillar": 1
+            }
         },
         {
             name: "Automation Engineer",
@@ -752,7 +832,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
-            pillarNumeral: 'III'
+            pillarNumeral: 'III', 
+            provides: {
+                "CreativityByPillar": 1
+            }
         },
         {
             name: "Database Administrator",
@@ -764,7 +847,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
-            pillarNumeral: 'IV'
+            pillarNumeral: 'IV', 
+            provides: {
+                "CreativityByPillar": 3
+            }
         },
         {
             name: "Athena",
@@ -777,7 +863,10 @@ export const cardDatabase = {
             copies: 1,
             category: "Analytics", 
             pillarIndex: 4, 
-            pillarNumeral: 'V'
+            pillarNumeral: 'V', 
+            provides: {
+                "CreativityByPillar": 4
+            }
         },
         {
             name: "Predictive Autoscaling",
@@ -788,7 +877,10 @@ export const cardDatabase = {
             cost: "TT",
             starter: false,
             copies: 1,
-            category: "Compute"
+            category: "Compute",
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Competitive Research",
@@ -798,7 +890,10 @@ export const cardDatabase = {
             text: "Acquire a random card from an opponent's hand<br/><em>When you acquire a card, put it into your discard pile</em></br>",
             cost: "TTTT",
             starter: false,
-            copies: 1
+            copies: 1,
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Ops Bootcamp",
@@ -810,7 +905,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 0, 
-            pillarNumeral: 'I'
+            pillarNumeral: 'I', 
+            action: {
+                "Promote": 0
+            }
         },
         {
             name: "Security Bootcamp",
@@ -822,7 +920,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 1, 
-            pillarNumeral: 'II'
+            pillarNumeral: 'II', 
+            action: {
+                "Promote": 1
+            }
         },
         {
             name: "Reliability Bootcamp",
@@ -834,7 +935,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
-            pillarNumeral: 'III'
+            pillarNumeral: 'III', 
+            action: {
+                "Promote": 2
+            }
         },
         {
             name: "Performance Bootcamp",
@@ -846,7 +950,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
-            pillarNumeral: 'IV'
+            pillarNumeral: 'IV', 
+            action: {
+                "Promote": 3
+            }
         },
         {
             name: "Cost Bootcamp",
@@ -858,7 +965,10 @@ export const cardDatabase = {
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
-            pillarNumeral: 'V'
+            pillarNumeral: 'V', 
+            action: {
+                "Promote": 4
+            }
         },
         {
             name: "Kinesis Stream",
@@ -869,7 +979,11 @@ export const cardDatabase = {
             cost: "$",
             starter: false,
             copies: 1,
-            category: "Analytics"
+            category: "Analytics", 
+            action: {
+                "Discard": 1, 
+                "Retire": 1
+            }
         },
         {
             name: "Quicksight",
@@ -880,7 +994,11 @@ export const cardDatabase = {
             cost: "TT",
             starter: false,
             copies: 1,
-            category: "Analytics"
+            category: "Analytics", 
+            provides: {
+                "Credit": 1,
+                "Creativity": 1
+            }
         },
         {
             name: "Aurora",
@@ -891,7 +1009,11 @@ export const cardDatabase = {
             cost: "$$",
             starter: false,
             copies: 1,
-            category: "Database"
+            category: "Database", 
+            provides: {
+                "Credit": 1,
+                "Talent": 1
+            }
         },
         {
             name: "CloudFormation",
@@ -909,10 +1031,13 @@ export const cardDatabase = {
             type: "Resource",
             subtype: "Augment Human",
             bigtext: "{Cr}{Cr}",
-            text: "<em>(Provides 1 Creativity)</em><br/>You must have a human resource to play this card",
+            text: "<em>(Provides 2 Creativity)</em><br/>You must have a human resource to play this card",
             cost: "$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Creativity": 2
+            }
         },
         {
             name: "Poach",
@@ -923,7 +1048,10 @@ export const cardDatabase = {
             auction: "Talent",
             cost: "$$TTT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Crappy Coders",
@@ -933,7 +1061,10 @@ export const cardDatabase = {
             text: "<em>(Roll a d6 and demote that pillar. On a 6, you choose)</em><br/>Then retire this card.<br/><br/>When you acquire this, place it in an opponent's discard pile.",
             cost: "T",
             starter: false,
-            copies: 2
+            copies: 2, 
+            action: { 
+                "Demote": 6
+            }
         },
         {
             name: "Guard Duty",
@@ -944,7 +1075,10 @@ export const cardDatabase = {
             cost: "T",
             starter: false,
             copies: 1,
-            category: "Security"
+            category: "Security", 
+            provides: {
+                "Creativity": 1
+            }
         },
         {
             name: "Chaos Testing",
@@ -954,7 +1088,10 @@ export const cardDatabase = {
             text: "<em>(Provides 2 Creativity)</em><br/>When you play this card, you must retire the top card of your deck",
             cost: "$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Creativity": 1
+            }
         },
         {
             name: "Think Tank",
@@ -965,17 +1102,23 @@ export const cardDatabase = {
             cost: "$$TTT",
             auction: "Credits",
             starter: false,
-            copies: 1
+            copies: 1, 
+            action: {
+                "Draw": 3
+            }
         },
         {
             name: "AWS Shield",
             type: "Resource",
             subtype: "Augment Cloud",
             bigtext: "{T}{T}",
-            text: "<em>(Provides 2 Telents)</em><br/>You must have a cloud resource to play this card",
+            text: "<em>(Provides 2 Talents)</em><br/>You must have a cloud resource to play this card",
             cost: "$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Talent": 2
+            }
         },
         {
             name: "Pro Cert",
@@ -985,7 +1128,12 @@ export const cardDatabase = {
             text: "<em>(Provides 1 Credit, 1 Talent, and 1 Creativity)</em><br/>You must have a human resource to play this card",
             cost: "$T",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Talent": 1, 
+                "Credit": 1, 
+                "Creativity": 1
+            }
         },
         {
             name: "Talented Jerk",
@@ -995,7 +1143,11 @@ export const cardDatabase = {
             text: "<em>(Provides 2 Creativity and 1 Credit)</em><br/>If you fail a trial, demote in addition to any other penalties<br/><em>(Roll a d6 and demote that pillar. On a 6, you choose)</em>",
             cost: "$$TT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Credit": 1, 
+                "Creativity": 2
+            }
         },
         {
             name: "Popular Product",
@@ -1006,7 +1158,13 @@ export const cardDatabase = {
             auction: "Talent",
             cost: "$$$TTT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Customer": 3
+            }, 
+            action: {
+                "Promote": 5
+            }
         },
         {
             name: "Promoted to VP",
@@ -1016,7 +1174,10 @@ export const cardDatabase = {
             text: "<em>(Provides 3 Creativity)</em><br/>You must have a human resource to play this card<br/>You must discard a card from your hand to play this card",
             cost: "$$TT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Creativity": 3
+            }
         },
         {
             name: "Cloud 9",
@@ -1027,17 +1188,24 @@ export const cardDatabase = {
             cost: "$TTT",
             starter: false,
             copies: 1,
-            category: "Development"
+            category: "Development", 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Solutions Architect",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{T} {Cr} {Cr}",
+            bigtext: "{T}{Cr}{Cr}",
             text: "<em>(Provides 1 Talent and 2 Creativity)</em>",
             cost: "$$TT",
             starter: false,
-            copies: 2
+            copies: 2, 
+            provides: {
+                "Creativity": 2, 
+                "Talent": 1
+            }
         },
         {
             name: "Outsourcing",
@@ -1048,7 +1216,11 @@ export const cardDatabase = {
             auction: "Credits",
             cost: "$$$$$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Creativity": 2, 
+                "Talent": 3
+            }
         },
         {
             name: "AWS Lambda",
@@ -1060,17 +1232,26 @@ export const cardDatabase = {
             cost: "$$TTT",
             starter: false,
             copies: 1,
-            category: "Compute"
+            category: "Compute", 
+            provides: {
+                "Customer": 1
+            }, 
+            action: {
+                "Draw": 2
+            }
         },
         {
             name: "Senior Developer",
             type: "Resource",
             subtype: "Human",
-            bigtext: "{T} {T}",
+            bigtext: "{T}{T}",
             text: "<em>(Provides 2 Talents)</em><br/>If you have a Compute Resource in play, draw an extra card at the end of your turn",
             cost: "$T",
             starter: false,
-            copies: 3
+            copies: 3, 
+            provides: {
+                "Talent": 2
+            }
         },
         {
             name: "SQS",
@@ -1092,7 +1273,10 @@ export const cardDatabase = {
             cost: "$$",
             starter: false,
             copies: 1,
-            category: "Storage"
+            category: "Storage", 
+            action: {
+                "Draw": 2
+            }
         },
         {
             name: "Stack Overflow",
@@ -1102,7 +1286,10 @@ export const cardDatabase = {
             text: "Then retire this card.<br/><br/>When you acquire this, place it in an opponents's discard pile",
             cost: "T",
             starter: false,
-            copies: 2
+            copies: 2, 
+            provides: {
+                "Customer": -1
+            }
         },
         {
             name: "Off By 1",
@@ -1123,7 +1310,10 @@ export const cardDatabase = {
             cost: "TT",
             starter: false,
             copies: 2,
-            category: "Networking"
+            category: "Networking", 
+            provides: {
+                "Creativity": 2
+            }
         },
         {
             name: "S3 Bucket",
@@ -1134,7 +1324,10 @@ export const cardDatabase = {
             cost: "TT",
             starter: false,
             copies: 1,
-            category: "Storage"
+            category: "Storage", 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "First to Market",
@@ -1145,7 +1338,10 @@ export const cardDatabase = {
             auction: "Talent",
             cost: "$$TTT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "WAF",
@@ -1156,7 +1352,10 @@ export const cardDatabase = {
             cost: "$$",
             starter: false,
             copies: 1,
-            category: "Security"
+            category: "Security", 
+            provides: {
+                "Creativity": 1
+            }
         },
         {
             name: "X-Ray",
@@ -1167,7 +1366,10 @@ export const cardDatabase = {
             cost: "$T",
             starter: false,
             copies: 1,
-            category: "Development"
+            category: "Development", 
+            provides: {
+                "Creativity": 1
+            }
         },
         {
             name: "Marketing Event",
@@ -1177,7 +1379,10 @@ export const cardDatabase = {
             text: "",
             cost: "$$$",
             starter: false,
-            copies: 2
+            copies: 2, 
+            provides: {
+                "Customer": 2
+            }
         },
         {
             name: "Job Fair",
@@ -1198,7 +1403,10 @@ export const cardDatabase = {
             cost: "$TT",
             starter: false,
             copies: 2,
-            category: "AI-ML"
+            category: "AI-ML", 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Sagemaker",
@@ -1210,7 +1418,12 @@ export const cardDatabase = {
             auction: "Credits",
             starter: false,
             copies: 1,
-            category: "AI-ML"
+            category: "AI-ML", 
+            provides: {
+                "Credit": 1, 
+                "Talent": 1, 
+                "Creativity": 1
+            }
         },
         {
             name: "Database Migration",
@@ -1221,7 +1434,10 @@ export const cardDatabase = {
             cost: "TTT",
             starter: false,
             copies: 1,
-            category: "Database"
+            category: "Database", 
+            action: {
+                "Draw": 3
+            }
         },
         {
             name: "Recruiter",
@@ -1231,7 +1447,10 @@ export const cardDatabase = {
             text: "<em>(Provides 3 Talents)</em>",
             cost: "$$$$",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Talent": 3
+            }
         },
         {
             name: "Collaboration",
@@ -1241,7 +1460,10 @@ export const cardDatabase = {
             text: "Take 2 customers from the player with the most customers. Keep 1 and give the other to the player with the least customers",
             cost: "$$TT",
             starter: false,
-            copies: 1
+            copies: 1, 
+            action: {
+                "Draw": 1
+            }
         },
         {
             name: "Patent Awarded",
@@ -1252,7 +1474,10 @@ export const cardDatabase = {
             cost: "$$TTT",
             auction: "Credits",
             starter: false,
-            copies: 1
+            copies: 1, 
+            provides: {
+                "Customer": 2
+            }
         },
         {
             name: "Reference Card",

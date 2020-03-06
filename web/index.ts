@@ -1,4 +1,3 @@
-import { cardDatabase } from '../lambdas/card-database';
 import { Card } from '../lambdas/card';
 import { Player } from '../lambdas/player';
 import { GameState, TrialStack } from '../lambdas/game-state';
@@ -6,6 +5,7 @@ import { CanvasUtil } from './canvas-util';
 import { Howl, Howler } from 'howler';
 import { PillarsConfig } from '../config/pillars-config';
 import * as ui from './ui-utils';
+import {LocalGame} from './local-game';
 
 /**
  * Pillars game UI. Initialized from index.html.
@@ -36,7 +36,6 @@ class PillarsGame {
     static readonly DISCARD_X = 1000;
     static readonly DISCARD_Y = PillarsGame.BH - 250;
     static readonly HAND_WIDTH = 600;
-    static readonly AI_NAMES = ['Skynet', 'HAL 9000', 'Agent Smith'];
     static readonly PILLARX = 650;
     static readonly PILLARY = 10;
     static readonly PILLARW = 195;
@@ -70,11 +69,6 @@ class PillarsGame {
      * The current state of the game according to the back end.
      */
     gameState: GameState;
-
-    /**
-     * The 5 pillars of the Well-Architected Framework.
-     */
-    pillars: Array<Card>;
 
     /**
      * True when we are ready to draw after loading images.
@@ -123,7 +117,6 @@ class PillarsGame {
 
         var self = this;
 
-        this.pillars = [];
         this.animations = new Map<string, ui.PillarsAnimation>();
         this.mouseables = new Map<string, ui.Mouseable>();
         this.sounds = new Map<string, Howl>();
@@ -176,8 +169,9 @@ class PillarsGame {
             }
         }
 
-        imageNames.push('img/JuniorDeveloper-800x1060.png');
-        imageNames.push('img/AWSSupport-800x1060.png');
+        for (const [k, v] of this.gameState.cardMasters.entries()) {
+            imageNames.push(v.getImageName());
+        }
 
         // Load images
         for (let i = 0; i < imageNames.length; i++) {
@@ -417,9 +411,9 @@ class PillarsGame {
      * Initialize the pillars.
      */
     initPillars() {
-        for (let i = 0; i < this.pillars.length; i++) {
-            const pillar = this.pillars[i];
-            const m = new ui.MouseableCard(this.pillars[i]);
+        for (let i = 0; i < this.gameState.pillars.length; i++) {
+            const pillar = this.gameState.pillars[i];
+            const m = new ui.MouseableCard(this.gameState.pillars[i]);
             m.x = PillarsGame.PILLARX + (i * PillarsGame.PILLARW);
             m.y = PillarsGame.PILLARY;
             m.draw = () => {
@@ -519,95 +513,9 @@ class PillarsGame {
      */
     startLocalGame() {
         this.gameState = new GameState();
-
-        const gs = this.gameState;
-        gs.pillarMax = 6;
-
-        // Create players (1 human and 3 AI)
-        const human = new Player();
-        human.isHuman = true;
-        human.name = "Human";
-        human.index = 0;
-
-        gs.players.push(human);
-        gs.currentPlayer = human;
-        this.localPlayer = human;
-
-        for (let i = 0; i < 3; i++) {
-            const ai = new Player();
-            ai.isHuman = false;
-            ai.name = PillarsGame.AI_NAMES[i];
-            ai.index = (i + 1);
-            gs.players.push(ai);
-        }
-
-        let uniqueIndex = 0;
-
-        // Load the card database
-        for (let i = 0; i < cardDatabase.cards.length; i++) {
-            const card = <Card>cardDatabase.cards[i];
-
-            switch (card.type) {
-                case 'Resource':
-                    if (card.starter) {
-                        // Put copies in each player's deck
-                        for (let i = 0; i < gs.players.length; i++) {
-                            const player = gs.players[i];
-                            for (let j = 0; j < card.copies / 4; j++) {
-                                const copy = <Card>Object.assign({}, card);
-                                player.deck.push(copy);
-                                copy.uniqueIndex = uniqueIndex++;
-                            }
-                        }
-                    } else {
-                        const copy = <Card>Object.assign({}, card);
-                        copy.uniqueIndex = uniqueIndex++;
-                        gs.marketStack.push(copy);
-                    }
-                    break;
-                case 'Trial':
-                    const trialCopy = <Card>Object.assign({}, card);
-                    trialCopy.uniqueIndex = uniqueIndex++;
-                    switch (trialCopy.name) {
-                        case 'Phase I':
-                            gs.trialStacks[0].notused.push(trialCopy);
-                            break;
-                        case 'Phase II':
-                            gs.trialStacks[1].notused.push(trialCopy);
-                            break;
-                        case 'Phase III':
-                            gs.trialStacks[2].notused.push(trialCopy);
-                            break;
-                    }
-                    break;
-                case 'Pillar':
-                    const pillarCopy = <Card>Object.assign({}, card);
-                    pillarCopy.uniqueIndex = uniqueIndex++;
-                    this.pillars.push(pillarCopy);
-                    break;
-            }
-        }
-
-        // Shuffle decks
-        for (let i = 0; i < this.gameState.players.length; i++) {
-            const player = this.gameState.players[i];
-            GameState.shuffle(player.deck);
-        }
-
-        // Draw the opening hand
-        for (const p of this.gameState.players) {
-            for (let i = 0; i < 6; i++) {
-                this.gameState.drawOne(p);
-            }
-        }
-
-        // Shuffle market deck
-        GameState.shuffle(this.gameState.marketStack);
-
-        // Shuffle trial stacks
-        for (const t of this.gameState.trialStacks) {
-            GameState.shuffle(t.notused);
-        }
+        const localGame = new LocalGame(this.gameState);
+        localGame.start();
+        this.localPlayer = this.gameState.players[0];
 
         //console.log(JSON.stringify(this.gameState, null, 1));
     }
@@ -759,6 +667,89 @@ class PillarsGame {
      */
     playCard(card:Card) {
 
+        const player = this.localPlayer;
+
+        if (card.provides) {
+            if (card.provides.Talent) {
+                player.numTalents += card.provides.Talent;
+            }
+            if (card.provides.Credit) {
+                player.numCredits += card.provides.Credit;
+            }
+            if (card.provides.Creativity) {
+                player.numCreativity += card.provides.Creativity;
+            }
+            if (card.provides.Customer) {
+                player.numCustomers += card.provides.Customer;
+            }
+            if (card.provides.CreditByPillar) {
+                player.numCredits += player.pillarRanks[card.provides.CreditByPillar];
+            }
+            if (card.provides.TalentByPillar) {
+                player.numTalents += player.pillarRanks[card.provides.TalentByPillar];
+            }
+            if (card.provides.CreativityByPillar) {
+                player.numCreativity += player.pillarRanks[card.provides.CreativityByPillar];
+            }
+        }
+
+        if (card.action) {
+            if (card.action.Retire) {
+
+            }
+            if (card.action.Promote) {
+                // 0-4 means that pillar
+                // 5 means any
+                // 6 means roll a d6
+            }
+            if (card.action.Draw) {
+                for (let i = 0; i < card.action.Draw; i++) {
+                    this.gameState.drawOne(player);
+                }
+            }
+        }
+
+        // Some cards need special handling for custom conditions
+        // Ops Workshop
+        // Security Workshop
+        // Reliability Workshop
+        // Performance Workshop
+        // Predictive Autoscaling
+        // Competitive Research
+        // CloudFormation
+        // Poach
+        // Guard Duty
+        // Chaos Testing
+        // Think Tank
+        // Talented Jerk
+        // Promoted to VP
+        // Cloud 9
+        // Outsourcing
+        // Senior Developer
+        // AWS Lambda
+        // SQS
+        // EBS Volume
+        // Stack Overflow
+        // S3 Bucket
+        // First to Market
+        // WAF
+        // Job Fair
+        // Forecast
+        // Sagemaker
+        // Database Migration
+        // Collaboration
+        // Patent Awarded
+
+        this.broadcast(`${player.name} played ${card.name}`);
+    }
+
+    /**
+     * Broadcast a change to the game state.
+     */
+    broadcast(summary: string) {
+        // TODO
+
+        this.gameState.broadcastSummaries.push(summary);
     }
     
     /**
@@ -781,27 +772,39 @@ class PillarsGame {
             }
         }
 
+        const p = this.localPlayer;
+
         if (key) {
             const m = <ui.MouseableCard>this.mouseables.get(key);
-            // Acquire the card
-            this.localPlayer.discardPile.push(m.card);
-            this.mouseables.delete(key);
-            let indexToRemove = -1;
-            for (let i = 0; i < this.gameState.currentMarket.length; i++) {
-                if (this.gameState.currentMarket[i].uniqueIndex == m.card.uniqueIndex) {
-                    indexToRemove = i;
-                }
-            }
-            if (indexToRemove > -1) {
-                this.gameState.currentMarket.splice(indexToRemove, 1);
-            } else {
-                throw Error('Unable to remove card from current market');
-            }
 
-            this.initHand();
-            this.initDiscard();
-            this.initMarket();
+            if (m.card.canAcquire(p.numCredits, p.numTalents)) {
+                this.acquireCard(m.card, key);
+            }
         }
+    }
+
+    /**
+     * Acquire a card from the marketplace.
+     */
+    acquireCard(card:Card, key:string) {
+        
+        this.localPlayer.discardPile.push(card);
+        this.mouseables.delete(key);
+        let indexToRemove = -1;
+        for (let i = 0; i < this.gameState.currentMarket.length; i++) {
+            if (this.gameState.currentMarket[i].uniqueIndex == card.uniqueIndex) {
+                indexToRemove = i;
+            }
+        }
+        if (indexToRemove > -1) {
+            this.gameState.currentMarket.splice(indexToRemove, 1);
+        } else {
+            throw Error('Unable to remove card from current market');
+        }
+
+        this.initHand();
+        this.initDiscard();
+        this.initMarket();
     }
 
     /**
@@ -972,6 +975,7 @@ class PillarsGame {
         let w = m.w;
         let h = m.h;
         let radius = ui.MouseableCard.CARD_RADIUS;
+        let p = this.localPlayer;
 
         if (isPopup) {
             radius *= 2;
@@ -993,24 +997,57 @@ class PillarsGame {
             ctx.fillStyle = 'gray';
         }
 
+        // Highlight market cards if the local player can purchase it
+        let isInMarket = false;
+        for (const c of this.gameState.currentMarket) {
+            if (c.uniqueIndex == m.card.uniqueIndex) {
+                isInMarket = true;
+                break;
+            }
+        }
+
+        let isInHand = false;
+        for (const c of this.localPlayer.hand) {
+            if (c.uniqueIndex == m.card.uniqueIndex) {
+                isInHand = true;
+            }
+        }
+
+        let highlight = false;
+
+        if (isInMarket && m.card.canAcquire(p.numCredits, p.numTalents)) {
+            highlight = true;
+        }
+        if (isInHand && this.gameState.canPlayCard(m.card)) {
+            highlight = true;
+        }
+        
+        if (highlight) {
+            ctx.save()
+            ctx.strokeStyle = 'yellow';
+            ctx.lineWidth = 5;
+            CanvasUtil.roundRect(this.ctx, x - 2, y - 2, w + 4, h + 4, radius, false, true);
+            ctx.restore();
+        }
+
         // Card border
         ctx.fillStyle = '#FEF9E7';
         CanvasUtil.roundRect(this.ctx, x, y, w, h, radius, true, true);
         ctx.fillStyle = 'black';
 
         // Card Name
-        ctx.font = '9pt Arial';
+        ctx.font = 'normal normal 9px arial';
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
 
-        const imgFileName = `img/${card.name.replace(' ', '')}-800x1060.png`;
+        const imgFileName = m.card.getImageName();
 
         const img = this.images.get(imgFileName);
         if (img) {
             this.drawCardImage(imgFileName, x, y, isPopup);
-        } else {
-            ctx.fillText(card.name, x + w / 2, y + 20);
-        }
+        } 
+
+        ctx.fillText(card.name, x + w / 2, y + 20);
 
         switch (card.type) {
             case "Pillar":
@@ -1018,7 +1055,7 @@ class PillarsGame {
                 const pidx: number = card.pillarIndex || 0;
 
                 // Draw the roman numeral
-                ctx.font = '24pt Arial';
+                ctx.font = 'normal bold 24px arial';
                 ctx.fillStyle = 'blue';
                 ctx.fillText(card.pillarNumeral || '', x + w / 2, y + h / 2 + 20);
                 ctx.strokeStyle = 'black';
@@ -1034,7 +1071,7 @@ class PillarsGame {
 
                 for (let i = 0; i < this.gameState.players.length; i++) {
 
-                    ctx.font = '16pt Arial';
+                    ctx.font = 'normal bold 16px arial';
                     ctx.fillStyle = 'black';
                     ctx.strokeStyle = 'black';
 
@@ -1073,7 +1110,7 @@ class PillarsGame {
         ctx.fill();
         ctx.stroke();
 
-        ctx.font = '18pt Arial Bold';
+        ctx.font = 'normal bold 18px arial';
         ctx.fillStyle = '#FFFFFF';
 
         ctx.fillText(total.toString(), x + 78, y + 86);
@@ -1108,7 +1145,7 @@ class PillarsGame {
         const summaryx = 10;
         const summaryy = 10;
         const summaryw = 300;
-        const summaryh = 120;
+        const summaryh = 110;
 
         for (let i = 0; i < 4; i++) {
             const p = this.gameState.players[i];
@@ -1152,6 +1189,10 @@ class PillarsGame {
                 `Cy:${p.numCreativity}`, sx + 5, sy + 45);
             this.ctx.fillText(`Customers: ${p.numCustomers}`, sx + 5, sy + summaryh - 10);
 
+            this.ctx.lineWidth = 1;
+            this.ctx.font = 'normal normal 12px arial';
+            this.ctx.fillText(`> ${this.gameState.getLastBroadcastSummary()}`, 
+                summaryx, summaryy + (summaryh * 2) + 15);
         }
     }
 
@@ -1316,7 +1357,7 @@ class PillarsGame {
             }
         }
         if (numLoaded < numImages) {
-            ctx.font = '36pt Arial';
+            ctx.font = 'normal bold 36px arial';
             ctx.fillStyle = 'black';
             ctx.fillText(`Loaded ${numLoaded} of ${numImages} images`, 
                 (PillarsGame.BW / 2) - 50, PillarsGame.BH / 2);
@@ -1340,7 +1381,7 @@ class PillarsGame {
         }
 
         // Debugging data
-        ctx.font = "9pt Arial";
+        ctx.font = "normal normal 9px arial";
         ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
             `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
             `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +

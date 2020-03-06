@@ -1,5 +1,6 @@
-import {Player} from './player';
-import {Card} from './card';
+import { Player } from './player';
+import { Card } from './card';
+import { cardDatabase } from './card-database';
 
 /**
  * Represents the current state of a game.
@@ -9,12 +10,12 @@ export class GameState {
     /**
      * Id
      */
-    id:string;
+    id: string;
 
     /**
      * Name
      */
-    name:string;
+    name: string;
 
     /**
      * Public/Private
@@ -35,7 +36,7 @@ export class GameState {
      * Players (sign up or new each time?)
        
      */
-    players: Array<Player>; 
+    players: Array<Player>;
 
     /**
      * Pillar max (4, 5, or 6)
@@ -50,12 +51,12 @@ export class GameState {
     /**
      * Market stack
      */
-    marketStack: Array<Card>; 
+    marketStack: Array<Card>;
 
     /**
      * Retired Cards
      */
-    retiredCards: Array<Card>; 
+    retiredCards: Array<Card>;
 
     /**
      * Trial Stacks
@@ -64,7 +65,7 @@ export class GameState {
         •	Face up/down
         •	Top card showing/hidden
      */
-    trialStacks: Array<TrialStack>; 
+    trialStacks: Array<TrialStack>;
 
     /**
      * The currently active player.
@@ -77,6 +78,21 @@ export class GameState {
     currentMarket: Array<Card>;
 
     /**
+     * Broadcast summaries.
+     */
+    broadcastSummaries: Array<string>;
+
+    /**
+     * The 5 pillars of the Well-Architected Framework.
+     */
+    pillars: Array<Card>;
+
+    /**
+     * Master copies of each unique card.
+     */
+    cardMasters: Map<string, Card>;
+
+    /**
      * Constructor.
      */
     constructor() {
@@ -85,9 +101,23 @@ export class GameState {
         this.retiredCards = [];
         this.trialStacks = [];
         this.currentMarket = [];
+        this.broadcastSummaries = [];
+        this.pillars = [];
+        this.cardMasters = new Map<string, Card>();
     }
 
-    
+    /**
+     * Get the last broadcast summary.
+     */
+    getLastBroadcastSummary() {
+        if (!this.broadcastSummaries || this.broadcastSummaries.length == 0) {
+            return '';
+        }
+
+        return this.broadcastSummaries[this.broadcastSummaries.length - 1];
+    }
+
+
     /**
      * Randomly shuffle an array.
      * 
@@ -117,7 +147,7 @@ export class GameState {
     /**
      * Draw a card for the player from their deck.
      */
-    drawOne(player:Player) {
+    drawOne(player: Player) {
 
         if (player.deck.length == 0 && player.discardPile.length == 0) {
             console.log('No cards in deck or discard pile');
@@ -155,6 +185,117 @@ export class GameState {
             }
         }
 
+    }
+
+    /**
+     * Load the card database, shuffle, and draw opening hands.
+     */
+    initializeCards() {
+
+        let uniqueIndex = 0;
+
+        // Load the card database
+        for (let i = 0; i < cardDatabase.cards.length; i++) {
+            const card = <Card>cardDatabase.cards[i];
+
+            this.cardMasters.set(card.name, (Object.assign(new Card(), card)));
+
+            switch (card.type) {
+                case 'Resource':
+                    if (card.starter) {
+                        // Put copies in each player's deck
+                        for (let i = 0; i < this.players.length; i++) {
+                            const player = this.players[i];
+                            for (let j = 0; j < card.copies / 4; j++) {
+                                const copy = <Card>Object.assign(new Card(), card);
+                                player.deck.push(copy);
+                                copy.uniqueIndex = uniqueIndex++;
+                            }
+                        }
+                    } else {
+                        const copy = <Card>Object.assign(new Card(), card);
+                        copy.uniqueIndex = uniqueIndex++;
+                        this.marketStack.push(copy);
+                    }
+                    break;
+                case 'Trial':
+                    const trialCopy = <Card>Object.assign(new Card(), card);
+                    trialCopy.uniqueIndex = uniqueIndex++;
+                    switch (trialCopy.name) {
+                        case 'Phase I':
+                            this.trialStacks[0].notused.push(trialCopy);
+                            break;
+                        case 'Phase II':
+                            this.trialStacks[1].notused.push(trialCopy);
+                            break;
+                        case 'Phase III':
+                            this.trialStacks[2].notused.push(trialCopy);
+                            break;
+                    }
+                    break;
+                case 'Pillar':
+                    const pillarCopy = <Card>Object.assign(new Card(), card);
+                    pillarCopy.uniqueIndex = uniqueIndex++;
+                    this.pillars.push(pillarCopy);
+                    break;
+            }
+        }
+
+        // Fill the current market
+        this.refillMarket();
+
+        // Shuffle decks
+        for (let i = 0; i < this.players.length; i++) {
+            const player = this.players[i];
+            GameState.shuffle(player.deck);
+        }
+
+        // Draw the opening hand
+        for (const p of this.players) {
+            for (let i = 0; i < 6; i++) {
+                this.drawOne(p);
+            }
+        }
+
+        // Shuffle market deck
+        GameState.shuffle(this.marketStack);
+
+        // Shuffle trial stacks
+        for (const t of this.trialStacks) {
+            GameState.shuffle(t.notused);
+        }
+
+    }
+
+    /**
+     * Check to see if the current player is allowed to play the card.
+     */
+    canPlayCard(card:Card) {
+        if (card.subtype == "Augment Cloud") {
+            let hasCloud = false;
+            for (const inPlay of this.currentPlayer.inPlay) {
+                if (inPlay.subtype == "Cloud") {
+                    hasCloud = true;
+                }
+            }
+            if (!hasCloud) {
+                return false;
+            }
+        }
+
+        if (card.subtype == "Augment Human") {
+            let hasHuman = false;
+            for (const inPlay of this.currentPlayer.inPlay) {
+                if (inPlay.subtype == "Human") {
+                    hasHuman = true;
+                }
+            }
+            if (!hasHuman) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }
