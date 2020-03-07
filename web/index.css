@@ -13,3 +13,8 @@ html, body {
     top: 20px;
     left: 20px;
 }
+
+@font-face {
+    font-family: 'AmazonEmber';
+    src: url('fonts/AmazonEmberDisplay_Rg.ttf');
+}

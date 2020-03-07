@@ -1,4 +1,8 @@
 import { Card } from '../lambdas/card';
+import { GameState } from '../lambdas/game-state';
+import { Player } from '../lambdas/player';
+import { CanvasUtil } from './canvas-util';
+import { PillarsConstants } from './constants';
 
 /**
  * Used to track the progress of animations.
@@ -31,7 +35,7 @@ export class PillarsAnimation {
      * Called each time the canvas is drawn. 
      * 
      * This function can actually do the drawing or set variables that 
-     * are used in PillarsGame.draw.
+     * are used in PillarsConstants.draw.
      */
     animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) { }
 }
@@ -108,6 +112,7 @@ export class Mouseable {
     y: number;
     w: number;
     h: number;
+    zindex: number;
     onclick: Function;
     onhover: Function;
     onmousedown: Function;
@@ -123,7 +128,7 @@ export class Mouseable {
     hitWidth?: number;
 
     constructor() {
-
+        this.zindex = 0;
     }
 
     /**
@@ -169,6 +174,17 @@ export class PillarsImages {
     static readonly IMG_BACK_GREEN = 'img/back-green-800x1060.png';
     static readonly IMG_BACK_ORANGE = 'img/back-orange-800x1060.png';
     static readonly IMG_BACK_PINK = 'img/back-pink-800x1060.png';
+    static readonly IMG_BLANK_HUMAN_RESOURCE = 'img/Blank-Human-Resource-800x1060.png';
+    static readonly IMG_BLANK_ClOUD_RESOURCE = 'img/Blank-Cloud-Resource-800x1060.png';
+    static readonly IMG_BLANK_BUG = 'img/Blank-Bug-800x1060.png';
+    static readonly IMG_BLANK_ACTION = 'img/Blank-Action-800x1060.png';
+    static readonly IMG_BLANK_EVENT = 'img/Blank-Event-800x1060.png';
+    static readonly IMG_BLANK_TRIAL = 'img/Blank-Trial-800x1060.png';
+    static readonly IMG_BLANK_PILLAR_I = 'img/Blank-Pillar-I-800x1060.png';
+    static readonly IMG_BLANK_PILLAR_II = 'img/Blank-Pillar-II-800x1060.png';
+    static readonly IMG_BLANK_PILLAR_III = 'img/Blank-Pillar-III-800x1060.png';
+    static readonly IMG_BLANK_PILLAR_IV = 'img/Blank-Pillar-IV-800x1060.png';
+    static readonly IMG_BLANK_PILLAR_V = 'img/Blank-Pillar-V-800x1060.png';
 }
 
 export class FrameRate {
@@ -197,3 +213,119 @@ export class FrameRate {
         }
     }
 }
+
+/**
+ * Function exports got the main class so other classes can make callbacks.
+ */
+export interface IPillarsGame {
+
+    /**
+     * The canvas context.
+     */
+    ctx: CanvasRenderingContext2D;
+
+    /**
+     * The current state of the game according to the back end.
+     */
+    gameState: GameState;
+
+    /**
+     * The local person playing.
+     */
+    localPlayer: Player;
+
+    /**
+     * Get the default font for ctx.
+     */
+    getFont(size: number, style?: string): string;
+
+    /**
+     * Close the modal.
+     */
+    closeModal(): any;
+
+    /**
+     * Add a mouseable UI element.
+     */
+    addMouseable(m:Mouseable, key:string):any;
+}
+
+/**
+ * A modal dialog.
+ */
+export class Modal {
+    text: string;
+
+    constructor(text: string) {
+        this.text = text;
+    }
+
+    /**
+     * Show the modal.
+     * 
+     * Adds mousables to the game.
+     */
+    show(game: IPillarsGame) {
+        const ctx = game.ctx;
+
+        const modalBox = new Mouseable();
+        modalBox.x = PillarsConstants.MODALX;
+        modalBox.y = PillarsConstants.MODALY;
+        modalBox.w = PillarsConstants.MODALW;
+        modalBox.h = PillarsConstants.MODALH;
+        modalBox.zindex = 9;
+
+        modalBox.draw = () => {
+
+            // Border
+            ctx.fillStyle = 'gray';
+            ctx.strokeStyle = PillarsConstants.COLOR_BLACKISH;
+            ctx.globalAlpha = 0.9;
+            CanvasUtil.roundRect(ctx,
+                PillarsConstants.MODALX, PillarsConstants.MODALY,
+                PillarsConstants.MODALW, PillarsConstants.MODALH,
+                PillarsConstants.MODALR, true, true);
+            ctx.globalAlpha = 1;
+
+            // Text
+            ctx.font = game.getFont(48, 'bold');
+            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            ctx.textAlign = 'center';
+            ctx.fillText(this.text,
+                PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
+                PillarsConstants.MODALY + 100);
+        };
+
+        game.addMouseable(modalBox, PillarsConstants.MODAL_KEY);
+
+        // Close button
+        const closew = 50;
+
+        const modalClose = new Mouseable();
+        modalClose.x = PillarsConstants.MODALX + PillarsConstants.MODALW - 100;
+        modalClose.y = PillarsConstants.MODALY + 10;
+        modalClose.w = closew;
+        modalClose.h = closew;
+        modalClose.zindex = 10;
+
+        modalClose.draw = () => {
+            ctx.font = game.getFont(48, 'bold');
+            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            if (modalClose.hovering) {
+                ctx.fillStyle = 'black';
+                ctx.strokeStyle = 'yellow';
+            }
+            ctx.textAlign = 'center';
+            ctx.strokeText('X', modalClose.x + closew/2, modalClose.y + closew);
+            CanvasUtil.roundRect(ctx, modalClose.x, modalClose.y, closew, closew, 5, false, true);
+        };
+
+        modalClose.onclick = () => {
+            console.log('modalClose onclick');
+            game.closeModal();
+        }
+
+        game.addMouseable(modalClose, PillarsConstants.MODAL_CLOSE_KEY);
+    }
+}
+

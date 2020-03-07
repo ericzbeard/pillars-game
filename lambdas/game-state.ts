@@ -100,6 +100,9 @@ export class GameState {
         this.marketStack = [];
         this.retiredCards = [];
         this.trialStacks = [];
+        for (let i = 0; i < 3; i++) {
+            this.trialStacks.push(new TrialStack());
+        }
         this.currentMarket = [];
         this.broadcastSummaries = [];
         this.pillars = [];
@@ -221,16 +224,18 @@ export class GameState {
                 case 'Trial':
                     const trialCopy = <Card>Object.assign(new Card(), card);
                     trialCopy.uniqueIndex = uniqueIndex++;
-                    switch (trialCopy.name) {
-                        case 'Phase I':
+                    switch (trialCopy.subtype) {
+                        case 'Phase 1':
                             this.trialStacks[0].notused.push(trialCopy);
                             break;
-                        case 'Phase II':
+                        case 'Phase 2':
                             this.trialStacks[1].notused.push(trialCopy);
                             break;
-                        case 'Phase III':
+                        case 'Phase 3':
                             this.trialStacks[2].notused.push(trialCopy);
                             break;
+                        default:
+                            throw Error(`Unexpected Trial ${trialCopy.name}`);
                     }
                     break;
                 case 'Pillar':

@@ -5,40 +5,14 @@ import { CanvasUtil } from './canvas-util';
 import { Howl, Howler } from 'howler';
 import { PillarsConfig } from '../config/pillars-config';
 import * as ui from './ui-utils';
-import {LocalGame} from './local-game';
+import { LocalGame } from './local-game';
+import { CardActions } from './card-actions';
+import { PillarsConstants } from './constants';
 
 /**
  * Pillars game UI. Initialized from index.html.
  */
-class PillarsGame {
-
-    // Base width and height. Position everything as if it's this
-    // size and then scale it to the actual size.
-    static readonly BW = 1920;
-    static readonly BH = 1080;
-    static readonly PROPORTION = PillarsGame.BW / PillarsGame.BH;
-    static readonly MARKETX = 850;
-    static readonly MARKETY = 275;
-    static readonly INPLAYX = 10;
-    static readonly INPLAYY = PillarsGame.MARKETY;
-    static readonly INPLAYW = 450;
-    static readonly INPLAYH = 540;
-    static readonly BIGCARDX = 480;
-    static readonly BIGCARDY = PillarsGame.MARKETY + 15;
-    static readonly MARKET_START_KEY = 'market_';
-    static readonly MARKET_HOVER_KEY = 'market_hover';
-    static readonly HAND_START_KEY = 'hand_';
-    static readonly HAND_HOVER_KEY = 'hand_hover_';
-    static readonly DISCARD_START_KEY = 'discard_';
-    static readonly DISCARD_HOVER_KEY = 'discard_hover_';
-    static readonly HAND_X = 280;
-    static readonly HAND_Y = PillarsGame.BH - 250;
-    static readonly DISCARD_X = 1000;
-    static readonly DISCARD_Y = PillarsGame.BH - 250;
-    static readonly HAND_WIDTH = 600;
-    static readonly PILLARX = 650;
-    static readonly PILLARY = 10;
-    static readonly PILLARW = 195;
+class PillarsGame implements ui.IPillarsGame {
 
     /**
      * The canvas we're drawing on.
@@ -101,14 +75,14 @@ class PillarsGame {
     sounds: Map<string, Howl>;
 
     /**
-     * All cards in the database keyed by card name.
-     */
-    cards: Map<string, Card>;
-
-    /**
      * The local person playing.
      */
     localPlayer: Player;
+
+    /**
+     * If non-null, we are showing a modal dialog.
+     */
+    modal?: ui.Modal;
 
     /**
      * PillarsGame constructor.
@@ -158,7 +132,18 @@ class PillarsGame {
             ui.PillarsImages.IMG_BACK_GREEN,
             ui.PillarsImages.IMG_BACK_ORANGE,
             ui.PillarsImages.IMG_BACK_PINK,
-            ui.PillarsImages.IMG_BACK_BLUE
+            ui.PillarsImages.IMG_BACK_BLUE,
+            ui.PillarsImages.IMG_BLANK_ClOUD_RESOURCE,
+            ui.PillarsImages.IMG_BLANK_HUMAN_RESOURCE,
+            ui.PillarsImages.IMG_BLANK_BUG,
+            ui.PillarsImages.IMG_BLANK_ACTION,
+            ui.PillarsImages.IMG_BLANK_EVENT,
+            ui.PillarsImages.IMG_BLANK_TRIAL,
+            ui.PillarsImages.IMG_BLANK_PILLAR_I,
+            ui.PillarsImages.IMG_BLANK_PILLAR_II,
+            ui.PillarsImages.IMG_BLANK_PILLAR_III,
+            ui.PillarsImages.IMG_BLANK_PILLAR_IV,
+            ui.PillarsImages.IMG_BLANK_PILLAR_V
         ];
 
         // Add dice image names
@@ -167,10 +152,6 @@ class PillarsGame {
                 const dieName = this.getDieName(i, j);
                 imageNames.push(dieName);
             }
-        }
-
-        for (const [k, v] of this.gameState.cardMasters.entries()) {
-            imageNames.push(v.getImageName());
         }
 
         // Load images
@@ -197,8 +178,8 @@ class PillarsGame {
             self.handleClick.call(self, e);
         });
 
-         // Listen for double clicks
-         self.gameCanvas.addEventListener('dblclick', function (e) {
+        // Listen for double clicks
+        self.gameCanvas.addEventListener('dblclick', function (e) {
             e.stopPropagation();
             e.preventDefault();
             self.handleDoubleClick.call(self, e);
@@ -215,6 +196,9 @@ class PillarsGame {
 
         // Market
         this.initMarket();
+
+        // Trials
+        this.initTrials();
     }
 
     /**
@@ -224,8 +208,8 @@ class PillarsGame {
         const self = this;
 
         const button = new ui.Mouseable();
-        button.x = PillarsGame.BW - 105;
-        button.y = PillarsGame.BH - 55;
+        button.x = PillarsConstants.BW - 105;
+        button.y = PillarsConstants.BH - 55;
         button.w = 100;
         button.h = 50;
         button.onclick = function () {
@@ -234,6 +218,7 @@ class PillarsGame {
             self.gameState.drawOne(self.localPlayer);
             self.initHand();
             self.initDiscard();
+            self.showModal('This is a test');
         };
         button.draw = function () {
             self.ctx.strokeStyle = 'black';
@@ -250,7 +235,7 @@ class PillarsGame {
     /**
      * Remove all mouesables that start with the specified string.
      */
-    removeMouseableKeys(startsWith:string) {
+    removeMouseableKeys(startsWith: string) {
         const remove = [];
         for (const k of this.mouseables.keys()) {
             if (k.startsWith(startsWith)) {
@@ -266,57 +251,57 @@ class PillarsGame {
      * Draw the static parts of the player's deck, hand, and discard pile.
      */
     drawPlayerDeck() {
-        
+
         const ctx = this.ctx;
 
         // Draw the big card placeholder in the center
-        this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, 
-            PillarsGame.BIGCARDX, PillarsGame.BIGCARDY, true);
+        this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE,
+            PillarsConstants.BIGCARDX, PillarsConstants.BIGCARDY, true);
 
         // Deck Label
         ctx.save();
-        ctx.translate(30, PillarsGame.HAND_Y + 100);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(50, PillarsConstants.HAND_Y + 100);
+        ctx.rotate(-Math.PI / 2);
         ctx.textAlign = "center";
-        ctx.font = 'normal bold 24px arial';
+        ctx.font = this.getFont(24, 'bold');
         ctx.fillText("Deck", 0, 0);
         ctx.restore();
 
         // Draw the deck if it has any cards in it
         if (this.localPlayer.deck.length > 0) {
-            this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, 50, PillarsGame.BH - 250);
+            this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, 50, PillarsConstants.BH - 250);
             if (this.localPlayer.deck.length > 1) {
-                this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, 55, PillarsGame.BH - 255);
+                this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, 55, PillarsConstants.BH - 255);
             }
         } else {
-            CanvasUtil.roundRect(this.ctx, 50, PillarsGame.BH - 250, 
-                ui.MouseableCard.CARD_WIDTH, ui.MouseableCard.CARD_HEIGHT, 
+            CanvasUtil.roundRect(this.ctx, 50, PillarsConstants.BH - 250,
+                ui.MouseableCard.CARD_WIDTH, ui.MouseableCard.CARD_HEIGHT,
                 ui.MouseableCard.CARD_RADIUS, false, true);
         }
 
         // Hand label
         ctx.save();
-        ctx.translate(PillarsGame.HAND_X - 5, PillarsGame.HAND_Y + 100);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(PillarsConstants.HAND_X - 5, PillarsConstants.HAND_Y + 100);
+        ctx.rotate(-Math.PI / 2);
         ctx.textAlign = "center";
-        ctx.font = 'normal bold 24px arial';
+        ctx.font = this.getFont(24, 'bold');
         ctx.fillText("Hand", 0, 0);
         ctx.restore();
 
-        CanvasUtil.roundRect(this.ctx, PillarsGame.HAND_X, PillarsGame.HAND_Y - 5, 
-            PillarsGame.HAND_WIDTH + 10, 250, 10, false, true);
+        CanvasUtil.roundRect(this.ctx, PillarsConstants.HAND_X, PillarsConstants.HAND_Y - 5,
+            PillarsConstants.HAND_WIDTH + 10, 250, 10, false, true);
 
         // Discard label
         ctx.save();
-        ctx.translate(PillarsGame.DISCARD_X - 5, PillarsGame.DISCARD_Y + 100);
-        ctx.rotate(-Math.PI/2);
+        ctx.translate(PillarsConstants.DISCARD_X - 5, PillarsConstants.DISCARD_Y + 100);
+        ctx.rotate(-Math.PI / 2);
         ctx.textAlign = "center";
-        ctx.font = 'normal bold 24px arial';
+        ctx.font = this.getFont(24, 'bold');
         ctx.fillText("Discard", 0, 0);
         ctx.restore();
-        
-        CanvasUtil.roundRect(this.ctx, PillarsGame.DISCARD_X, PillarsGame.DISCARD_Y - 5, 
-            PillarsGame.HAND_WIDTH + 10, 250, 10, false, true);
+
+        CanvasUtil.roundRect(this.ctx, PillarsConstants.DISCARD_X, PillarsConstants.DISCARD_Y - 5,
+            PillarsConstants.HAND_WIDTH + 10, 250, 10, false, true);
 
     }
 
@@ -339,17 +324,17 @@ class PillarsGame {
      */
     initHandOrDiscard(isHand: boolean) {
 
-        let startKey = PillarsGame.HAND_START_KEY;
-        let hoverKey = PillarsGame.HAND_HOVER_KEY;
-        let x = PillarsGame.HAND_X;
-        let y = PillarsGame.HAND_Y;
+        let startKey = PillarsConstants.HAND_START_KEY;
+        let hoverKey = PillarsConstants.HAND_HOVER_KEY;
+        let x = PillarsConstants.HAND_X;
+        let y = PillarsConstants.HAND_Y;
         let a = this.localPlayer.hand;
 
         if (!isHand) {
-            startKey = PillarsGame.DISCARD_START_KEY;
-            hoverKey = PillarsGame.DISCARD_HOVER_KEY;
-            x = PillarsGame.DISCARD_X;
-            y = PillarsGame.DISCARD_Y;
+            startKey = PillarsConstants.DISCARD_START_KEY;
+            hoverKey = PillarsConstants.DISCARD_HOVER_KEY;
+            x = PillarsConstants.DISCARD_X;
+            y = PillarsConstants.DISCARD_Y;
             a = this.localPlayer.discardPile;
         }
 
@@ -362,7 +347,7 @@ class PillarsGame {
         if (len == 0) {
             len = 1;
         }
-        const cardOffset = (PillarsGame.HAND_WIDTH - ui.MouseableCard.CARD_WIDTH) / len;
+        const cardOffset = (PillarsConstants.HAND_WIDTH - ui.MouseableCard.CARD_WIDTH) / len;
 
         for (let i = 0; i < a.length; i++) {
             const card = a[i];
@@ -414,8 +399,8 @@ class PillarsGame {
         for (let i = 0; i < this.gameState.pillars.length; i++) {
             const pillar = this.gameState.pillars[i];
             const m = new ui.MouseableCard(this.gameState.pillars[i]);
-            m.x = PillarsGame.PILLARX + (i * PillarsGame.PILLARW);
-            m.y = PillarsGame.PILLARY;
+            m.x = PillarsConstants.PILLARX + (i * PillarsConstants.PILLARW);
+            m.y = PillarsConstants.PILLARY;
             m.draw = () => {
                 this.drawCard(m);
             }
@@ -430,12 +415,12 @@ class PillarsGame {
     initMarket() {
 
         // Every time we change the market, remove all the mouseables start over
-        this.removeMouseableKeys(PillarsGame.MARKET_START_KEY);
+        this.removeMouseableKeys(PillarsConstants.MARKET_START_KEY);
 
-        let marketx = PillarsGame.MARKETX;
+        let marketx = PillarsConstants.MARKETX;
         let curx = marketx + 228;
         let cw = 200;
-        let markety = PillarsGame.MARKETY + 10;
+        let markety = PillarsConstants.MARKETY + 10;
 
         this.gameState.refillMarket();
 
@@ -447,38 +432,102 @@ class PillarsGame {
                 curx = marketx + 25;
             }
             if (card) {
-                const m = new ui.MouseableCard(card);
-                m.x = curx;
-                m.y = markety;
-
-                const hk = PillarsGame.MARKET_HOVER_KEY + i;
-
-                m.onmouseout = () => {
-                    this.mouseables.delete(hk);
-                };
-    
-                // Draw a second copy unobstructed when hovering
-                const hoverOrClick = () => {
-                    const h = new ui.MouseableCard(card);
-                    h.x = m.x;
-                    h.y = m.y;
-                    this.mouseables.set(hk, h);
-                    h.draw = () => {
-                        this.drawCard(h, true);
-                    }
-                };
-    
-                m.onhover = hoverOrClick;
-                m.onclick = hoverOrClick;
-
-                m.draw = () => {
-                    this.drawCard(m);
-                };
-
-                this.mouseables.set(PillarsGame.MARKET_START_KEY + i, m);
+                this.initHoverCard(card, curx, markety,
+                    PillarsConstants.MARKET_START_KEY,
+                    PillarsConstants.MARKET_HOVER_KEY,
+                    i);
             }
             curx += cw;
         }
+
+        this.resizeCanvas();
+    }
+
+    /**
+     * Draw the visible trial.
+     */
+    initTrials() {
+
+        // TODO - For now, draw them all so we can finish design
+
+        for (let i = 0; i < this.gameState.trialStacks.length; i++) {
+            const stack = this.gameState.trialStacks[i];
+            const card = stack.notused[0];
+            stack.topShowing = true; // TODO
+
+            const offset = ui.MouseableCard.CARD_HEIGHT + PillarsConstants.TRIALY_OFFSET;
+
+            if (stack.topShowing) {
+                this.initHoverCard(card,
+                    PillarsConstants.TRIALX,
+                    PillarsConstants.TRIALY + (i * offset),
+                    PillarsConstants.TRIAL_START_KEY,
+                    PillarsConstants.TRIAL_HOVER_KEY,
+                    i);
+            }
+        }
+    }
+
+    /**
+     * Draw a modal dialog that deactivates everything else until it is closed.
+     */
+    showModal(text: string) {
+        this.modal = new ui.Modal(text);
+        this.modal.show(this);
+    }
+
+    /**
+     * Close the modal.
+     */
+    closeModal() {
+        this.modal = undefined;
+        this.mouseables.delete(PillarsConstants.MODAL_KEY);
+        this.mouseables.delete(PillarsConstants.MODAL_CLOSE_KEY);
+        this.playSound('hint.wav');
+    }
+
+    /**
+     * Add a mouseable UI element.
+     */
+    addMouseable(m: ui.Mouseable, key: string) {
+        this.mouseables.set(key, m);
+    }
+
+    /**
+     * Initialize a hoverable card.
+     */
+    initHoverCard(card: Card, x: number, y: number,
+        startKey: string, hoverKey: string,
+        index: number) {
+        const m = new ui.MouseableCard(card);
+        m.x = x;
+        m.y = y;
+
+        const tk = hoverKey + index;
+
+        m.onmouseout = () => {
+            this.mouseables.delete(tk);
+        };
+
+        // Draw a second copy unobstructed when hovering
+        const hoverOrClick = () => {
+            const h = new ui.MouseableCard(card);
+            h.x = m.x;
+            h.y = m.y;
+            this.mouseables.set(tk, h);
+            h.draw = () => {
+                this.drawCard(h, true);
+            }
+        };
+
+        m.onhover = hoverOrClick;
+        m.onclick = hoverOrClick;
+
+        m.draw = () => {
+            this.drawCard(m);
+        };
+
+        this.mouseables.set(startKey + index, m);
 
         this.resizeCanvas();
     }
@@ -552,20 +601,30 @@ class PillarsGame {
         this.my = poz.y;
 
         for (const [key, m] of this.mouseables.entries()) {
-            if (m.hitTest(this.mx, this.my)) {
-                if (m.onmouseover) {
-                    m.onmouseover();
-                }
-                m.hovering = true;
-                if (m.onhover) {
-                    m.onhover();
-                }
-            } else {
-                if (m.hovering) {
-                    if (m.onmouseout) {
-                        m.onmouseout();
+
+            let ignore = false;
+
+            // Ignore everything but the modal close if we're showing a modal
+            if (this.modal && key !== PillarsConstants.MODAL_CLOSE_KEY) {
+                ignore = true;
+            }
+
+            if (!ignore) {
+                if (m.hitTest(this.mx, this.my)) {
+                    if (m.onmouseover) {
+                        m.onmouseover();
                     }
-                    m.hovering = false;
+                    m.hovering = true;
+                    if (m.onhover) {
+                        m.onhover();
+                    }
+                } else {
+                    if (m.hovering) {
+                        if (m.onmouseout) {
+                            m.onmouseout();
+                        }
+                        m.hovering = false;
+                    }
                 }
             }
         }
@@ -581,6 +640,13 @@ class PillarsGame {
         const mx = poz.x;
         const my = poz.y;
 
+        // We have to wait for user interaction to load sounds
+        if (this.sounds.size == 0) {
+            this.addSound('swoosh.wav');
+            this.addSound('menuselect.wav');
+            this.addSound('hint.wav');
+        }
+
         // Animate each click location
         const click: ui.ClickAnimation = new ui.ClickAnimation();
         click.x = mx;
@@ -591,7 +657,15 @@ class PillarsGame {
 
         // Look at mouseables
         for (const [key, m] of this.mouseables.entries()) {
-            if (m.onclick && m.hitTest(mx, my)) {
+
+            let ignore = false;
+
+            // Ignore everything but the modal close if we're showing a modal
+            if (this.modal && key !== PillarsConstants.MODAL_CLOSE_KEY) {
+                ignore = true;
+            }
+
+            if (!ignore && m.onclick && m.hitTest(mx, my)) {
                 m.onclick();
                 clickedSomething = true;
             }
@@ -606,12 +680,6 @@ class PillarsGame {
             }
         }
 
-        // We have to wait for user interaction to load sounds
-        if (this.sounds.size == 0) {
-            this.addSound('swoosh.wav');
-            this.addSound('menuselect.wav');
-        }
-
         this.playSound('menuselect.wav');
 
         this.resizeCanvas();
@@ -622,15 +690,25 @@ class PillarsGame {
      * 
      * If so, play it.
      */
-    checkHandDoubleClick(mx:number, my:number) {
+    checkHandDoubleClick(mx: number, my: number) {
 
         let key = null;
         for (const k of this.mouseables.keys()) {
-            if (k.startsWith(PillarsGame.HAND_START_KEY)) {
-                const m = <ui.MouseableCard>this.mouseables.get(k);
-                if (m.hitTest(mx, my)) {
-                    key = k;
-                    break;
+
+            let ignore = false;
+
+            // Ignore everything but the modal close if we're showing a modal
+            if (this.modal && key !== PillarsConstants.MODAL_CLOSE_KEY) {
+                ignore = true;
+            }
+
+            if (!ignore) {
+                if (k.startsWith(PillarsConstants.HAND_START_KEY)) {
+                    const m = <ui.MouseableCard>this.mouseables.get(k);
+                    if (m.hitTest(mx, my)) {
+                        key = k;
+                        break;
+                    }
                 }
             }
         }
@@ -665,7 +743,7 @@ class PillarsGame {
     /**
      * Play a card from the local player's hand.
      */
-    playCard(card:Card) {
+    playCard(card: Card) {
 
         const player = this.localPlayer;
 
@@ -710,35 +788,11 @@ class PillarsGame {
         }
 
         // Some cards need special handling for custom conditions
-        // Ops Workshop
-        // Security Workshop
-        // Reliability Workshop
-        // Performance Workshop
-        // Predictive Autoscaling
-        // Competitive Research
-        // CloudFormation
-        // Poach
-        // Guard Duty
-        // Chaos Testing
-        // Think Tank
-        // Talented Jerk
-        // Promoted to VP
-        // Cloud 9
-        // Outsourcing
-        // Senior Developer
-        // AWS Lambda
-        // SQS
-        // EBS Volume
-        // Stack Overflow
-        // S3 Bucket
-        // First to Market
-        // WAF
-        // Job Fair
-        // Forecast
-        // Sagemaker
-        // Database Migration
-        // Collaboration
-        // Patent Awarded
+        const actions = new CardActions(this);
+        const a = actions.actions.get(card.name);
+        if (a) {
+            a();
+        }
 
         this.broadcast(`${player.name} played ${card.name}`);
     }
@@ -751,7 +805,7 @@ class PillarsGame {
 
         this.gameState.broadcastSummaries.push(summary);
     }
-    
+
     /**
      * Check to see if a card in the market was double clicked.
      * 
@@ -759,11 +813,11 @@ class PillarsGame {
      * 
      * TODO - Highlight cards the player can buy.
      */
-    checkMarketDoubleClick(mx:number, my:number) {
+    checkMarketDoubleClick(mx: number, my: number) {
 
         let key = null;
         for (const k of this.mouseables.keys()) {
-            if (k.startsWith(PillarsGame.MARKET_START_KEY)) {
+            if (k.startsWith(PillarsConstants.MARKET_START_KEY)) {
                 const m = <ui.MouseableCard>this.mouseables.get(k);
                 if (m.hitTest(mx, my)) {
                     key = k;
@@ -786,8 +840,8 @@ class PillarsGame {
     /**
      * Acquire a card from the marketplace.
      */
-    acquireCard(card:Card, key:string) {
-        
+    acquireCard(card: Card, key: string) {
+
         this.localPlayer.discardPile.push(card);
         this.mouseables.delete(key);
         let indexToRemove = -1;
@@ -800,6 +854,19 @@ class PillarsGame {
             this.gameState.currentMarket.splice(indexToRemove, 1);
         } else {
             throw Error('Unable to remove card from current market');
+        }
+
+        // Subtract the cost from the player's current resources
+        const cost = card.convertCost();
+        for (const [k, v] of cost.entries()) {
+            switch (k) {
+                case "Credit":
+                    this.localPlayer.numCredits -= v;
+                    break;
+                case "Talent":
+                    this.localPlayer.numTalents -= v;
+                    break;
+            }
         }
 
         this.initHand();
@@ -890,7 +957,7 @@ class PillarsGame {
      * 
      * The image has to be scaled and masked.
      */
-    drawCardImage(name: string, x: number, y: number, isPopup?:boolean) {
+    drawCardImage(name: string, x: number, y: number, isPopup?: boolean) {
 
         if (!this.isDoneLoading) {
             return;
@@ -965,6 +1032,14 @@ class PillarsGame {
     }
 
     /**
+     * Get the default font for ctx.
+     */
+    getFont(size: number, style?: string): string {
+        if (!style) style = 'normal';
+        return `normal ${style} ${size}px amazonember`;
+    }
+
+    /**
      * Draw a card.
      */
     drawCard(m: ui.MouseableCard, isPopup?: boolean) {
@@ -979,8 +1054,8 @@ class PillarsGame {
 
         if (isPopup) {
             radius *= 2;
-            x = PillarsGame.BIGCARDX;
-            y = PillarsGame.BIGCARDY;
+            x = PillarsConstants.BIGCARDX;
+            y = PillarsConstants.BIGCARDY;
             w *= 2;
             h *= 2;
         }
@@ -1021,7 +1096,7 @@ class PillarsGame {
         if (isInHand && this.gameState.canPlayCard(m.card)) {
             highlight = true;
         }
-        
+
         if (highlight) {
             ctx.save()
             ctx.strokeStyle = 'yellow';
@@ -1035,43 +1110,91 @@ class PillarsGame {
         CanvasUtil.roundRect(this.ctx, x, y, w, h, radius, true, true);
         ctx.fillStyle = 'black';
 
-        // Card Name
-        ctx.font = 'normal normal 9px arial';
-        ctx.fillStyle = 'black';
-        ctx.textAlign = 'center';
-
         const imgFileName = m.card.getImageName();
 
         const img = this.images.get(imgFileName);
         if (img) {
             this.drawCardImage(imgFileName, x, y, isPopup);
-        } 
+        } else {
+            console.log(`Unable to get img ${imgFileName}`);
+        }
 
-        ctx.fillText(card.name, x + w / 2, y + 20);
+        let fontSize = 14;
+        if (isPopup) {
+            fontSize = 28;
+        }
+
+        ctx.font = this.getFont(fontSize);
+        ctx.fillStyle = PillarsConstants.COLOR_WHITE;
+
+        // Card Name
+        if (card.type == 'Pillar') {
+            ctx.textAlign = 'center';
+            ctx.fillText(card.name, x + w / 2, y + 18);
+        } else {
+            ctx.textAlign = 'left';
+            let namex = x + 5;
+            let namey = y + 18;
+            if (isPopup) {
+                namex += 10;
+                namey += 10;
+            }
+            ctx.fillText(card.name, namex, namey);
+        }
+
+        fontSize = 9;
+
+        // Marketing
+        if (card.marketing) {
+            ctx.textAlign = 'left';
+            ctx.font = this.getFont(fontSize, 'italic');
+            // TODO - split long lines
+            let mkx = x + 5;
+            let mky = y + 30;
+            if (isPopup) {
+                mkx += 10;
+                mky += 10;
+            }
+            let maxw: any = ui.MouseableCard.CARD_WIDTH - 10;
+            if (isPopup) {
+                maxw = undefined;
+            }
+            ctx.fillText(<string>card.marketing, mkx, mky, maxw);
+        }
+
+        if (card.type != 'Pillar') {
+            // Card Type and Subtype
+            ctx.font = this.getFont(10);
+            let t = card.type.toLocaleUpperCase();
+            if (card.subtype) {
+                t += ' - ' + card.subtype.toLocaleUpperCase();
+            }
+            ctx.textAlign = 'center';
+            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            let ty = y + 60;
+            if (isPopup) {
+                ty += 50;
+                ctx.font = this.getFont(16, 'bold');
+            }
+            ctx.fillText(t, x + w / 2, ty);
+        }
 
         switch (card.type) {
             case "Pillar":
 
                 const pidx: number = card.pillarIndex || 0;
 
-                // Draw the roman numeral
-                ctx.font = 'normal bold 24px arial';
-                ctx.fillStyle = 'blue';
-                ctx.fillText(card.pillarNumeral || '', x + w / 2, y + h / 2 + 20);
-                ctx.strokeStyle = 'black';
-                ctx.strokeText(card.pillarNumeral || '', x + w / 2, y + h / 2 + 20);
-
                 // Draw player rank dice
 
                 const p: Array<any> = [];
-                p[0] = { x: 5, y: 30 };
-                p[1] = { x: w - 55, y: 30 };
+                p[0] = { x: 5, y: 40 };
+                p[1] = { x: w - 55, y: 40 };
                 p[2] = { x: 5, y: h - 55 };
                 p[3] = { x: w - 55, y: h - 55 };
 
                 for (let i = 0; i < this.gameState.players.length; i++) {
 
-                    ctx.font = 'normal bold 16px arial';
+                    ctx.font = this.getFont(16, 'bold');
                     ctx.fillStyle = 'black';
                     ctx.strokeStyle = 'black';
 
@@ -1082,6 +1205,23 @@ class PillarsGame {
 
                     this.drawDie(x + p[i].x, y + p[i].y, i, player.pillarRanks[pidx], a);
                 }
+
+                break;
+
+            case "Resource":
+
+                switch (card.subtype) {
+
+                    case "Human":
+                    case "Augment Human":
+
+                        break;
+
+                }
+
+                break;
+
+            case "Trial":
 
                 break;
         }
@@ -1110,7 +1250,7 @@ class PillarsGame {
         ctx.fill();
         ctx.stroke();
 
-        ctx.font = 'normal bold 18px arial';
+        ctx.font = this.getFont(18, 'bold');
         ctx.fillStyle = '#FFFFFF';
 
         ctx.fillText(total.toString(), x + 78, y + 86);
@@ -1190,8 +1330,8 @@ class PillarsGame {
             this.ctx.fillText(`Customers: ${p.numCustomers}`, sx + 5, sy + summaryh - 10);
 
             this.ctx.lineWidth = 1;
-            this.ctx.font = 'normal normal 12px arial';
-            this.ctx.fillText(`> ${this.gameState.getLastBroadcastSummary()}`, 
+            this.ctx.font = this.getFont(12);
+            this.ctx.fillText(`> ${this.gameState.getLastBroadcastSummary()}`,
                 summaryx, summaryy + (summaryh * 2) + 15);
         }
     }
@@ -1228,7 +1368,7 @@ class PillarsGame {
         ctx.clearRect(0, 0, w, h);
 
         // Width and height scale
-        const s = 1 / (PillarsGame.BW / w);
+        const s = 1 / (PillarsConstants.BW / w);
 
         // Outer Border
         ctx.strokeStyle = 'blue';
@@ -1241,7 +1381,7 @@ class PillarsGame {
 
         // Background
         ctx.fillStyle = "#CCCCCC";
-        ctx.fillRect(0, 0, PillarsGame.BW, PillarsGame.BH);
+        ctx.fillRect(0, 0, PillarsConstants.BW, PillarsConstants.BH);
 
         if (this.isDoneLoading) {
             ctx.globalAlpha = 0.3;
@@ -1263,64 +1403,67 @@ class PillarsGame {
         const currentColor = this.playerDiceColors[currentPlayer.index];
 
         // In Play
-        
+
         ctx.strokeStyle = 'black';
         ctx.fillStyle = 'green';
-        CanvasUtil.roundRect(this.ctx, PillarsGame.INPLAYX, PillarsGame.INPLAYY, 
-            PillarsGame.INPLAYW, PillarsGame.INPLAYH,
+        CanvasUtil.roundRect(this.ctx, PillarsConstants.INPLAYX, PillarsConstants.INPLAYY,
+            PillarsConstants.INPLAYW, PillarsConstants.INPLAYH,
             30, true, true);
 
         for (let i = 0; i < this.localPlayer.inPlay.length; i++) {
             const c = this.localPlayer.inPlay[i];
             const m = new ui.MouseableCard(c);
-            m.x = PillarsGame.INPLAYX + (50 * i);
-            m.y = PillarsGame.INPLAYY + 100;
+            m.x = PillarsConstants.INPLAYX + (50 * i);
+            m.y = PillarsConstants.INPLAYY + 100;
             this.drawCard(m);
         }
 
         // Credits, Creativity, and Talent
         if (this.isDoneLoading) {
-            const resourcey = PillarsGame.INPLAYY + PillarsGame.INPLAYH - 110;
+            const resourcey = PillarsConstants.INPLAYY + PillarsConstants.INPLAYH - 110;
             this.drawResource(this.getImg(ui.PillarsImages.IMG_CREDITS),
-                PillarsGame.INPLAYX + 50, resourcey, this.localPlayer.numCredits);
+                PillarsConstants.INPLAYX + 50, resourcey, this.localPlayer.numCredits);
             this.drawResource(this.getImg(ui.PillarsImages.IMG_CREATIVITY),
-                PillarsGame.INPLAYX + 150, resourcey, this.localPlayer.numCreativity);
+                PillarsConstants.INPLAYX + 150, resourcey, this.localPlayer.numCreativity);
             this.drawResource(this.getImg(ui.PillarsImages.IMG_TALENT),
-                PillarsGame.INPLAYX + 250, resourcey, this.localPlayer.numTalents);
+                PillarsConstants.INPLAYX + 250, resourcey, this.localPlayer.numTalents);
         }
 
         // Player deck
         this.drawPlayerDeck();
-        
+
         // Marketplace
-        let marketx = PillarsGame.MARKETX;
-        let markety = PillarsGame.INPLAYY;
+        let marketx = PillarsConstants.MARKETX;
+        let markety = PillarsConstants.INPLAYY;
         this.ctx.strokeStyle = 'black';
         this.ctx.fillStyle = 'purple';
-        CanvasUtil.roundRect(this.ctx, marketx, markety, 845, PillarsGame.INPLAYH, 30,
+        CanvasUtil.roundRect(this.ctx, marketx, markety, 845, PillarsConstants.INPLAYH, 30,
             true, true);
 
         if (this.gameState.marketStack.length > 0) {
             this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, marketx + 20, markety + 15);
             this.drawCardImage(ui.PillarsImages.IMG_BACK_BLUE, marketx + 25, markety + 10);
         } else {
-            CanvasUtil.roundRect(this.ctx, marketx + 20, markety + 15, 
-                ui.MouseableCard.CARD_WIDTH, ui.MouseableCard.CARD_HEIGHT, 
+            CanvasUtil.roundRect(this.ctx, marketx + 20, markety + 15,
+                ui.MouseableCard.CARD_WIDTH, ui.MouseableCard.CARD_HEIGHT,
                 ui.MouseableCard.CARD_RADIUS, false, true);
         }
         // Trials
-        const trialx = PillarsGame.BW - 210;
+        const trialx = PillarsConstants.TRIALX;
+        const trialy = PillarsConstants.TRIALY;
 
         // Phase 1
-        this.drawCardImage(ui.PillarsImages.IMG_BACK_GREEN, trialx, 50);
+        this.drawCardImage(ui.PillarsImages.IMG_BACK_GREEN, trialx, trialy);
         this.drawCardImage(ui.PillarsImages.IMG_BACK_GREEN, trialx + 5, 45);
 
+        const offset = ui.MouseableCard.CARD_HEIGHT + PillarsConstants.TRIALY_OFFSET;
+
         // Phase 2
-        this.drawCardImage(ui.PillarsImages.IMG_BACK_ORANGE, trialx, 310);
+        this.drawCardImage(ui.PillarsImages.IMG_BACK_ORANGE, trialx, trialy + offset);
         this.drawCardImage(ui.PillarsImages.IMG_BACK_ORANGE, trialx + 5, 305);
 
         // Phase 3
-        this.drawCardImage(ui.PillarsImages.IMG_BACK_PINK, trialx, 570);
+        this.drawCardImage(ui.PillarsImages.IMG_BACK_PINK, trialx, trialy + (offset * 2));
         this.drawCardImage(ui.PillarsImages.IMG_BACK_PINK, trialx + 5, 565);
 
         // Dice rolling area
@@ -1357,17 +1500,21 @@ class PillarsGame {
             }
         }
         if (numLoaded < numImages) {
-            ctx.font = 'normal bold 36px arial';
+            ctx.font = this.getFont(36, 'bold');
             ctx.fillStyle = 'black';
-            ctx.fillText(`Loaded ${numLoaded} of ${numImages} images`, 
-                (PillarsGame.BW / 2) - 50, PillarsGame.BH / 2);
+            ctx.fillText(`Loaded ${numLoaded} of ${numImages} images`,
+                (PillarsConstants.BW / 2) - 50, PillarsConstants.BH / 2);
         }
 
-        // Mouseables
+        // Mouseables, drawn in zindex order
+        const marray = [];
         for (const [key, m] of this.mouseables.entries()) {
+            marray.push(m);
+        }
 
-            // TODO zindex?
+        marray.sort((a, b) => a.zindex > b.zindex ? 1 : -1);
 
+        for (const m of marray) {
             if (m.draw) {
                 m.draw();
             }
@@ -1381,15 +1528,15 @@ class PillarsGame {
         }
 
         // Debugging data
-        ctx.font = "normal normal 9px arial";
+        ctx.font = this.getFont(9);
         ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
-            `P: ${PillarsGame.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
+            `P: ${PillarsConstants.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
             `ih: ${window.innerHeight}, ga: ${ctx.globalAlpha}, ` +
             `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}, ` +
             `as:${this.animations.size}, ` +
             `a:${this.isAnimating()}, d:${this.isDoneLoading}, ` +
             `FRa:${ui.FrameRate.avg.toFixed(1)}, FRc:${ui.FrameRate.cur.toFixed(1)}`,
-            1200, PillarsGame.BH - 5);
+            1200, PillarsConstants.BH - 5);
     }
 
     /**
@@ -1400,12 +1547,12 @@ class PillarsGame {
         let self = this;
 
         let w = window.innerWidth - 40;
-        let h = w / PillarsGame.PROPORTION;
+        let h = w / PillarsConstants.PROPORTION;
 
         // We want the whole game to be visible regardless of window shape
         if (h > window.innerHeight) {
             h = window.innerHeight - 40;
-            w = h * PillarsGame.PROPORTION;
+            w = h * PillarsConstants.PROPORTION;
         }
 
         this.gameCanvas.width = w;
@@ -1436,7 +1583,7 @@ class PillarsGame {
      */
     getMousePos(canvas: HTMLCanvasElement, evt: MouseEvent) {
         var rect = canvas.getBoundingClientRect();
-        var scale = PillarsGame.BW / rect.width;
+        var scale = PillarsConstants.BW / rect.width;
         return {
             x: (evt.clientX - rect.left) * scale,
             y: (evt.clientY - rect.top) * scale

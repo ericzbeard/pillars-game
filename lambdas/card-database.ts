@@ -21,6 +21,7 @@ export const cardDatabase = {
     cards: [
         {
             name: "EC2 Instance",
+            marketing: "Virtual servers in the cloud.",
             type: "Resource",
             subtype: "Cloud",
             bigtext: "{$}",
@@ -46,6 +47,7 @@ export const cardDatabase = {
         },
         {
             name: "AWS Support",
+            marketing: "Maintain operational health of your AWS solutions.",
             type: "Resource",
             subtype: "Human",
             bigtext: "{Cr}",
@@ -971,7 +973,8 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Kinesis Stream",
+            name: "Amazon Kinesis",
+            marketing: "Collect, process, and analyze video and data streams in real time",
             type: "Resource",
             subtype: "Cloud",
             bigtext: "Discard 1",
@@ -1121,7 +1124,7 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Pro Cert",
+            name: "AWS Professional Certification",
             type: "Resource",
             subtype: "Augment Human",
             bigtext: "{$}{T}{Cr}",

@@ -83,7 +83,40 @@ export class Card {
      * Get the image file name for this card.
      */
     getImageName() {
-        let imgName = this.name.replace(/ /g, '').replace(/:/g, '');
+        // let imgName = this.name.replace(/ /g, '').replace(/:/g, '');
+        // return `img/${imgName}-800x1060.png`;
+
+        let imgName = '';
+        switch (this.type) {
+            case 'Resource':
+                switch (this.subtype) {
+                    case 'Human':
+                    case 'Augment Human':
+                        imgName = 'Blank-Human-Resource';
+                        break;
+                    case 'Cloud':
+                    case 'Augment Cloud':
+                        imgName = 'Blank-Cloud-Resource';
+                        break;
+                    case 'Bug':
+                        imgName = 'Blank-Bug';
+                        break;
+                    case 'Event':
+                        imgName = 'Blank-Event';
+                        break;
+                    case 'Action':
+                        imgName = 'Blank-Action';
+                        break;
+                }
+                break;
+            case "Pillar":
+                imgName = 'Blank-Pillar-' + this.pillarNumeral;
+                break;
+            case 'Trial':
+                imgName = 'Blank-Trial';
+                break;
+        }
+
         return `img/${imgName}-800x1060.png`;
     }
 }

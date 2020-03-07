@@ -6,6 +6,7 @@ import * as fs from 'fs-extra';
 
 fs.ensureDirSync('web/dist/img');
 fs.ensureDirSync('web/dist/audio');
+fs.ensureDirSync('web/dist/fonts');
 
 const filterPng = (src:string, dst:string):boolean => {
     return (src === 'web/img' || src.endsWith('.png'));
@@ -13,6 +14,7 @@ const filterPng = (src:string, dst:string):boolean => {
 
 fs.copySync('web/img', 'web/dist/img', { filter: filterPng });
 fs.copySync('web/audio', 'web/dist/audio');
+fs.copySync('web/fonts', 'web/dist/fonts');
 
 fs.copySync('web/index.html', 'web/dist/index.html');
 fs.copySync('web/index.css', 'web/dist/index.css');
