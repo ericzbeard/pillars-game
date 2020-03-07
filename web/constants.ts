@@ -43,4 +43,5 @@ export class PillarsConstants {
     static readonly MODALR = 50;
     static readonly MODAL_KEY = 'modal';
     static readonly MODAL_CLOSE_KEY = 'modal_close';
+    static readonly INFO_KEY = 'info';
 }

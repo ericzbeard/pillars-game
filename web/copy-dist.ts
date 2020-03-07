@@ -4,6 +4,7 @@
 
 import * as fs from 'fs-extra';
 
+fs.ensureDirSync('web/dist');
 fs.ensureDirSync('web/dist/img');
 fs.ensureDirSync('web/dist/audio');
 fs.ensureDirSync('web/dist/fonts');
@@ -18,5 +19,7 @@ fs.copySync('web/fonts', 'web/dist/fonts');
 
 fs.copySync('web/index.html', 'web/dist/index.html');
 fs.copySync('web/index.css', 'web/dist/index.css');
+fs.copySync('web/play.html', 'web/dist/play.html');
+fs.copySync('web/play.css', 'web/dist/play.css');
 
 // TODO - Figure out AudioURL config

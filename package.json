@@ -5,14 +5,14 @@
     "pillars_api": "bin/pillars_api.js"
   },
   "scripts": {
-    "build": "cross-env SUBDOMAIN=local node config/copy-config.js && tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/bundle.js && node web/copy-dist.js",
-    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard node config/copy-config.js && tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/bundle.js && node web/copy-dist.js",
+    "build": "cross-env SUBDOMAIN=local node config/copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] > web/dist/play-bundle.js && node web/copy-dist.js",
+    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard node config/copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] > web/dist/play-bundle.js && node web/copy-dist.js",
     "watch": "tsc -w",
     "test": "jest --group=unit",
     "integration-test": "jest --group=integration",
     "cdk": "cdk",
-    "clean": "node web/clean-dist.js", 
-    "synth-ezbeard": "cdk synth -c subdomain=ezbeard", 
+    "clean": "node web/clean-dist.js",
+    "synth-ezbeard": "cdk synth -c subdomain=ezbeard",
     "deploy-ezbeard": "cdk deploy -c subdomain=ezbeard"
   },
   "devDependencies": {
@@ -20,7 +20,7 @@
     "@aws-cdk/aws-s3-deployment": "^1.27.0",
     "@types/aws-lambda": "^8.10.46",
     "@types/howler": "^2.1.2",
-    "@types/jest": "^25.1.3",
+    "@types/jest": "^25.1.4",
     "@types/node": "^13.7.7",
     "aws-cdk": "^1.27.0",
     "cross-env": "^7.0.1",

@@ -122,10 +122,10 @@ export class Mouseable {
     draw: Function;
     hovering: boolean;
 
-    /**
-     * Width for hit testing can be overridden when we overlap cards.
-     */
-    hitWidth?: number;
+    hitx?: number;
+    hity?: number;
+    hitw?: number;
+    hith?: number;
 
     constructor() {
         this.zindex = 0;
@@ -134,13 +134,18 @@ export class Mouseable {
     /**
      * Check to see if they coordinates overlap.
      */
-    hitTest(x: number, y: number): boolean {
-        let hw = this.w;
-        if (this.hitWidth) {
-            hw = this.hitWidth;
-        }
-        const hit = x >= this.x && x <= this.x + hw &&
-            y >= this.y && y <= this.y + this.h;
+    hitTest(mx: number, my: number): boolean {
+        let hx = this.hitx ?? this.x;
+        let hy = this.hity ?? this.y;
+        let hw = this.hitw ?? this.w;
+        let hh = this.hith ?? this.h;
+
+        const hit = 
+              mx >= hx && 
+              mx <= hx + hw &&
+              my >= hy && 
+              my <= hy + hh;
+
         return hit;
     }
 }
@@ -185,6 +190,7 @@ export class PillarsImages {
     static readonly IMG_BLANK_PILLAR_III = 'img/Blank-Pillar-III-800x1060.png';
     static readonly IMG_BLANK_PILLAR_IV = 'img/Blank-Pillar-IV-800x1060.png';
     static readonly IMG_BLANK_PILLAR_V = 'img/Blank-Pillar-V-800x1060.png';
+    static readonly IMG_INFO = 'img/info-80x80.png';
 }
 
 export class FrameRate {
@@ -247,7 +253,7 @@ export interface IPillarsGame {
     /**
      * Add a mouseable UI element.
      */
-    addMouseable(m:Mouseable, key:string):any;
+    addMouseable(m: Mouseable, key: string): any;
 }
 
 /**
@@ -273,7 +279,7 @@ export class Modal {
         modalBox.y = PillarsConstants.MODALY;
         modalBox.w = PillarsConstants.MODALW;
         modalBox.h = PillarsConstants.MODALH;
-        modalBox.zindex = 9;
+        modalBox.zindex = 900;
 
         modalBox.draw = () => {
 
@@ -291,9 +297,10 @@ export class Modal {
             ctx.font = game.getFont(48, 'bold');
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
             ctx.textAlign = 'center';
-            ctx.fillText(this.text,
+            this.wrapText(ctx, this.text,
                 PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
-                PillarsConstants.MODALY + 100);
+                PillarsConstants.MODALY + 100, 
+                PillarsConstants.MODALW - 200, 50);
         };
 
         game.addMouseable(modalBox, PillarsConstants.MODAL_KEY);
@@ -306,7 +313,7 @@ export class Modal {
         modalClose.y = PillarsConstants.MODALY + 10;
         modalClose.w = closew;
         modalClose.h = closew;
-        modalClose.zindex = 10;
+        modalClose.zindex = 1000;
 
         modalClose.draw = () => {
             ctx.font = game.getFont(48, 'bold');
@@ -316,7 +323,7 @@ export class Modal {
                 ctx.strokeStyle = 'yellow';
             }
             ctx.textAlign = 'center';
-            ctx.strokeText('X', modalClose.x + closew/2, modalClose.y + closew);
+            ctx.strokeText('X', modalClose.x + closew / 2, modalClose.y + closew);
             CanvasUtil.roundRect(ctx, modalClose.x, modalClose.y, closew, closew, 5, false, true);
         };
 
@@ -325,6 +332,31 @@ export class Modal {
         }
 
         game.addMouseable(modalClose, PillarsConstants.MODAL_CLOSE_KEY);
+    }
+
+    /**
+     * Wrap text.
+     */
+    wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number,
+        maxWidth: number, lineHeight: number) {
+
+        const words = text.split(' ');
+        let line = '';
+
+        for (let n = 0; n < words.length; n++) {
+            var testLine = line + words[n] + ' ';
+            var metrics = ctx.measureText(testLine);
+            var testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                ctx.fillText(line, x, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+            }
+            else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, y);
     }
 }
 

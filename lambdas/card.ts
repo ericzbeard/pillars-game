@@ -24,6 +24,8 @@ export class Card {
     pillarNumeral?: string;
     provides?: any;
     action?: any;
+    info?: string;
+    href?: string;
 
     /**
      * Each copy of a card used in the game is given a unique index.
