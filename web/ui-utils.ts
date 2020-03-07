@@ -321,7 +321,6 @@ export class Modal {
         };
 
         modalClose.onclick = () => {
-            console.log('modalClose onclick');
             game.closeModal();
         }
 
