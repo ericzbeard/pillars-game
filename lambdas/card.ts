@@ -40,27 +40,24 @@ export class Card {
     /**
      * Convert the shorthand cost to a map.
      */
-    convertCost(): Map<string, number> {
-        const m = new Map<string, number>();
-        m.set(Card.TALENTS, 0);
-        m.set(Card.CREDITS, 0);
+    convertCost(): CardCost {
+        const cc = new CardCost();
 
-        if (!this.cost) return m;
+        if (!this.cost) return cc;
 
         for (let i = 0; i < this.cost.length; i++) {
             const c = this.cost.charAt(i);
             switch (c) {
                 case "T":
-                    const curTalents = <number>m.get(Card.TALENTS);
-                    m.set(Card.TALENTS, curTalents + 1);
+                    cc.talents++;
                     break;
                 case "$":
-                    const curCredits = <number>m.get(Card.CREDITS);
-                    m.set(Card.CREDITS, curCredits + 1);
+                    cc.credits++;
                     break;
             }
         }
-        return m;
+
+        return cc;
     }
 
     /**
@@ -69,14 +66,9 @@ export class Card {
     canAcquire(credits: number, talents: number): boolean {
         const conv = this.convertCost();
 
-        const t = conv.get(Card.TALENTS);
-        const c = conv.get(Card.CREDITS);
-
-        if (t !== undefined && c !== undefined) {
-            if (t <= talents &&
-                c <= credits) {
-                return true;
-            }
+        if (conv.talents <= talents &&
+            conv.credits <= credits) {
+            return true;
         }
         return false;
     }
@@ -120,5 +112,18 @@ export class Card {
         }
 
         return `img/${imgName}-800x1060.png`;
+    }
+}
+
+/**
+ * The cost of a card.
+ */
+export class CardCost {
+    talents: number;
+    credits: number;
+
+    constructor() {
+        this.talents = 0;
+        this.credits = 0;
     }
 }

@@ -59,7 +59,9 @@ export const cardDatabase = {
             flavor: "You do have a support contract, don't you?", 
             provides: { 
                 "Creativity": 1
-            }
+            }, 
+            info: "At AWS, Support goes beyond break-fix and issue resolution. AWS Support provides a mix of tools and technology, people, and programs designed to proactively help you optimize performance, lower costs, and innovate faster. We save time for your team by helping you to move faster in the cloud and focus on your core business.",
+            href: "https://aws.amazon.com/premiumsupport/"
         },
         {
             name: "Sandbox Credit",
@@ -85,7 +87,9 @@ export const cardDatabase = {
             provides: { 
                 "Talent": 1
             }, 
-            augments: "Human"
+            augments: "Human", 
+            info: "Organizations need individuals with cloud skills to help transform their business. AWS Training and Certification helps you build and validate your cloud skills so you can get more out of the cloud. Our content is built by experts at AWS and updated regularly to keep pace with AWS updates, so you can be sure you’re learning the latest and keeping your cloud skills fresh.", 
+            href: "https://aws.amazon.com/training/"
         },
         {
             name: "Decommision",
@@ -109,7 +113,9 @@ export const cardDatabase = {
             copies: 4, 
             action: {
                 "Promote": 6
-            }
+            }, 
+            info: "AWS Certification validates cloud expertise to help professionals highlight in-demand skills and organizations build effective, innovative teams for cloud initiatives using AWS. Choose from diverse certification exams by role and specialty designed to empower individuals and teams to meet their unique goals.", 
+            href: "https://aws.amazon.com/certification/"
         },
         {
             name: "DDoS Attack",

@@ -121,6 +121,7 @@ export class Mouseable {
     onmouseout: Function;
     draw: Function;
     hovering: boolean;
+    key:string;
 
     hitx?: number;
     hity?: number;
@@ -167,12 +168,22 @@ export class MouseableCard extends Mouseable {
         this.w = MouseableCard.CARD_WIDTH;
         this.h = MouseableCard.CARD_HEIGHT;
     }
+
+    /**
+     * Get the key for the info clickable.
+     */
+    getInfoKey(): string {
+        return PillarsConstants.INFO_KEY + '_' + this.card.name;
+    }
 }
 
 export class PillarsImages {
     static readonly IMG_CREDITS = 'img/credits-100x100.png';
     static readonly IMG_CREATIVITY = 'img/creativity-100x100.png';
     static readonly IMG_TALENT = 'img/talent-100x100.png';
+    static readonly IMG_CREDITS_SMALL = 'img/credits-40x50.png';
+    static readonly IMG_CREATIVITY_SMALL = 'img/creativity-40x50.png';
+    static readonly IMG_TALENT_SMALL = 'img/talent-40x50.png';
     static readonly IMG_LOGO = 'img/logo.png';
     static readonly IMG_BG = 'img/bg.png';
     static readonly IMG_BACK_BLUE = 'img/back-blue-800x1060.png';
@@ -191,6 +202,10 @@ export class PillarsImages {
     static readonly IMG_BLANK_PILLAR_IV = 'img/Blank-Pillar-IV-800x1060.png';
     static readonly IMG_BLANK_PILLAR_V = 'img/Blank-Pillar-V-800x1060.png';
     static readonly IMG_INFO = 'img/info-80x80.png';
+    static readonly IMG_CUSTOMER_GREEN = 'img/customer-green-400x400.png';
+    static readonly IMG_CUSTOMER_BLUE = 'img/customer-blue-400x400.png';
+    static readonly IMG_CUSTOMER_ORANGE = 'img/customer-orange-400x400.png';
+    static readonly IMG_CUSTOMER_YELLOW = 'img/customer-yellow-400x400.png';
 }
 
 export class FrameRate {
@@ -253,7 +268,12 @@ export interface IPillarsGame {
     /**
      * Add a mouseable UI element.
      */
-    addMouseable(m: Mouseable, key: string): any;
+    addMouseable(key: string, m: Mouseable): any;
+
+    /**
+     * Remove a mouseable UI element.
+     */
+    removeMouseable(key: string): any;
 }
 
 /**
@@ -261,9 +281,11 @@ export interface IPillarsGame {
  */
 export class Modal {
     text: string;
+    href?:string;
 
-    constructor(text: string) {
+    constructor(text: string, href?: string) {
         this.text = text;
+        this.href = href;
     }
 
     /**
@@ -284,9 +306,9 @@ export class Modal {
         modalBox.draw = () => {
 
             // Border
-            ctx.fillStyle = 'gray';
-            ctx.strokeStyle = PillarsConstants.COLOR_BLACKISH;
-            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = '#0B243B';
+            ctx.strokeStyle = PillarsConstants.COLOR_WHITEISH;
+            ctx.globalAlpha = 0.98;
             CanvasUtil.roundRect(ctx,
                 PillarsConstants.MODALX, PillarsConstants.MODALY,
                 PillarsConstants.MODALW, PillarsConstants.MODALH,
@@ -294,16 +316,41 @@ export class Modal {
             ctx.globalAlpha = 1;
 
             // Text
-            ctx.font = game.getFont(48, 'bold');
-            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            ctx.font = game.getFont(48, 'normal');
+            ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
             ctx.textAlign = 'center';
             this.wrapText(ctx, this.text,
                 PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
                 PillarsConstants.MODALY + 100, 
                 PillarsConstants.MODALW - 200, 50);
+
+            // Href
+            if (this.href) {
+                const hm = new Mouseable();
+                const hx = PillarsConstants.MODALX + (PillarsConstants.MODALW / 2);
+                const hy = PillarsConstants.MODALY + PillarsConstants.MODALH - 50;
+                const tm = ctx.measureText(this.href);
+                const hw = tm.width;
+                const hh = 40;
+                hm.x = hx - hw/2;
+                hm.y = hy - hh;
+                hm.w = hw;
+                hm.h = hh;
+                hm.zindex = modalBox.zindex + 1;
+                hm.draw = () => {
+                    ctx.font = game.getFont(42, 'normal');
+                    ctx.fillStyle = 'lightblue';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(<string>this.href, hx, hy);
+                };
+                hm.onclick = () => {
+                    window.open(this.href);
+                };
+                game.addMouseable(PillarsConstants.MODAL_HREF_KEY, hm);
+            }
         };
 
-        game.addMouseable(modalBox, PillarsConstants.MODAL_KEY);
+        game.addMouseable(PillarsConstants.MODAL_KEY, modalBox);
 
         // Close button
         const closew = 50;
@@ -316,14 +363,15 @@ export class Modal {
         modalClose.zindex = 1000;
 
         modalClose.draw = () => {
-            ctx.font = game.getFont(48, 'bold');
-            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            ctx.font = game.getFont(48, 'normal');
+            ctx.fillStyle = 'red';
+            ctx.strokeStyle = 'red';
             if (modalClose.hovering) {
-                ctx.fillStyle = 'black';
-                ctx.strokeStyle = 'yellow';
+                ctx.font = game.getFont(48, 'bold');
+                ctx.strokeStyle = 'red';
             }
             ctx.textAlign = 'center';
-            ctx.strokeText('X', modalClose.x + closew / 2, modalClose.y + closew);
+            ctx.strokeText('X', modalClose.x + closew / 2, modalClose.y + 40);
             CanvasUtil.roundRect(ctx, modalClose.x, modalClose.y, closew, closew, 5, false, true);
         };
 
@@ -331,7 +379,18 @@ export class Modal {
             game.closeModal();
         }
 
-        game.addMouseable(modalClose, PillarsConstants.MODAL_CLOSE_KEY);
+        game.addMouseable(PillarsConstants.MODAL_CLOSE_KEY, modalClose);
+    }
+
+    /**
+     * Close the modal.
+     */
+    close(game: IPillarsGame) {
+        if (this.href) {
+            game.removeMouseable(PillarsConstants.MODAL_HREF_KEY);
+        }
+        game.removeMouseable(PillarsConstants.MODAL_CLOSE_KEY);
+        game.removeMouseable(PillarsConstants.MODAL_KEY);
     }
 
     /**

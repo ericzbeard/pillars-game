@@ -153,7 +153,6 @@ export class GameState {
     drawOne(player: Player) {
 
         if (player.deck.length == 0 && player.discardPile.length == 0) {
-            console.log('No cards in deck or discard pile');
 
             // This might happen in a very lean deck with lots of draw
 
@@ -196,6 +195,8 @@ export class GameState {
     initializeCards() {
 
         let uniqueIndex = 0;
+
+        GameState.shuffle(cardDatabase.cards);
 
         // Load the card database
         for (let i = 0; i < cardDatabase.cards.length; i++) {
@@ -245,6 +246,8 @@ export class GameState {
                     break;
             }
         }
+
+        this.pillars.sort((a, b) => <number>a.pillarIndex > <number>b.pillarIndex ? 1 : -1);
 
         // Fill the current market
         this.refillMarket();

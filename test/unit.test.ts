@@ -45,7 +45,6 @@ test('Lambda handles path', async () => {
         httpMethod: 'GET', 
         body: 'abc'
     });
-    console.log(resp);
     expect(resp.statusCode).toBe(200);
 
     // Handle with or without the /
@@ -54,7 +53,6 @@ test('Lambda handles path', async () => {
         httpMethod: 'GET', 
         body: 'abc'
     });
-    console.log(resp);
     expect(resp.statusCode).toBe(200);
 });
 
@@ -74,12 +72,24 @@ test('Card costs work', () => {
 
     const accountManager = gameState.cardMasters.get("Account Manager");
     expect(accountManager).toBeDefined();
-    const conv = accountManager?.convertCost();
-    expect(conv?.get(Card.TALENTS)).toBe(1);
-    expect(conv?.get(Card.CREDITS)).toBe(1);
+    let conv = (<Card>accountManager).convertCost();
+    expect(conv.talents).toBe(1);
+    expect(conv.credits).toBe(1);
     expect(accountManager?.canAcquire(0, 0)).toBeFalsy();
     expect(accountManager?.canAcquire(1, 1)).toBeTruthy();
     expect(accountManager?.canAcquire(2, 2)).toBeTruthy();
+
+    const popularProduct = gameState.cardMasters.get('Popular Product');
+    expect(popularProduct).toBeDefined();
+    conv = (<Card>popularProduct).convertCost();
+    expect(conv).toBeDefined();
+    expect(conv.talents).toBe(3);
+    expect(conv.credits).toBe(3);
+    expect(popularProduct?.canAcquire(0, 0)).toBeFalsy();
+    expect(popularProduct?.canAcquire(1, 1)).toBeFalsy();
+    expect(popularProduct?.canAcquire(3, 0)).toBeFalsy();
+    expect(popularProduct?.canAcquire(2, 3)).toBeFalsy();
+    expect(popularProduct?.canAcquire(3, 3)).toBeTruthy();
 });
 
 // See integration.test.ts where we actually test the running API post-deployment.
