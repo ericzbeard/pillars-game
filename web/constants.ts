@@ -7,7 +7,7 @@ export class PillarsConstants {
     static readonly BW = 1920;
     static readonly BH = 1080;
     static readonly PROPORTION = PillarsConstants.BW / PillarsConstants.BH;
-    static readonly MARKETX = 850;
+    static readonly MARKETX = 870;
     static readonly MARKETY = 275;
     static readonly INPLAYX = 10;
     static readonly INPLAYY = PillarsConstants.MARKETY;
@@ -15,19 +15,19 @@ export class PillarsConstants {
     static readonly INPLAYH = 540;
     static readonly INPLAY_START_KEY = 'inplay_start';
     static readonly INPLAY_HOVER_KEY = 'inplay_hover';
-    static readonly BIGCARDX = 480;
-    static readonly BIGCARDY = PillarsConstants.MARKETY + 15;
+    static readonly BIGCARDX = PillarsConstants.INPLAYX + PillarsConstants.INPLAYW + 5;
+    static readonly BIGCARDY = PillarsConstants.MARKETY;
     static readonly MARKET_START_KEY = 'market_';
     static readonly MARKET_HOVER_KEY = 'market_hover';
     static readonly HAND_START_KEY = 'hand_';
     static readonly HAND_HOVER_KEY = 'hand_hover_';
     static readonly DISCARD_START_KEY = 'discard_';
     static readonly DISCARD_HOVER_KEY = 'discard_hover_';
-    static readonly HAND_X = 280;
+    static readonly HAND_X = 270;
     static readonly HAND_Y = PillarsConstants.BH - 250;
     static readonly DISCARD_X = 1000;
     static readonly DISCARD_Y = PillarsConstants.BH - 250;
-    static readonly HAND_WIDTH = 600;
+    static readonly HAND_WIDTH = 700;
     static readonly PILLARX = 650;
     static readonly PILLARY = 10;
     static readonly PILLARW = 195;
@@ -48,4 +48,5 @@ export class PillarsConstants {
     static readonly MODAL_CLOSE_KEY = 'modal_close';
     static readonly MODAL_HREF_KEY = 'modal_href';
     static readonly INFO_KEY = 'info';
+    static readonly POPUP_SCALE = 2.28;
 }

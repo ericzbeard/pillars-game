@@ -5,13 +5,14 @@ html, body {
     border: 0;
     overflow: hidden;
     display: block;
+    background-color: '#0B243B';
 }
 
 #gameCanvas {
     position: relative;
     margin: auto;
-    top: 20px;
-    left: 20px;
+   /* top: 20px;
+    left: 20px; */
 }
 
 @font-face {

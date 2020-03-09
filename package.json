@@ -21,6 +21,7 @@
     "@types/aws-lambda": "^8.10.46",
     "@types/howler": "^2.1.2",
     "@types/jest": "^25.1.4",
+    "@types/jquery": "^3.3.33",
     "@types/node": "^13.7.7",
     "aws-cdk": "^1.27.0",
     "cross-env": "^7.0.1",

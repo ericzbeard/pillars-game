@@ -48,6 +48,9 @@ export class CardActions {
 
     }
 
+    /**
+     * Do the regular actions like adding resources and drawing cards.
+     */
     doStandardActions(card:Card) {
 
         const player = this.game.localPlayer;
@@ -78,7 +81,7 @@ export class CardActions {
 
         if (card.action) {
             if (card.action.Retire) {
-
+                this.retireCardFromHand();
             }
             if (card.action.Promote) {
                 // 0-4 means that pillar
@@ -92,6 +95,15 @@ export class CardActions {
             }
         }
 
+    }
+
+    /**
+     * Remove a card in hand from the game.
+     */
+    retireCardFromHand() {
+
+        // Show a modal with the hand
+        
     }
 
     /**
