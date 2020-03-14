@@ -6,7 +6,7 @@ import { Howl, Howler } from 'howler';
 import { PillarsConfig } from '../config/pillars-config';
 import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
-import { DieAnimation, FrameRate } from './ui-utils';
+import { DieAnimation, FrameRate, TextUtil } from './ui-utils';
 import { LocalGame } from './local-game';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
@@ -1267,7 +1267,7 @@ class PillarsGame implements IPillarsGame {
 
         for (let i = 0; i < n; i++) {
             this.ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-            x += (i + 1) * img.width * scale
+            x += img.width * scale
         }
 
         return x;
@@ -1277,9 +1277,11 @@ class PillarsGame implements IPillarsGame {
      * Render a roman numeral on the card e.g. "*V".
      */
     renderTimesNumeralOnCard(numeral: string, x: number, y: number, scale: number) {
-        this.ctx.font = this.getFont(24 * scale, 'bold');
+        x += 5 * scale;
+        y += 25 * scale;
+        this.ctx.font = this.getFont(30 * scale, 'bold');
         this.ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
-        this.ctx.fillText(`*${numeral}`, x, y);
+        this.ctx.fillText(` * ${numeral}`, x + 10 * scale, y);
     }
 
     /**
@@ -1288,7 +1290,21 @@ class PillarsGame implements IPillarsGame {
     renderSmallText(card: Card, cardx: number, cardy: number, scale: number) {
         const ctx = this.ctx;
 
-        // TODO
+        const y = cardy + 120 * scale;
+        let x = cardx + ((PillarsConstants.CARD_WIDTH * scale) / 2);
+
+        this.ctx.font = this.getFont(10 * scale);
+        this.ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+        this.ctx.textAlign = 'center';
+
+        if (card.text) {
+            if (card.text.length > 50) {
+                this.ctx.font = this.getFont(8 * scale);
+            }
+            TextUtil.wrapText(this.ctx, card.text, x, y, 
+                PillarsConstants.CARD_WIDTH * scale, 12 * scale);
+        }
+
     }
 
     /**
@@ -1303,21 +1319,34 @@ class PillarsGame implements IPillarsGame {
         let providesLen = card.getProvidesLength();
 
         if (card.provides) {
-            if (card.provides.CreditByPillar ||
-                card.provides.TalentByPillar ||
-                card.provides.CreativityByPillar) {
+            if (card.provides.CreditByPillar !== undefined ||
+                card.provides.TalentByPillar != undefined  ||
+                card.provides.CreativityByPillar != undefined) {
 
                 providesLen = 3;
             }
         }
 
-        const y = cardy + 90 * scale;
-        const resourceScale = 0.35 * scale;
-        const custScale = 0.10 * scale;
-        const w = providesLen * 30;
+        const y = cardy + 75 * scale;
+        const resourceScale = 0.3 * scale;
+        const custScale = 0.075 * scale;
+        let w = providesLen * 100 * resourceScale;
         let x = cardx + ((PillarsConstants.CARD_WIDTH * scale) / 2) - (w / 2);
 
+        // The bigtext field is only populated for things we don't specify
+        // in a data-driven, programmatic way
+        if (card.bigtext) {
+            ctx.font = this.getFont(24 * scale, 'bold');
+            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            ctx.textAlign = 'center';
+            ctx.fillText(card.bigtext, x, y + 30 * scale, 
+                PillarsConstants.CARD_WIDTH * scale);
+        }
+
         if (card.provides) {
+
+            // T, $, Cr, and Cust can happen more than once
+
             if (card.provides.Talent) {
                 img = this.getImg(PillarsImages.IMG_TALENT);
                 x = this.renderImgOnCard(img, x, y, card.provides.Talent, resourceScale);
@@ -1334,23 +1363,26 @@ class PillarsGame implements IPillarsGame {
                 img = this.getImg(PillarsImages.IMG_CUSTOMER_BLUE);
                 x = this.renderImgOnCard(img, x, y, card.provides.Customer, custScale);
             }
-            if (card.provides.CreditByPillar) {
+
+            // Resource * Pillar is always by itself
+
+            if (card.provides.CreditByPillar !== undefined) {
                 img = this.getImg(PillarsImages.IMG_CREDITS);
                 x = this.renderImgOnCard(img, x, y, 1, resourceScale);
                 this.renderTimesNumeralOnCard(<string>card.pillarNumeral,
-                    x + img.width * scale, y, scale);
+                    x, y, scale);
             }
-            if (card.provides.TalentByPillar) {
+            if (card.provides.TalentByPillar !== undefined) {
                 img = this.getImg(PillarsImages.IMG_TALENT);
                 x = this.renderImgOnCard(img, x, y, 1, resourceScale);
                 this.renderTimesNumeralOnCard(<string>card.pillarNumeral,
-                    x + img.width * scale, y, scale);
+                    x, y, scale);
             }
-            if (card.provides.CreativityByPillar) {
+            if (card.provides.CreativityByPillar !== undefined) {
                 img = this.getImg(PillarsImages.IMG_CREATIVITY);
                 x = this.renderImgOnCard(img, x, y, 1, resourceScale);
                 this.renderTimesNumeralOnCard(<string>card.pillarNumeral,
-                    x + img.width * scale, y, scale);
+                    x, y, scale);
             }
         }
 
@@ -1374,7 +1406,9 @@ class PillarsGame implements IPillarsGame {
                     // 5 means any
                     // 6 means roll a d6
                     if (card.action.Promote < 5) {
-                        text = `Promote ${card.action.Promote}`;
+                        const numerals = ['I', 'II', 'III', 'IV', 'V'];
+                        const numeral = numerals[card.action.Promote];
+                        text = `Promote ${numeral}`;
                     } else if (card.action.Promote == 5) {
                         text = 'Promote Any';
                     } else {
@@ -1385,7 +1419,7 @@ class PillarsGame implements IPillarsGame {
                     text = `Draw ${card.action.Draw}`;
                 }
 
-                ctx.fillText(text, x, y + 30);
+                ctx.fillText(text, x, y + 30 * scale);
 
             } else {
 
@@ -1630,14 +1664,11 @@ class PillarsGame implements IPillarsGame {
         }
 
         // Big Text
-        if (card.bigtext && card.type != 'Pillar') {
-
+        if (card.type != 'Pillar') {
             ctx.font = this.getFont(12 * scale);
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
             ctx.textAlign = 'center';
-
             this.renderBigText(card, x, y, scale);
-
         }
 
         // Small text
@@ -1645,7 +1676,6 @@ class PillarsGame implements IPillarsGame {
             ctx.font = this.getFont(10 * scale);
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
             ctx.textAlign = 'center';
-
             this.renderSmallText(card, x, y, scale);
         }
 
@@ -1834,7 +1864,7 @@ class PillarsGame implements IPillarsGame {
             }
 
             // Player summary area
-            this.ctx.fillStyle = '#610B21';
+            this.ctx.fillStyle = '#F2F2F2';
             this.ctx.fillRect(sx, sy, summaryw, summaryh);
             this.ctx.strokeRect(sx, sy, summaryw, summaryh);
 
@@ -1846,6 +1876,11 @@ class PillarsGame implements IPillarsGame {
                 this.ctx.fillStyle = 'black';
             }
             this.ctx.fillText(p.name, sx + 5, sy + 20);
+
+            // XP
+            this.ctx.fillText(`XP:${p.xp()}`, sx + 100, sy + 20);
+
+            // Resources
 
             const talent = this.getImg(PillarsImages.IMG_TALENT);
             const credits = this.getImg(PillarsImages.IMG_CREDITS);

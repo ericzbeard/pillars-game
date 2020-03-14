@@ -102,9 +102,9 @@ export class Player {
     }
 
     /**
-     * Get the player's total pillar rank.
+     * Get the player's total pillar rank (experience or XP).
      */
-    getTotalPips() {
+    xp() {
         let t = 0;
         for (let i = 0; i < this.pillarRanks.length; i++) {
             t += this.pillarRanks[i];
@@ -120,7 +120,7 @@ export class Player {
      * 3: Rank 18+
      */
     getCurrentTrialPhase() {
-        const t = this.getTotalPips();
+        const t = this.xp();
         if (t < 12) return 1;
         if (t < 18) return 2;
         return 3;

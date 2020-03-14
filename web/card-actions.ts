@@ -99,7 +99,7 @@ export class CardActions {
                 if (card.conditionalAction.Pillar) {
                     const rank = player.pillarRanks[card.conditionalAction.Pillar.Index];
                     if (rank >= card.conditionalAction.Pillar.Rank) {
-                        for (let i = 0; i < card.action.conditionalAction.Draw; i++) {
+                        for (let i = 0; i < card.conditionalAction.Draw; i++) {
                             this.game.gameState.drawOne(player);
                         }
                     }

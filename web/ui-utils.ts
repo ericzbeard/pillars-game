@@ -4,6 +4,33 @@ import { Player } from '../lambdas/player';
 import { CanvasUtil } from './canvas-util';
 import { PillarsConstants } from './constants';
 
+export class TextUtil {
+
+    /**
+     * Wrap text.
+     */
+    static wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number,
+        maxWidth: number, lineHeight: number) {
+
+        const words = text.split(' ');
+        let line = '';
+
+        for (let n = 0; n < words.length; n++) {
+            var testLine = line + words[n] + ' ';
+            var metrics = ctx.measureText(testLine);
+            var testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                ctx.fillText(line, x, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+            }
+            else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, y);
+    }
+}
 /**
  * Used to track the progress of animations.
  */
@@ -121,7 +148,7 @@ export class Mouseable {
     onmouseout: Function;
     render: Function;
     hovering: boolean;
-    key:string;
+    key: string;
 
     hitx?: number;
     hity?: number;
@@ -141,11 +168,11 @@ export class Mouseable {
         let hw = this.hitw ?? this.w;
         let hh = this.hith ?? this.h;
 
-        const hit = 
-              mx >= hx && 
-              mx <= hx + hw &&
-              my >= hy && 
-              my <= hy + hh;
+        const hit =
+            mx >= hx &&
+            mx <= hx + hw &&
+            my >= hy &&
+            my <= hy + hh;
 
         return hit;
     }
@@ -259,7 +286,7 @@ export interface IPillarsGame {
     /**
      * Render a modal dialog that deactivates everything else until it is closed.
      */
-    showModal(text: string, href?: string):Modal;
+    showModal(text: string, href?: string): Modal;
 
     /**
      * Close the modal.
@@ -279,17 +306,17 @@ export interface IPillarsGame {
     /**
      * Render a card.
      */
-    renderCard(m: MouseableCard, isPopup?: boolean):any
+    renderCard(m: MouseableCard, isPopup?: boolean): any
 
     /**
      * Initialize the local player's hand or discard pile.
      */
-    initHandOrDiscard(isHand: boolean, isModal?:boolean, modalClick?:Function):any
+    initHandOrDiscard(isHand: boolean, isModal?: boolean, modalClick?: Function): any
 
     /**
      * Play a sound.
      */
-    playSound(name: string):any;
+    playSound(name: string): any;
 }
 
 /**
@@ -297,7 +324,7 @@ export interface IPillarsGame {
  */
 export class Modal {
     text: string;
-    href?:string;
+    href?: string;
     game: IPillarsGame;
 
     constructor(game: IPillarsGame, text: string, href?: string) {
@@ -312,7 +339,7 @@ export class Modal {
     renderCloseButton() {
         const game = this.game;
         const ctx = game.ctx;
-        
+
         const closew = 50;
 
         const modalClose = new Mouseable();
@@ -367,13 +394,13 @@ export class Modal {
     renderTitleText() {
         const game = this.game;
         const ctx = game.ctx;
-        
+
         ctx.font = game.getFont(48, 'normal');
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
         ctx.textAlign = 'center';
-        this.wrapText(ctx, this.text,
+        TextUtil.wrapText(ctx, this.text,
             PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
-            PillarsConstants.MODALY + 100, 
+            PillarsConstants.MODALY + 100,
             PillarsConstants.MODALW - 200, 50);
 
     }
@@ -392,7 +419,7 @@ export class Modal {
             const tm = ctx.measureText(this.href);
             const hw = tm.width;
             const hh = 40;
-            hm.x = hx - hw/2;
+            hm.x = hx - hw / 2;
             hm.y = hy - hh;
             hm.w = hw;
             hm.h = hh;
@@ -409,7 +436,7 @@ export class Modal {
             game.addMouseable(PillarsConstants.MODAL_HREF_KEY, hm);
         }
     }
-    
+
     /**
      * Show the modal.
      * 
@@ -448,32 +475,9 @@ export class Modal {
      * Close the modal.
      */
     close(game: IPillarsGame) {
-       
+
     }
 
-    /**
-     * Wrap text.
-     */
-    wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number,
-        maxWidth: number, lineHeight: number) {
 
-        const words = text.split(' ');
-        let line = '';
-
-        for (let n = 0; n < words.length; n++) {
-            var testLine = line + words[n] + ' ';
-            var metrics = ctx.measureText(testLine);
-            var testWidth = metrics.width;
-            if (testWidth > maxWidth && n > 0) {
-                ctx.fillText(line, x, y);
-                line = words[n] + ' ';
-                y += lineHeight;
-            }
-            else {
-                line = testLine;
-            }
-        }
-        ctx.fillText(line, x, y);
-    }
 }
 
