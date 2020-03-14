@@ -101,4 +101,29 @@ export class Player {
         return t;
     }
 
+    /**
+     * Get the player's total pillar rank.
+     */
+    getTotalPips() {
+        let t = 0;
+        for (let i = 0; i < this.pillarRanks.length; i++) {
+            t += this.pillarRanks[i];
+        }
+        return t;
+    }
+
+    /**
+     * Get the current trial phase.
+     * 
+     * 1: Rank 5-11
+     * 2: Rank 12-17
+     * 3: Rank 18+
+     */
+    getCurrentTrialPhase() {
+        const t = this.getTotalPips();
+        if (t < 12) return 1;
+        if (t < 18) return 2;
+        return 3;
+    }
+
 }

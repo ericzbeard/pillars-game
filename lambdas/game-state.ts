@@ -150,13 +150,13 @@ export class GameState {
     /**
      * Draw a card for the player from their deck.
      */
-    drawOne(player: Player) {
+    drawOne(player: Player):boolean {
 
         if (player.deck.length == 0 && player.discardPile.length == 0) {
 
             // This might happen in a very lean deck with lots of draw
 
-            return; // TODO - Alert?
+            return false; // TODO - Alert?
         }
 
         // If the player is out of cards, shuffle the discard pile
@@ -168,6 +168,30 @@ export class GameState {
 
         player.hand.push(<Card>player.deck.pop());
 
+        return true;
+    }
+
+    /**
+     * Put all cards in play and hand into discard pile. Draw 6.
+     */
+    endTurn() {
+        let p = this.currentPlayer;
+        for (let i = 0; i < p.inPlay.length; i++) {
+            p.discardPile.push(p.inPlay[i]);
+        }
+        p.inPlay = [];
+        for (let i = 0; i < p.hand.length; i++) {
+            p.discardPile.push(p.hand[i]);
+        }
+        p.hand= [];
+        for (let i = 0; i < 6; i++) {
+            this.drawOne(this.currentPlayer);
+        }
+        p.numCreativity = 0;
+        p.numCredits = 0;
+        p.numTalents = 0;
+
+        // TODO - Move to the next player
     }
 
     /**
@@ -306,6 +330,18 @@ export class GameState {
         return true;
     }
 
+    /**
+     * Check to see if the stack needs to be shuffled and shuffle it if so.
+     */
+    checkTrialStack(stack:TrialStack) {
+        if (stack.notused.length == 0) {
+            for (const c of stack.used) {
+                stack.notused.push(c);
+            }
+            stack.used = [];
+            GameState.shuffle(stack.notused);
+        }
+    }
 }
 
 /**

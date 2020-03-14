@@ -26,6 +26,8 @@ export class Card {
     action?: any;
     info?: string;
     href?: string;
+    retired: boolean;
+    conditionalAction?: any;
 
     /**
      * Each copy of a card used in the game is given a unique index.
@@ -35,6 +37,7 @@ export class Card {
     uniqueIndex?: number;
 
     constructor() {
+        this.retired = false;
     }
 
     /**
@@ -112,6 +115,31 @@ export class Card {
         }
 
         return `img/${imgName}-800x1060.png`;
+    }
+
+    /**
+     * Get the total length of the resources this card provides.
+     */
+    getProvidesLength():number {
+        if (!this.provides) {
+            return 0;
+        }
+
+        let n = 0;
+        if (this.provides.Talent) {
+            n += this.provides.Talent;
+        }
+        if (this.provides.Credit) {
+            n += this.provides.Credit;
+        }
+        if (this.provides.Creativity) {
+            n += this.provides.Creativity;
+        }
+        if (this.provides.Customer) {
+            n += this.provides.Customer;
+        }
+
+        return n;
     }
 }
 

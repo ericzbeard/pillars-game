@@ -119,7 +119,7 @@ export class Mouseable {
     onmouseup: Function;
     onmouseover: Function;
     onmouseout: Function;
-    draw: Function;
+    render: Function;
     hovering: boolean;
     key:string;
 
@@ -156,17 +156,13 @@ export class Mouseable {
  */
 export class MouseableCard extends Mouseable {
 
-    static readonly CARD_WIDTH = 172;
-    static readonly CARD_HEIGHT = 237;
-    static readonly CARD_RADIUS = 15;
-
     card: Card;
 
     constructor(card: Card) {
         super();
         this.card = card;
-        this.w = MouseableCard.CARD_WIDTH;
-        this.h = MouseableCard.CARD_HEIGHT;
+        this.w = PillarsConstants.CARD_WIDTH;
+        this.h = PillarsConstants.CARD_HEIGHT;
     }
 
     /**
@@ -261,6 +257,11 @@ export interface IPillarsGame {
     getFont(size: number, style?: string): string;
 
     /**
+     * Render a modal dialog that deactivates everything else until it is closed.
+     */
+    showModal(text: string, href?: string):Modal;
+
+    /**
      * Close the modal.
      */
     closeModal(): any;
@@ -274,6 +275,21 @@ export interface IPillarsGame {
      * Remove a mouseable UI element.
      */
     removeMouseable(key: string): any;
+
+    /**
+     * Render a card.
+     */
+    renderCard(m: MouseableCard, isPopup?: boolean):any
+
+    /**
+     * Initialize the local player's hand or discard pile.
+     */
+    initHandOrDiscard(isHand: boolean, isModal?:boolean, modalClick?:Function):any
+
+    /**
+     * Play a sound.
+     */
+    playSound(name: string):any;
 }
 
 /**
@@ -282,77 +298,21 @@ export interface IPillarsGame {
 export class Modal {
     text: string;
     href?:string;
+    game: IPillarsGame;
 
-    constructor(text: string, href?: string) {
+    constructor(game: IPillarsGame, text: string, href?: string) {
+        this.game = game;
         this.text = text;
         this.href = href;
     }
 
     /**
-     * Show the modal.
-     * 
-     * Adds mousables to the game.
+     * Render the button to close the modal at upper right.
      */
-    show(game: IPillarsGame) {
+    renderCloseButton() {
+        const game = this.game;
         const ctx = game.ctx;
-
-        const modalBox = new Mouseable();
-        modalBox.x = PillarsConstants.MODALX;
-        modalBox.y = PillarsConstants.MODALY;
-        modalBox.w = PillarsConstants.MODALW;
-        modalBox.h = PillarsConstants.MODALH;
-        modalBox.zindex = 900;
-
-        modalBox.draw = () => {
-
-            // Border
-            ctx.fillStyle = '#0B243B';
-            ctx.strokeStyle = PillarsConstants.COLOR_WHITEISH;
-            ctx.globalAlpha = 0.98;
-            CanvasUtil.roundRect(ctx,
-                PillarsConstants.MODALX, PillarsConstants.MODALY,
-                PillarsConstants.MODALW, PillarsConstants.MODALH,
-                PillarsConstants.MODALR, true, true);
-            ctx.globalAlpha = 1;
-
-            // Text
-            ctx.font = game.getFont(48, 'normal');
-            ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-            ctx.textAlign = 'center';
-            this.wrapText(ctx, this.text,
-                PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
-                PillarsConstants.MODALY + 100, 
-                PillarsConstants.MODALW - 200, 50);
-
-            // Href
-            if (this.href) {
-                const hm = new Mouseable();
-                const hx = PillarsConstants.MODALX + (PillarsConstants.MODALW / 2);
-                const hy = PillarsConstants.MODALY + PillarsConstants.MODALH - 50;
-                const tm = ctx.measureText(this.href);
-                const hw = tm.width;
-                const hh = 40;
-                hm.x = hx - hw/2;
-                hm.y = hy - hh;
-                hm.w = hw;
-                hm.h = hh;
-                hm.zindex = modalBox.zindex + 1;
-                hm.draw = () => {
-                    ctx.font = game.getFont(42, 'normal');
-                    ctx.fillStyle = 'lightblue';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(<string>this.href, hx, hy);
-                };
-                hm.onclick = () => {
-                    window.open(this.href);
-                };
-                game.addMouseable(PillarsConstants.MODAL_HREF_KEY, hm);
-            }
-        };
-
-        game.addMouseable(PillarsConstants.MODAL_KEY, modalBox);
-
-        // Close button
+        
         const closew = 50;
 
         const modalClose = new Mouseable();
@@ -362,7 +322,7 @@ export class Modal {
         modalClose.h = closew;
         modalClose.zindex = 1000;
 
-        modalClose.draw = () => {
+        modalClose.render = () => {
             ctx.font = game.getFont(48, 'normal');
             ctx.fillStyle = 'red';
             ctx.strokeStyle = 'red';
@@ -376,6 +336,7 @@ export class Modal {
         };
 
         modalClose.onclick = () => {
+            console.log('modalClose.onclick');
             game.closeModal();
         }
 
@@ -383,14 +344,111 @@ export class Modal {
     }
 
     /**
+     * Render the border and background.
+     */
+    renderBorder() {
+        const game = this.game;
+        const ctx = game.ctx;
+
+        ctx.fillStyle = '#0B243B';
+        ctx.strokeStyle = PillarsConstants.COLOR_WHITEISH;
+        ctx.globalAlpha = 0.98;
+        CanvasUtil.roundRect(ctx,
+            PillarsConstants.MODALX, PillarsConstants.MODALY,
+            PillarsConstants.MODALW, PillarsConstants.MODALH,
+            PillarsConstants.MODALR, true, true);
+        ctx.globalAlpha = 1;
+
+    }
+
+    /**
+     * Render the large title text at the top of the modal.
+     */
+    renderTitleText() {
+        const game = this.game;
+        const ctx = game.ctx;
+        
+        ctx.font = game.getFont(48, 'normal');
+        ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
+        ctx.textAlign = 'center';
+        this.wrapText(ctx, this.text,
+            PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
+            PillarsConstants.MODALY + 100, 
+            PillarsConstants.MODALW - 200, 50);
+
+    }
+
+    /**
+     * Render the Href at the bottom, if it is defined.
+     */
+    renderHref() {
+        const game = this.game;
+        const ctx = game.ctx;
+
+        if (this.href) {
+            const hm = new Mouseable();
+            const hx = PillarsConstants.MODALX + (PillarsConstants.MODALW / 2);
+            const hy = PillarsConstants.MODALY + PillarsConstants.MODALH - 50;
+            const tm = ctx.measureText(this.href);
+            const hw = tm.width;
+            const hh = 40;
+            hm.x = hx - hw/2;
+            hm.y = hy - hh;
+            hm.w = hw;
+            hm.h = hh;
+            hm.zindex = PillarsConstants.MODALZ + 1;
+            hm.render = () => {
+                ctx.font = game.getFont(42, 'normal');
+                ctx.fillStyle = 'lightblue';
+                ctx.textAlign = 'center';
+                ctx.fillText(<string>this.href, hx, hy);
+            };
+            hm.onclick = () => {
+                window.open(this.href);
+            };
+            game.addMouseable(PillarsConstants.MODAL_HREF_KEY, hm);
+        }
+    }
+    
+    /**
+     * Show the modal.
+     * 
+     * Adds mousables to the game.
+     */
+    show() {
+        const game = this.game;
+        const ctx = game.ctx;
+
+        const modalBox = new Mouseable();
+        modalBox.x = PillarsConstants.MODALX;
+        modalBox.y = PillarsConstants.MODALY;
+        modalBox.w = PillarsConstants.MODALW;
+        modalBox.h = PillarsConstants.MODALH;
+        modalBox.zindex = PillarsConstants.MODALZ;
+
+        modalBox.render = () => {
+
+            // Border
+            this.renderBorder();
+
+            // Text
+            this.renderTitleText();
+
+            // Href
+            this.renderHref();
+        };
+
+        game.addMouseable(PillarsConstants.MODAL_KEY, modalBox);
+
+        // Close button
+        this.renderCloseButton();
+    }
+
+    /**
      * Close the modal.
      */
     close(game: IPillarsGame) {
-        if (this.href) {
-            game.removeMouseable(PillarsConstants.MODAL_HREF_KEY);
-        }
-        game.removeMouseable(PillarsConstants.MODAL_CLOSE_KEY);
-        game.removeMouseable(PillarsConstants.MODAL_KEY);
+       
     }
 
     /**

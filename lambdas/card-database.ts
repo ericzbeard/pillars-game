@@ -98,10 +98,25 @@ export const cardDatabase = {
             bigtext: "Retire 1",
             text: "<em>(Retire 1 from your hand)</em><br/>Or Retire this card and add one Credit",
             starter: true,
-            copies: 4, 
-            action: {
-                "Retire": 1
-            }
+            copies: 4
+        },
+        {
+            name: "Decommision-1",
+            type: "Resource",
+            subtype: "Action",
+            bigtext: "Retire 1",
+            text: "<em>(Retire 1 from your hand)</em>",
+            starter: true,
+            copies: 0
+        },
+        {
+            name: "Decommision-2",
+            type: "Resource",
+            subtype: "Action",
+            bigtext: "Retire this card and add one credit",
+            text: "",
+            starter: true,
+            copies: 0
         },
         {
             name: "Get Certified",
@@ -575,7 +590,7 @@ export const cardDatabase = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8544;",
+            text: "Draw 1 more if you have 4+ on pillar &#8544;",
             cost: "$T",
             starter: false,
             copies: 1, 
@@ -583,6 +598,13 @@ export const cardDatabase = {
             pillarNumeral: 'I', 
             action: {
                 "Draw": 1
+            }, 
+            conditionalAction: {
+                "Draw": 1,
+                "Pillar": {
+                    "Index": 0, 
+                    "Rank": 4
+                }
             }
         },
         {
@@ -590,7 +612,7 @@ export const cardDatabase = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8545;",
+            text: "Draw 1 more if you have 4+ on pillar &#8545;",
             cost: "$T",
             starter: false,
             copies: 1, 
@@ -598,6 +620,13 @@ export const cardDatabase = {
             pillarNumeral: 'II', 
             action: {
                 "Draw": 1
+            }, 
+            conditionalAction: {
+                "Draw": 1,
+                "Pillar": {
+                    "Index": 1, 
+                    "Rank": 4
+                }
             }
         },
         {
@@ -605,7 +634,7 @@ export const cardDatabase = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8546;",
+            text: "Draw 1 more if you have 4+ on pillar &#8546;",
             cost: "$T",
             starter: false,
             copies: 1, 
@@ -613,6 +642,13 @@ export const cardDatabase = {
             pillarNumeral: 'III', 
             action: {
                 "Draw": 1
+            }, 
+            conditionalAction: {
+                "Draw": 1,
+                "Pillar": {
+                    "Index": 2, 
+                    "Rank": 4
+                }
             }
         },
         {
@@ -620,7 +656,7 @@ export const cardDatabase = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8547;",
+            text: "Draw 1 more if you have 4+ on pillar &#8547;",
             cost: "$T",
             starter: false,
             copies: 1, 
@@ -628,6 +664,13 @@ export const cardDatabase = {
             pillarNumeral: 'IV', 
             action: {
                 "Draw": 1
+            }, 
+            conditionalAction: {
+                "Draw": 1,
+                "Pillar": {
+                    "Index": 3, 
+                    "Rank": 4
+                }
             }
         },
         {
@@ -635,7 +678,7 @@ export const cardDatabase = {
             type: "Resource",
             subtype: "Event",
             bigtext: "Draw 1",
-            text: "Or Draw 2 if you have 4+ on pillar &#8548;",
+            text: "Draw 1 more if you have 4+ on pillar &#8548;",
             cost: "$T",
             starter: false,
             copies: 1, 
@@ -643,6 +686,13 @@ export const cardDatabase = {
             pillarNumeral: 'V', 
             action: {
                 "Draw": 1
+            }, 
+            conditionalAction: {
+                "Draw": 1,
+                "Pillar": {
+                    "Index": 4, 
+                    "Rank": 4
+                }
             }
         },
         {

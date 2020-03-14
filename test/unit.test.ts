@@ -92,4 +92,17 @@ test('Card costs work', () => {
     expect(popularProduct?.canAcquire(3, 3)).toBeTruthy();
 });
 
+test('Card lengths are correct', () => {
+    
+    const gameState = new GameState();
+    gameState.initializeCards();
+    
+    const accountManager = gameState.cardMasters.get("Account Manager");
+    expect(accountManager?.getProvidesLength()).toBe(2);
+
+    const juniorDeveloper = gameState.cardMasters.get("Junior Developer");
+    expect(juniorDeveloper?.getProvidesLength()).toBe(1);
+    
+
+});
 // See integration.test.ts where we actually test the running API post-deployment.
