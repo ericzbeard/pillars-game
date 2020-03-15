@@ -31,6 +31,17 @@ export class LocalGame {
         gs.players.push(human);
         gs.currentPlayer = human;
 
+        // TESTING
+        // TODO - Remove this!
+
+        // Give the human lots of stuff
+        human.numCreativity = 10;
+        human.numCredits = 10;
+        human.numTalents = 10;
+
+        /////////
+
+
         for (let i = 0; i < 3; i++) {
             const ai = new Player();
             ai.isHuman = false;

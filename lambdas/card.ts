@@ -28,6 +28,7 @@ export class Card {
     href?: string;
     retired: boolean;
     conditionalAction?: any;
+    hideType?: boolean;
 
     /**
      * Each copy of a card used in the game is given a unique index.

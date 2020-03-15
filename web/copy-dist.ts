@@ -10,11 +10,7 @@ fs.ensureDirSync('web/dist/audio');
 fs.ensureDirSync('web/dist/fonts');
 fs.ensureDirSync('web/dist/pages');
 
-const filterPng = (src:string, dst:string):boolean => {
-    return (src === 'web/img' || src.endsWith('.png'));
-};
-
-fs.copySync('web/img', 'web/dist/img', { filter: filterPng });
+fs.copySync('web/img', 'web/dist/img');
 fs.copySync('web/audio', 'web/dist/audio');
 fs.copySync('web/fonts', 'web/dist/fonts');
 

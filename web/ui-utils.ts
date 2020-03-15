@@ -306,7 +306,14 @@ export interface IPillarsGame {
     /**
      * Render a card.
      */
-    renderCard(m: MouseableCard, isPopup?: boolean): any
+    renderCard(m: MouseableCard, isPopup?: boolean, scale?:number): any
+
+    /**
+     * Render a card using an image file.
+     * 
+     * The image has to be scaled and masked.
+     */
+    renderCardImage(name: string, x: number, y: number, scale?: number):any;
 
     /**
      * Initialize the local player's hand or discard pile.
@@ -317,6 +324,11 @@ export interface IPillarsGame {
      * Play a sound.
      */
     playSound(name: string): any;
+
+    /**
+     * Broadcast a change to the game state.
+     */
+    broadcast(summary: string):any ;
 }
 
 /**
@@ -449,8 +461,8 @@ export class Modal {
         const modalBox = new Mouseable();
         modalBox.x = PillarsConstants.MODALX;
         modalBox.y = PillarsConstants.MODALY;
-        modalBox.w = PillarsConstants.MODALW;
-        modalBox.h = PillarsConstants.MODALH;
+        modalBox.w = 0; // Don't actually want this to cause mouse events
+        modalBox.h = 0;
         modalBox.zindex = PillarsConstants.MODALZ;
 
         modalBox.render = () => {

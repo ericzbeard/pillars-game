@@ -1,4 +1,5 @@
-import { IPillarsGame, Modal, MouseableCard } from './ui-utils';
+import { IPillarsGame, Modal, MouseableCard, PillarsImages } from './ui-utils';
+import { Mouseable } from './ui-utils';
 import { Card } from '../lambdas/card';
 import { PillarsConstants } from './constants';
 
@@ -8,6 +9,8 @@ import { PillarsConstants } from './constants';
 export class CardActions {
 
     customEffects: Map<string, Function>;
+
+    static readonly SCALE = 1.5;
 
     /**
      * The callback is called when we are done with any custom actions.
@@ -20,8 +23,8 @@ export class CardActions {
         this.customEffects = new Map<string, Function>();
 
         this.customEffects.set("Decommision", this.decommision);
+        this.customEffects.set("Predictive Autoscaling", this.predictiveAutoscaling);
 
-        // Decommision
         // Ops Workshop
         // Security Workshop
         // Reliability Workshop
@@ -217,6 +220,157 @@ export class CardActions {
         this.game.addMouseable(PillarsConstants.MODAL_KEY + '_c2', choice2);
         this.game.renderCard(choice2, false);
         
+    }
+
+    /**
+     * Look at the top card of any trial stack. 
+     * You may put it on the bottom of that stack face up.
+     */
+    predictiveAutoscaling() {
+
+        const modal = this.game.showModal(
+            "Look at the top card of any trial stack. " + 
+            "You may put it on the bottom of that stack face up.");
+
+        const scale = CardActions.SCALE;
+
+        const offset = PillarsConstants.CARD_WIDTH * scale + 50 * scale;
+        let w = offset * 3;
+
+        let x = PillarsConstants.MODALX + PillarsConstants.MODALW / 2 - w / 2;
+        let y = PillarsConstants.MODALY + 250;
+
+        this.game.ctx.font = this.game.getFont(12);
+        this.game.ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
+
+        const topOrBottom = (index:number) => {
+            this.game.showModal('Leave the trial on top or put it on the bottom');
+
+            const stack = this.game.gameState.trialStacks[index];
+            this.game.gameState.checkTrialStack(stack);
+            const trialCardName = stack.notused[0].name;
+            
+            const topCard = Object.assign(new Card(), 
+                this.game.gameState.cardMasters.get('Predictive Autoscaling'));
+            topCard.action = undefined;
+            topCard.bigtext = 'Top';
+            topCard.text = undefined;
+            topCard.name = '';
+            topCard.category = undefined;
+            topCard.cost = undefined;
+            topCard.hideType = true;
+            const top = new MouseableCard(topCard);
+            top.x = PillarsConstants.MODALX + PillarsConstants.MODALW / 2 - w / 2;
+            top.y = y;
+            top.zindex = PillarsConstants.MODALZ + 1;
+            top.render = () => {
+                this.game.renderCard(top, false, scale);
+            };
+            top.onclick = () => {
+                this.game.closeModal();
+                this.callback();
+                this.game.broadcast(`${this.game.gameState.currentPlayer.name} ` + 
+                    `looked at trial stack ${index + 1} and left the card on top`);
+            };
+            this.game.addMouseable(PillarsConstants.MODAL_KEY + '_top', top);
+
+            // Show the trial
+            const trialCard = stack.notused[0];
+            const trial = new MouseableCard(trialCard);
+            trial.x = top.x + offset;
+            trial.y = top.y;
+            trial.zindex = top.zindex;
+            trial.render = () => {
+                this.game.renderCard(trial, false, scale);
+            };
+            this.game.addMouseable(PillarsConstants.MODAL_KEY + '_trial', trial);
+
+            const bottomCard = Object.assign(new Card(), 
+                this.game.gameState.cardMasters.get('Predictive Autoscaling'));
+            bottomCard.action = undefined;
+            bottomCard.bigtext = 'Bottom';
+            bottomCard.text = undefined;
+            bottomCard.name = '';
+            bottomCard.category = undefined;
+            bottomCard.cost = undefined;
+            bottomCard.hideType = true;
+            const bottom = new MouseableCard(bottomCard);
+            bottom.x = trial.x + offset;
+            bottom.y = trial.y;
+            bottom.zindex = trial.zindex;
+            bottom.render = () => {
+                this.game.renderCard(bottom, false, scale);
+            };
+            bottom.onclick = () => {
+                this.game.closeModal();
+                const t = stack.notused.shift();
+                stack.used.push(<Card>t);
+                this.callback();
+                this.game.broadcast(`${this.game.gameState.currentPlayer.name} ` + 
+                    `put ${trialCardName} on the bottom of the trial stack`);
+            };
+            this.game.addMouseable(PillarsConstants.MODAL_KEY + '_bottom', bottom);
+
+        };
+
+        const textoffset = (PillarsConstants.CARD_WIDTH * scale) / 2;
+
+        // Phase 1
+        const p1 = new Mouseable();
+        p1.x = x;
+        p1.y = y;
+        p1.w = PillarsConstants.CARD_WIDTH * scale;
+        p1.h = PillarsConstants.CARD_HEIGHT * scale;
+        p1.zindex = PillarsConstants.MODALZ + 1;
+        p1.render = () => {
+            this.game.ctx.fillText('Phase 1', p1.x + textoffset, p1.y - 10);
+            this.game.renderCardImage(PillarsImages.IMG_BACK_GREEN, p1.x, p1.y, scale);
+            this.game.renderCardImage(PillarsImages.IMG_BACK_GREEN, p1.x + 5, p1.y + 5, scale);
+        };
+        p1.onclick = () => {
+            this.game.closeModal();
+            topOrBottom(0);
+        };
+        this.game.addMouseable(PillarsConstants.MODAL_KEY + '_p1', p1);
+
+        x += offset;
+
+        // Phase 2
+        const p2 = new Mouseable();
+        p2.x = x;
+        p2.y = y;
+        p2.w = PillarsConstants.CARD_WIDTH * scale;
+        p2.h = PillarsConstants.CARD_HEIGHT * scale;
+        p2.zindex = PillarsConstants.MODALZ + 1;
+        p2.render = () => {
+            this.game.ctx.fillText('Phase 2', p2.x + textoffset, p2.y - 10);
+            this.game.renderCardImage(PillarsImages.IMG_BACK_ORANGE, p2.x, p2.y, scale);
+            this.game.renderCardImage(PillarsImages.IMG_BACK_ORANGE, p2.x + 5, p2.y + 5, scale);
+        };
+        p2.onclick = () => {
+            this.game.closeModal();
+            topOrBottom(1);
+        };
+        this.game.addMouseable(PillarsConstants.MODAL_KEY + '_p2', p2);
+
+        // Phase 3
+        x += offset;
+        const p3 = new Mouseable();
+        p3.x = x;
+        p3.y = y;
+        p3.w = PillarsConstants.CARD_WIDTH * scale;
+        p3.h = PillarsConstants.CARD_HEIGHT * scale;
+        p3.zindex = PillarsConstants.MODALZ + 1;
+        p3.render = () => {
+            this.game.ctx.fillText('Phase 3', p3.x + textoffset, p3.y - 10);
+            this.game.renderCardImage(PillarsImages.IMG_BACK_PINK, p3.x, p3.y, scale);
+            this.game.renderCardImage(PillarsImages.IMG_BACK_PINK, p3.x + 5, p3.y + 5, scale);
+        };
+        p3.onclick = () => {
+            this.game.closeModal();
+            topOrBottom(2);
+        };
+        this.game.addMouseable(PillarsConstants.MODAL_KEY + '_p3', p3);
     }
 
 }

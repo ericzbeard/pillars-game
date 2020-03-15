@@ -166,7 +166,7 @@ export class GameState {
             GameState.shuffle(player.deck);
         }
 
-        player.hand.push(<Card>player.deck.pop());
+        player.hand.push(<Card>player.deck.shift());
 
         return true;
     }
@@ -207,7 +207,7 @@ export class GameState {
         if (this.currentMarket.length < max) {
             const numEmpty = max - this.currentMarket.length;
             for (let i = 0; i < numEmpty; i++) {
-                this.currentMarket.push(<Card>this.marketStack.pop());
+                this.currentMarket.push(<Card>this.marketStack.shift());
             }
         }
 
@@ -273,6 +273,16 @@ export class GameState {
 
         this.pillars.sort((a, b) => <number>a.pillarIndex > <number>b.pillarIndex ? 1 : -1);
 
+        // Shuffle market deck
+        GameState.shuffle(this.marketStack);
+
+        // TESTING
+        // TODO - Remove this
+
+        // Add specific cards to the top of the market stack so we can test quickly.
+        this.marketStack.unshift(Object.assign(new Card(), 
+            this.cardMasters.get('Predictive Autoscaling')));
+
         // Fill the current market
         this.refillMarket();
 
@@ -288,9 +298,6 @@ export class GameState {
                 this.drawOne(p);
             }
         }
-
-        // Shuffle market deck
-        GameState.shuffle(this.marketStack);
 
         // Shuffle trial stacks
         for (const t of this.trialStacks) {

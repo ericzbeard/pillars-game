@@ -1435,7 +1435,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Render a card.
      */
-    renderCard(m: MouseableCard, isPopup?: boolean): any {
+    renderCard(m: MouseableCard, isPopup?: boolean, scale?: number): any {
         const card = m.card;
         const ctx = this.ctx;
         let x = m.x;
@@ -1444,7 +1444,9 @@ class PillarsGame implements IPillarsGame {
         let h = m.h;
         let radius = PillarsConstants.CARD_RADIUS;
         let p = this.localPlayer;
-        let scale = 1;
+        if (scale === undefined) {
+            scale = 1;
+        }
 
         if (card.type == 'Pillar') {
             scale = PillarsConstants.PILLAR_SCALE;
@@ -1519,10 +1521,7 @@ class PillarsGame implements IPillarsGame {
             console.log(`Unable to get img ${imgFileName}`);
         }
 
-        let fontSize = 14;
-        if (isPopup) {
-            fontSize = 28;
-        }
+        let fontSize = 14 * scale;
 
         ctx.font = this.getFont(fontSize);
         ctx.fillStyle = PillarsConstants.COLOR_WHITE;
@@ -1533,13 +1532,9 @@ class PillarsGame implements IPillarsGame {
             ctx.fillText(card.name, x + w / 2, y + 18);
         } else {
             ctx.textAlign = 'left';
-            let namex = x + 5;
-            let namey = y + 18;
-            if (isPopup) {
-                namex += 15;
-                namey += 15;
-            }
-            ctx.fillText(card.name, namex, namey);
+            let namex = x + 5 * scale;
+            let namey = y + 18 * scale;
+            ctx.fillText(card.name, namex, namey, PillarsConstants.CARD_WIDTH * scale - 5);
         }
 
         // Info hyperlink
@@ -1569,27 +1564,32 @@ class PillarsGame implements IPillarsGame {
             this.addMouseable(m.getInfoKey(), infoLink);
         }
 
-        fontSize = 9;
+        fontSize = 9 * scale;
 
         // Marketing
         if (card.marketing) {
             ctx.textAlign = 'left';
+            let mkx = x + 5 * scale;
+            let mky = y + 30 * scale;
+         
             ctx.font = this.getFont(fontSize, 'italic');
-            // TODO - split long lines
-            let mkx = x + 5;
-            let mky = y + 30;
-            if (isPopup) {
-                mkx += 10;
-                mky += 10;
-            }
-            let maxw: any = PillarsConstants.CARD_WIDTH - 10;
-            if (isPopup) {
-                maxw = undefined;
-            }
+            let maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
             ctx.fillText(<string>card.marketing, mkx, mky, maxw);
         }
 
-        if (card.type != 'Pillar') {
+        // Flavor
+        if (card.flavor) {
+            fontSize = 9 * scale;
+            ctx.font = this.getFont(fontSize, 'italic');
+            ctx.textAlign = 'center';
+            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            let fx = x + ((PillarsConstants.CARD_WIDTH * scale) / 2);
+            let fy = y + (25 * scale) + ((PillarsConstants.CARD_HEIGHT * scale) / 2);
+            let maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
+            ctx.fillText(<string>card.flavor, fx, fy, maxw);
+        }
+
+        if (card.type != 'Pillar' && !card.hideType) {
             // Card Type and Subtype
             ctx.font = this.getFont(10);
             let t = card.type.toLocaleUpperCase();
@@ -1598,11 +1598,8 @@ class PillarsGame implements IPillarsGame {
             }
             ctx.textAlign = 'center';
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
-            let ty = y + 60;
-            if (isPopup) {
-                ty += 75;
-                ctx.font = this.getFont(18, 'bold');
-            }
+            let ty = y + 60 * scale;
+            ctx.font = this.getFont(9 * scale, 'bold');
             ctx.fillText(t, x + w / 2, ty);
         }
 
@@ -1614,18 +1611,14 @@ class PillarsGame implements IPillarsGame {
                 costw = 8;
                 costh = 8;
             }
-            let costoffx = 60;
-            let costoffy = 35;
+            let costoffx = 60 * scale;
+            let costoffy = 35 * scale;
             let cw = PillarsConstants.CARD_WIDTH;
             let ch = PillarsConstants.CARD_HEIGHT;
-            if (isPopup) {
-                costw *= PillarsConstants.POPUP_SCALE;
-                costh *= PillarsConstants.POPUP_SCALE;
-                cw *= PillarsConstants.POPUP_SCALE;
-                ch *= PillarsConstants.POPUP_SCALE;
-                costoffx = 140;
-                costoffy = 85;
-            }
+            costw *= scale;
+            costh *= scale;
+            cw *= scale;
+            ch *= scale;
 
             //ctx.strokeRect(x + cw - costoffx, y + ch - costoffy, 6 * costw, costh);
 
@@ -1864,7 +1857,7 @@ class PillarsGame implements IPillarsGame {
             }
 
             // Player summary area
-            this.ctx.fillStyle = '#F2F2F2';
+            this.ctx.fillStyle = '#D8D8D8';
             this.ctx.fillRect(sx, sy, summaryw, summaryh);
             this.ctx.strokeRect(sx, sy, summaryw, summaryh);
 
