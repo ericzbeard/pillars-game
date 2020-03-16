@@ -146,9 +146,18 @@ export class Mouseable {
     onmouseup: Function;
     onmouseover: Function;
     onmouseout: Function;
+    ondragenter: Function;
+    ondragexit: Function;
     render: Function;
     hovering: boolean;
     key: string;
+    draggable: boolean;
+    droppable: boolean;
+    dragging: boolean;
+    dragoffx: number;
+    draggoffy: number;
+    origx: number;
+    origy: number;
 
     hitx?: number;
     hity?: number;

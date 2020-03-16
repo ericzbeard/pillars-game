@@ -92,6 +92,11 @@ class PillarsGame implements IPillarsGame {
     typing: string;
 
     /**
+     * True if a card is being dragged by the mouse.
+     */
+    dragging:boolean;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -102,6 +107,7 @@ class PillarsGame implements IPillarsGame {
         this.mouseables = new Map<string, Mouseable>();
         this.sounds = new Map<string, Howl>();
         this.images = new Map<string, HTMLImageElement>();
+        this.dragging = false;
 
         this.typing = '';
 
@@ -188,6 +194,20 @@ class PillarsGame implements IPillarsGame {
             self.handleMouseMove.call(self, e);
         });
 
+        // Listen to mouse ups
+        self.gameCanvas.addEventListener('mouseup', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            self.handleMouseUp.call(self, e);
+        });
+
+        // Listen to mouse downs
+        self.gameCanvas.addEventListener('mousedown', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            self.handleMouseDown.call(self, e);
+        });
+
         // Listen for clicks
         self.gameCanvas.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -213,14 +233,14 @@ class PillarsGame implements IPillarsGame {
         // Hand
         this.initHand();
 
+        // Discard
+        this.initDiscard();
+
         // Pillars
         this.initPillars();
 
         // Market
         this.initMarket();
-
-        // // Trials
-        // this.initTrials();
 
         // In Play
         this.initInPlay();
@@ -305,7 +325,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Draw the static parts of the player's deck, hand, and discard pile.
      */
-    drawPlayerDeck() {
+    initPlayerDeck() {
 
         const ctx = this.ctx;
 
@@ -320,17 +340,17 @@ class PillarsGame implements IPillarsGame {
         ctx.textAlign = "center";
         ctx.font = this.getFont(24, 'bold');
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText("Deck", 0, 0);
+        ctx.fillText(`Deck (${this.localPlayer.deck.length})`, 0, 0);
         ctx.restore();
 
         // Draw the deck if it has any cards in it
         if (this.localPlayer.deck.length > 0) {
-            this.renderCardImage(PillarsImages.IMG_BACK_BLUE, 50, PillarsConstants.BH - 250);
+            this.renderCardImage(PillarsImages.IMG_BACK_BLUE, 45, PillarsConstants.BH - 250);
             if (this.localPlayer.deck.length > 1) {
-                this.renderCardImage(PillarsImages.IMG_BACK_BLUE, 55, PillarsConstants.BH - 255);
+                this.renderCardImage(PillarsImages.IMG_BACK_BLUE, 50, PillarsConstants.BH - 255);
             }
         } else {
-            CanvasUtil.roundRect(this.ctx, 50, PillarsConstants.BH - 250,
+            CanvasUtil.roundRect(this.ctx, 45, PillarsConstants.BH - 250,
                 PillarsConstants.CARD_WIDTH, PillarsConstants.CARD_HEIGHT,
                 PillarsConstants.CARD_RADIUS, false, true);
         }
@@ -342,7 +362,7 @@ class PillarsGame implements IPillarsGame {
         ctx.textAlign = "center";
         ctx.font = this.getFont(24, 'bold');
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText("Hand", 0, 0);
+        ctx.fillText(`Hand (${this.localPlayer.hand.length})`, 0, 0);
         ctx.restore();
 
         ctx.fillStyle = 'green';
@@ -356,12 +376,8 @@ class PillarsGame implements IPillarsGame {
         ctx.textAlign = "center";
         ctx.font = this.getFont(24, 'bold');
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText("Discard", 0, 0);
+        ctx.fillText(`Discard (${this.localPlayer.discardPile.length})`, 0, 0);
         ctx.restore();
-
-        ctx.fillStyle = 'green';
-        CanvasUtil.roundRect(this.ctx, PillarsConstants.DISCARD_X, PillarsConstants.DISCARD_Y - 5,
-            PillarsConstants.HAND_WIDTH + 10, 250, 10, true, true);
 
     }
 
@@ -376,6 +392,23 @@ class PillarsGame implements IPillarsGame {
      * Initialize the local player's discard pile.
      */
     initDiscard() {
+
+        // Discard area needs to be mouseable
+        const discard = new Mouseable();
+        discard.x = PillarsConstants.DISCARD_X;
+        discard.y = PillarsConstants.DISCARD_Y - 5;
+        discard.w = PillarsConstants.HAND_WIDTH + 10;
+        discard.h = 250;
+        discard.zindex = 0;
+        discard.droppable = true;
+
+        discard.render = () => {
+            this.ctx.fillStyle = 'green';
+            CanvasUtil.roundRect(this.ctx, PillarsConstants.DISCARD_X, PillarsConstants.DISCARD_Y - 5, PillarsConstants.HAND_WIDTH + 10, 250, 10, true, true);
+        };
+
+        this.addMouseable(PillarsConstants.DISCARD_AREA_KEY, discard);
+
         this.initHandOrDiscard(false);
     }
 
@@ -428,7 +461,12 @@ class PillarsGame implements IPillarsGame {
             const m = new MouseableCard(card);
             m.x = x + 10 + (i * cardOffset);
             m.y = y;
-            m.zindex = i;
+            m.origx = m.x;
+            m.origy = m.y;
+            m.zindex = i + 1;
+            if (isHand && this.gameState.canPlayCard(m.card)) {
+                m.draggable = true;
+            }
             if (isModal === true) {
                 m.zindex += PillarsConstants.MODALZ;
             }
@@ -471,7 +509,6 @@ class PillarsGame implements IPillarsGame {
                 m.onhover = hoverOrClick;
                 m.onclick = () => {
                     hoverOrClick();
-                    this.playSound('menuselect.wav');
                 }
             }
 
@@ -516,6 +553,8 @@ class PillarsGame implements IPillarsGame {
 
         this.gameState.refillMarket();
 
+        const p = this.localPlayer;
+
         for (let i = 0; i < this.gameState.currentMarket.length; i++) {
             const card = this.gameState.currentMarket[i];
             if (i == 3) {
@@ -527,7 +566,8 @@ class PillarsGame implements IPillarsGame {
                 this.initHoverCard(card, curx, markety,
                     PillarsConstants.MARKET_START_KEY,
                     PillarsConstants.MARKET_HOVER_KEY,
-                    i);
+                    i, 
+                    card.canAcquire(p.numCredits, p.numTalents));
             }
             curx += cw;
         }
@@ -541,45 +581,6 @@ class PillarsGame implements IPillarsGame {
     initTrials() {
 
         this.showModal("Time to face a trial!");
-
-        // Trials
-        // const trialx = PillarsConstants.TRIALX;
-        // const trialy = PillarsConstants.TRIALY;
-
-        // // Phase 1
-        // this.renderCardImage(PillarsImages.IMG_BACK_GREEN, trialx, trialy);
-        // this.renderCardImage(PillarsImages.IMG_BACK_GREEN, trialx + 5, 45);
-
-        // const offset = PillarsConstants.CARD_HEIGHT + PillarsConstants.TRIAL_OFFSET;
-
-        // // Phase 2
-        // this.renderCardImage(PillarsImages.IMG_BACK_ORANGE, trialx + offset, trialy);
-        // this.renderCardImage(PillarsImages.IMG_BACK_ORANGE, trialx + 5, 305);
-
-        // // Phase 3
-        // this.renderCardImage(PillarsImages.IMG_BACK_PINK, trialx + (offset * 2), trialy);
-        // this.renderCardImage(PillarsImages.IMG_BACK_PINK, trialx + 5, 565);
-
-        // TODO - For now, draw them all so we can finish design
-
-        // TODO - Move this to a modal, since they don't need to always be on screen
-
-        // for (let i = 0; i < this.gameState.trialStacks.length; i++) {
-        //     const stack = this.gameState.trialStacks[i];
-        //     const card = stack.notused[0];
-        //     stack.topShowing = true; // TODO
-
-        //     const offset = PillarsConstants.CARD_HEIGHT + PillarsConstants.TRIAL_OFFSET;
-
-        //     if (stack.topShowing) {
-        //         this.initHoverCard(card,
-        //             PillarsConstants.TRIALX + (i * offset),
-        //             PillarsConstants.TRIALY,
-        //             PillarsConstants.TRIAL_START_KEY,
-        //             PillarsConstants.TRIAL_HOVER_KEY,
-        //             i);
-        //     }
-        // }
 
         // We only need to show a single card, the trial being faced
         const phase = this.localPlayer.getCurrentTrialPhase();
@@ -615,6 +616,23 @@ class PillarsGame implements IPillarsGame {
         // Every time we change the in play cards, remove all the mouseables start over
         this.removeMouseableKeys(PillarsConstants.INPLAY_START_KEY);
 
+        // In Play Border
+        const inPlay = new Mouseable();
+        inPlay.x = PillarsConstants.INPLAYX;
+        inPlay.y = PillarsConstants.INPLAYY;
+        inPlay.w = PillarsConstants.INPLAYW;
+        inPlay.h = PillarsConstants.INPLAYH;
+        inPlay.zindex = 0;
+        inPlay.droppable = true;
+        inPlay.render = () => {
+            this.ctx.strokeStyle = 'black';
+            this.ctx.fillStyle = 'green';
+            CanvasUtil.roundRect(this.ctx, PillarsConstants.INPLAYX, PillarsConstants.INPLAYY,
+                PillarsConstants.INPLAYW, PillarsConstants.INPLAYH,
+                30, true, true);
+        }
+        this.addMouseable(PillarsConstants.INPLAY_AREA_KEY, inPlay);
+
         for (let i = 0; i < this.localPlayer.inPlay.length; i++) {
             const card = this.localPlayer.inPlay[i];
 
@@ -626,7 +644,7 @@ class PillarsGame implements IPillarsGame {
                 PillarsConstants.INPLAYX + 10 + (50 * place),
                 PillarsConstants.INPLAYY + 10 + (row * 10) + (10 * i),
                 PillarsConstants.INPLAY_START_KEY,
-                PillarsConstants.INPLAY_HOVER_KEY, i);
+                PillarsConstants.INPLAY_HOVER_KEY, i, false);
         }
 
     }
@@ -674,11 +692,14 @@ class PillarsGame implements IPillarsGame {
      */
     initHoverCard(card: Card, x: number, y: number,
         startKey: string, hoverKey: string,
-        index: number): MouseableCard {
+        index: number, draggable: boolean): MouseableCard {
         const m = new MouseableCard(card);
         m.x = x;
         m.y = y;
-        m.zindex = index;
+        m.origx = m.x;
+        m.origy = m.y;
+        m.draggable = draggable;
+        m.zindex = index + 1;
 
         const tk = hoverKey + index;
 
@@ -700,7 +721,6 @@ class PillarsGame implements IPillarsGame {
         m.onhover = hoverOrClick;
         m.onclick = () => {
             hoverOrClick();
-            this.playSound('menuselect.wav');
         }
 
         m.render = () => {
@@ -815,6 +835,19 @@ class PillarsGame implements IPillarsGame {
             const m = marray[i];
             const key = m.key;
 
+            if (m.dragging) {
+                // Move the mouseable
+                m.x = this.mx - m.dragoffx;
+                m.y = this.my - m.draggoffy;
+                m.zindex = 1000;
+            } else if (this.dragging) {
+
+                // If we're dragging something, we don't want to handle any 
+                // other actions associated with mouse moves.
+                // TODO - What about highlighting the droppable area?
+                break;
+            }
+
             let ignore = false;
 
             // Ignore everything but the modal close if we're showing a modal
@@ -833,11 +866,16 @@ class PillarsGame implements IPillarsGame {
                         if (m.onmouseover) {
                             m.onmouseover();
                         }
+
                         m.hovering = true;
-                        this.gameCanvas.style.cursor = 'pointer';
                         if (m.onhover) {
                             m.onhover();
                         }
+
+                        if (this.gameCanvas.style.cursor != 'grabbing') {
+                            this.gameCanvas.style.cursor = 'pointer';
+                        }
+                        
                     }
                 } else {
                     if (m.hovering) {
@@ -851,6 +889,62 @@ class PillarsGame implements IPillarsGame {
             }
         }
 
+        if (!alreadyHit && !this.dragging) {
+            // We hit nothing and we're not dragging
+            this.gameCanvas.style.cursor = 'default';
+        }
+
+        this.resizeCanvas();
+    }
+
+    /**
+     * Handle mouse down events.
+     */
+    handleMouseDown(e: MouseEvent) {
+        const poz = this.getMousePos(this.gameCanvas, e);
+        this.mx = poz.x;
+        this.my = poz.y;
+
+        let marray = this.sortMouseables(true);
+
+        let alreadyHit = false; // Only hover the top element by zindex
+
+        for (let i = 0; i < marray.length; i++) {
+            const m = marray[i];
+            const key = m.key;
+
+            let ignore = false;
+
+            // Ignore everything but the modal close if we're showing a modal
+            if (this.checkModal(key)) {
+                ignore = true;
+            }
+
+            if (!ignore) {
+                if (m.hitTest(this.mx, this.my)) {
+
+                    this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
+
+                    if (!alreadyHit) {
+                        alreadyHit = true;
+
+                        if (m.draggable) {
+                            if (m.ondragenter) {
+                                m.ondragenter();
+                            }
+                            m.dragging = true;
+                            this.gameCanvas.style.cursor = 'grabbing'; 
+                            m.dragoffx = this.mx - m.x;
+                            m.draggoffy = this.my - m.y;
+                        }
+                    }
+                } else {
+                    m.dragging = false;
+                    this.gameCanvas.style.cursor = 'default';
+                }
+            }
+        }
+
         if (!alreadyHit) {
             // We hit nothing
             this.gameCanvas.style.cursor = 'default';
@@ -858,6 +952,84 @@ class PillarsGame implements IPillarsGame {
 
         this.resizeCanvas();
     }
+
+
+    /**
+     * Handle mouse up events.
+     */
+    handleMouseUp(e: MouseEvent) {
+        const poz = this.getMousePos(this.gameCanvas, e);
+        this.mx = poz.x;
+        this.my = poz.y;
+
+        let marray = this.sortMouseables(true);
+        let dropped = false;
+
+        for (let i = 0; i < marray.length; i++) {
+            const m = marray[i];
+            
+            const key = m.key;
+
+            if (m.hitTest(this.mx, this.my)) {
+
+                this.broadcast(`up hit ${m.key}, zindex ${m.zindex}`);
+
+                // Find the mouseable being dragged, and if this m in droppable, drop it
+                for (let j = 0; j < marray.length; j++) {
+                    const d = marray[j];
+
+                    if (d.dragging && m.droppable) {
+
+                        // Dropping a card from hand into play
+                        if (m.key == PillarsConstants.INPLAY_AREA_KEY && 
+                            d instanceof MouseableCard && 
+                            this.gameState.isInHand(d.card)) {
+                            // Play the card
+                            var self = this;
+                            this.playCard(d.card, () => {
+                                self.finishPlayingCard.call(self, d, key);
+                            });
+
+                            dropped = true;
+                        }
+
+                        // Dropping a card from the market to discard
+                        if (m.key == PillarsConstants.DISCARD_AREA_KEY && 
+                            d instanceof MouseableCard && 
+                            this.gameState.isInMarket(d.card)) {
+                            
+                            // Acquire the card
+                            this.acquireCard(d.card, d.key);
+
+                            dropped = true;
+                        }
+
+                    }
+
+                    if (d.dragging && !dropped) {
+                        d.x = d.origx;
+                        d.y = d.origy;
+                    }
+
+                }
+
+            } else {
+            }
+
+        }
+
+        //this.gameCanvas.style.cursor = 'default';
+
+        // Clear dragging flags
+        this.dragging = false;
+        for (let i = 0; i < marray.length; i++) {
+            const m = marray[i];
+            m.dragging = false;
+        }
+
+        this.resizeCanvas();
+    }
+
 
     /**
      * Handle mouse clicks.
@@ -899,7 +1071,7 @@ class PillarsGame implements IPillarsGame {
             if (!ignore && !clickedSomething && m.onclick && m.hitTest(mx, my)) {
                 m.onclick();
                 clickedSomething = true;
-                console.log(`Clicked ${m.key}`);
+                this.broadcast(`Clicked ${m.key}`);
                 break;
             }
         }
@@ -1022,6 +1194,7 @@ class PillarsGame implements IPillarsGame {
      * Play a card from the local player's hand.
      */
     playCard(card: Card, callback: Function) {
+        this.playSound('menuselect.wav');
         const actions = new CardActions(this, card, callback);
         actions.play();
     }
@@ -1068,7 +1241,8 @@ class PillarsGame implements IPillarsGame {
      * Acquire a card from the marketplace.
      */
     acquireCard(card: Card, key: string) {
-
+        
+        this.playSound('menuselect.wav');
         this.localPlayer.discardPile.push(card);
         this.mouseables.delete(key);
         let indexToRemove = -1;
@@ -1301,7 +1475,7 @@ class PillarsGame implements IPillarsGame {
             if (card.text.length > 50) {
                 this.ctx.font = this.getFont(8 * scale);
             }
-            TextUtil.wrapText(this.ctx, card.text, x, y, 
+            TextUtil.wrapText(this.ctx, card.text, x, y,
                 PillarsConstants.CARD_WIDTH * scale, 12 * scale);
         }
 
@@ -1320,7 +1494,7 @@ class PillarsGame implements IPillarsGame {
 
         if (card.provides) {
             if (card.provides.CreditByPillar !== undefined ||
-                card.provides.TalentByPillar != undefined  ||
+                card.provides.TalentByPillar != undefined ||
                 card.provides.CreativityByPillar != undefined) {
 
                 providesLen = 3;
@@ -1339,7 +1513,7 @@ class PillarsGame implements IPillarsGame {
             ctx.font = this.getFont(24 * scale, 'bold');
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
             ctx.textAlign = 'center';
-            ctx.fillText(card.bigtext, x, y + 30 * scale, 
+            ctx.fillText(card.bigtext, x, y + 30 * scale,
                 PillarsConstants.CARD_WIDTH * scale);
         }
 
@@ -1386,7 +1560,7 @@ class PillarsGame implements IPillarsGame {
             }
         }
 
-        
+
         if (card.action) {
 
             if (!card.provides) {
@@ -1456,11 +1630,15 @@ class PillarsGame implements IPillarsGame {
             scale = PillarsConstants.POPUP_SCALE;
             x = PillarsConstants.BIGCARDX;
             y = PillarsConstants.BIGCARDY;
+            m.x = x;
+            m.y = y;
         }
 
         radius *= scale;
         w *= scale;
         h *= scale;
+        //m.w = w;
+        //m.h = h;
 
         // Card border
         ctx.lineWidth = 1;
@@ -1518,7 +1696,7 @@ class PillarsGame implements IPillarsGame {
         if (img) {
             this.renderCardImage(imgFileName, x, y, scale);
         } else {
-            console.log(`Unable to get img ${imgFileName}`);
+            console.log(`[Log] Unable to get img ${imgFileName}`);
         }
 
         let fontSize = 14 * scale;
@@ -1571,7 +1749,7 @@ class PillarsGame implements IPillarsGame {
             ctx.textAlign = 'left';
             let mkx = x + 5 * scale;
             let mky = y + 30 * scale;
-         
+
             ctx.font = this.getFont(fontSize, 'italic');
             let maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
             ctx.fillText(<string>card.marketing, mkx, mky, maxw);
@@ -1817,7 +1995,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Summaries of the other players. Current scores, etc.
      */
-    drawPlayerSummaries() {
+    renderPlayerSummaries() {
         const summaryx = 10;
         const summaryy = 10;
         const summaryw = 300;
@@ -1977,7 +2155,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Draw the canvas, scaling by width.
      */
-    draw(w: number, h: number) {
+    renderCanvas(w: number, h: number) {
 
         const ctx = this.ctx;
         const mx = this.mx;
@@ -2017,12 +2195,8 @@ class PillarsGame implements IPillarsGame {
         //     ctx.restore();
         // }
 
-        // In Play Border
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = 'green';
-        CanvasUtil.roundRect(this.ctx, PillarsConstants.INPLAYX, PillarsConstants.INPLAYY,
-            PillarsConstants.INPLAYW, PillarsConstants.INPLAYH,
-            30, true, true);
+        // Deck
+        this.initPlayerDeck();
 
         const currentPlayer = this.gameState.currentPlayer;
         const currentColor = this.playerDiceColors[currentPlayer.index];
@@ -2037,9 +2211,6 @@ class PillarsGame implements IPillarsGame {
             this.drawResource(this.getImg(PillarsImages.IMG_TALENT),
                 PillarsConstants.INPLAYX + 250, resourcey, this.localPlayer.numTalents);
         }
-
-        // Player deck
-        this.drawPlayerDeck();
 
         // Marketplace
         let marketx = PillarsConstants.MARKETX;
@@ -2061,7 +2232,7 @@ class PillarsGame implements IPillarsGame {
         this.renderDice();
 
         // Player summaries
-        this.drawPlayerSummaries();
+        this.renderPlayerSummaries();
 
         // Loading
         const numImages = this.images.size;
@@ -2138,7 +2309,7 @@ class PillarsGame implements IPillarsGame {
         this.gameCanvas.style.width = w + 'px';
         this.gameCanvas.style.height = h + 'px';
 
-        this.draw(w, h);
+        this.renderCanvas(w, h);
 
         // Call this every time the browser decides to redraw the screen, 
         // while we are animating something.

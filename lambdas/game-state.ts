@@ -338,6 +338,26 @@ export class GameState {
     }
 
     /**
+     * Returns true if the card is in the current player's hand.
+     */
+    isInHand(card:Card): boolean {
+        for (const c of this.currentPlayer.hand) {
+            if (c.uniqueIndex == card.uniqueIndex) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the card in the the current market (showing).
+     */
+    isInMarket(card:Card): boolean {
+        for (const c of this.currentMarket) {
+            if (c.uniqueIndex == card.uniqueIndex) return true;
+        }
+        return false;
+    }
+
+    /**
      * Check to see if the stack needs to be shuffled and shuffle it if so.
      */
     checkTrialStack(stack:TrialStack) {

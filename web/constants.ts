@@ -15,6 +15,7 @@ export class PillarsConstants {
     static readonly INPLAYH = 540;
     static readonly INPLAY_START_KEY = 'inplay_start';
     static readonly INPLAY_HOVER_KEY = 'inplay_hover';
+    static readonly INPLAY_AREA_KEY = PillarsConstants.INPLAY_START_KEY + '_area'
     static readonly BIGCARDX = PillarsConstants.INPLAYX + PillarsConstants.INPLAYW + 5;
     static readonly BIGCARDY = PillarsConstants.MARKETY;
     static readonly MARKET_START_KEY = 'market_';
@@ -23,7 +24,8 @@ export class PillarsConstants {
     static readonly HAND_HOVER_KEY = 'hand_hover_';
     static readonly DISCARD_START_KEY = 'discard_';
     static readonly DISCARD_HOVER_KEY = 'discard_hover_';
-    static readonly HAND_X = 270;
+    static readonly DISCARD_AREA_KEY = 'disc_area'; // Don't start with discard_
+    static readonly HAND_X = 260;
     static readonly HAND_Y = PillarsConstants.BH - 250;
     static readonly DISCARD_X = 1000;
     static readonly DISCARD_Y = PillarsConstants.BH - 250;
