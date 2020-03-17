@@ -3,7 +3,7 @@ import { Player } from '../lambdas/player';
 import { GameState, TrialStack } from '../lambdas/game-state';
 import { CanvasUtil } from './canvas-util';
 import { Howl, Howler } from 'howler';
-import { PillarsConfig } from '../config/pillars-config';
+import { PillarsWebConfig } from '../config/pillars-web-config';
 import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
 import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
@@ -1277,7 +1277,7 @@ class PillarsGame implements IPillarsGame {
      * Add a sound.
      */
     addSound(name: string) {
-        const baseUrl = PillarsConfig.AudioUrl;
+        const baseUrl = PillarsWebConfig.AudioUrl;
         const h = new Howl({ src: [`${baseUrl}${name}`] });
         this.sounds.set(name, h);
     }

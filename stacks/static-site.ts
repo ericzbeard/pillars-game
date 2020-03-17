@@ -7,7 +7,7 @@ import acm = require('@aws-cdk/aws-certificatemanager');
 import cdk = require('@aws-cdk/core');
 import targets = require('@aws-cdk/aws-route53-targets/lib');
 import { Construct } from '@aws-cdk/core';
-import { PillarsConfig } from '../config/pillars-config';
+import { PillarsAPIConfig } from '../config/pillars-api-config';
 import { PolicyStatement, CanonicalUserPrincipal } from '@aws-cdk/aws-iam';
 
 export interface StaticSiteProps {
@@ -54,7 +54,7 @@ export class StaticSite extends Construct {
         // This takes too long, times out, and causes the stack to fail.
         // Pre-create the cert
         // TODO - Put this in environment config
-        const certificateArn = PillarsConfig.CertificateArn;
+        const certificateArn = PillarsAPIConfig.CertificateArn;
 
         const oai = new cloudfront.CfnCloudFrontOriginAccessIdentity(this, 'OAI', {
             cloudFrontOriginAccessIdentityConfig: { comment: siteDomain }
