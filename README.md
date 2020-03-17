@@ -18,6 +18,10 @@ npm install -g browserify
 
 ## Building and deploying
 
+Before building, you will need to create config/local-config.ts, based on config/config.sample.ts.
+
+If you want to deploy to your AWS account, add another config file similar to local-config.ts with your environment name and add it to bin/pillars-api.ts.
+
 ```
 # Compile and unit test
 npm run build
