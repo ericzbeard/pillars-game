@@ -70,7 +70,7 @@ export class PillarsAnimation {
 /**
  * A die animation. Highlight the die when it changes.
  */
-export class DieAnimation extends PillarsAnimation {
+export class PillarDieAnimation extends PillarsAnimation {
     playerIndex: number;
     pillarIndex: number;
 
@@ -83,7 +83,7 @@ export class DieAnimation extends PillarsAnimation {
     }
 
     getKey() {
-        return DieAnimation.GetKey(this.playerIndex, this.pillarIndex);
+        return PillarDieAnimation.GetKey(this.playerIndex, this.pillarIndex);
     }
 
     animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
@@ -98,6 +98,72 @@ export class DieAnimation extends PillarsAnimation {
         }
     }
 }
+
+
+/**
+ * Animate the die roll for a promotion.
+ */
+export class DieRollAnimation extends PillarsAnimation {
+
+    constructor(private game: IPillarsGame, 
+                private roll:number, 
+                private x:number, 
+                private y:number, 
+                private n:number) {
+
+        super();
+    }
+
+    static GetKey(playerIndex: number, n:number) {
+        return `DieRoll_${playerIndex}_${n}`;
+    }
+
+    getKey() {
+        return DieRollAnimation.GetKey(this.game.gameState.currentPlayer.index, this.n);
+    }
+
+    /**
+     * Render the die being rolled on the modal.
+     */
+    static RenderDie(game: IPillarsGame, playerIndex: number, rank: number, x:number, y:number) {
+
+        const img = game.getImg(game.getDieName(playerIndex, rank));
+
+        const scale = 2;
+
+        if (img) {
+            game.ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        }
+    }
+
+    /**
+     * Render the die being rolled on the modal.
+     */
+    renderDie(playerIndex: number, rank: number) {
+        DieRollAnimation.RenderDie(this.game, playerIndex, rank, this.x, this.y);
+    }
+
+    animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
+        const elapsed = this.getElapsedTime();
+        const end = 1000;
+        if (elapsed >= end) {
+            deleteSelf(this.getKey());
+        } else {
+            this.percentComplete = elapsed / end;
+            let rank = (elapsed % 6) + 1;
+
+            if (this.percentComplete > 0.9) {
+                // Show the final roll at the end of the animation
+                rank = this.roll;
+            }
+
+            const p = this.game.gameState.currentPlayer;
+
+            this.renderDie(p.index, rank);
+        }
+    }
+}
+
 
 /**
  * Animate mouse clicks.
@@ -207,6 +273,32 @@ export class MouseableCard extends Mouseable {
      */
     getInfoKey(): string {
         return PillarsConstants.INFO_KEY + '_' + this.card.name;
+    }
+}
+
+/**
+ * A clickable button.
+ */
+export class Button extends Mouseable {
+    constructor(public text:string, private ctx:CanvasRenderingContext2D) {
+        super();
+
+        this.render = () => {
+            this.ctx.font = 'normal normal 24px amazonember';
+            this.ctx.textAlign = 'center';
+            this.ctx.strokeStyle = PillarsConstants.COLOR_WHITEISH;
+            this.ctx.fillStyle = '#084B8A';
+            if (this.hovering) {
+                this.ctx.fillStyle = '#045FB4';
+            }
+            CanvasUtil.roundRect(this.ctx, this.x, this.y, this.w, this.h, 5, true, true);
+            this.ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
+            this.ctx.fillText(this.text, this.x + this.w / 2, this.y + 30, this.w);
+        };
+
+        this.onhover = () => { 
+            
+        };
     }
 }
 
@@ -354,6 +446,11 @@ export interface IPillarsGame {
      * Get a loaded image. (Does not load the image)
      */
     getImg(name: string): HTMLImageElement;
+
+    /**
+     * Resize the canvas according to the window size.
+     */
+    resizeCanvas():any;
 }
 
 /**

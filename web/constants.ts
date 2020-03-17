@@ -65,4 +65,12 @@ export class PillarsConstants {
     static readonly CHATH = 240;
     static readonly COMPETITIVE_RESEARCH_KEY = PillarsConstants.MODAL_KEY + '_cr';
     static readonly NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
+    static readonly SUMMARYX = 10;
+    static readonly SUMMARYY = 10;
+    static readonly SUMMARYW = 300;
+    static readonly SUMMARYH = 120;
+    static readonly MENUX = PillarsConstants.CHATX + PillarsConstants.CHATW + 10;
+    static readonly MENUY = 10;
+    static readonly MENUW = 200;
+    static readonly MENUH = 120;
 }

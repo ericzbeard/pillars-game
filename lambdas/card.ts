@@ -29,6 +29,7 @@ export class Card {
     retired: boolean;
     conditionalAction?: any;
     hideType?: boolean;
+    trial: number;
 
     /**
      * Each copy of a card used in the game is given a unique index.

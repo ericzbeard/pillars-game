@@ -6,10 +6,11 @@ import { Howl, Howler } from 'howler';
 import { PillarsConfig } from '../config/pillars-config';
 import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
-import { DieAnimation, FrameRate, TextUtil } from './ui-utils';
+import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
 import { LocalGame } from './local-game';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
+import { Trial } from './trial';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -230,6 +231,9 @@ class PillarsGame implements IPillarsGame {
         // A button
         this.initTestButton();
 
+        // Button to go to trial and end the turn
+        this.initTrialButton();
+
         // Hand
         this.initHand();
 
@@ -256,12 +260,11 @@ class PillarsGame implements IPillarsGame {
      */
     initTestButton() {
         const self = this;
-
-        const button = new Mouseable();
-        button.x = PillarsConstants.DICEX - 80;
-        button.y = PillarsConstants.DICEY + 120;
-        button.w = 50;
-        button.h = 30;
+        const button = new Button('Test', this.ctx);
+        button.x = PillarsConstants.MENUX + 50;
+        button.y = PillarsConstants.MENUY + 50;
+        button.w = 150;
+        button.h = 50;
         button.onclick = function () {
             self.playSound('menuselect.wav');
             self.promote(0, 0);
@@ -274,35 +277,21 @@ class PillarsGame implements IPillarsGame {
             //self.showModal('This is a test');
             self.localPlayer.numCustomers++;
         };
-        button.render = function () {
-            self.ctx.strokeStyle = 'black';
-            self.ctx.fillStyle = 'lightgray';
-            if (button.hovering) {
-                self.ctx.fillStyle = 'blue';
-            }
-            CanvasUtil.roundRect(self.ctx, button.x, button.y, button.w, button.h,
-                5, true, true);
-        };
         this.addMouseable('testbutton', button);
+    }
 
-
-        const trialButton = new Mouseable();
-        trialButton.x = PillarsConstants.DICEX + 20;
-        trialButton.y = PillarsConstants.DICEY + 120;
-        trialButton.w = 50;
-        trialButton.h = 30;
+    /**
+     * Initialize the trial button.
+     */
+    initTrialButton() {
+        const trialButton = new Button('Go to Trial', this.ctx);
+        trialButton.x = PillarsConstants.MENUX + 50;
+        trialButton.y = PillarsConstants.MENUY + 150;
+        trialButton.w = 150;
+        trialButton.h = 50;
         trialButton.onclick = () => {
-            this.initTrials();
-        };
-        trialButton.render = function () {
-            self.ctx.strokeStyle = 'black';
-            self.ctx.fillStyle = 'orange';
-            if (trialButton.hovering) {
-                self.ctx.fillStyle = 'blue';
-            }
-            CanvasUtil.roundRect(self.ctx, trialButton.x, trialButton.y,
-                trialButton.w, trialButton.h,
-                5, true, true);
+            const t = new Trial(this);
+            t.show();
         };
         this.addMouseable('trialbutton', trialButton);
     }
@@ -575,38 +564,6 @@ class PillarsGame implements IPillarsGame {
         this.resizeCanvas();
     }
 
-    /**
-     * Draw the visible trial.
-     */
-    initTrials() {
-
-        this.showModal("Time to face a trial!");
-
-        // We only need to show a single card, the trial being faced
-        const phase = this.localPlayer.getCurrentTrialPhase();
-        const stack = this.gameState.trialStacks[phase - 1];
-        this.gameState.checkTrialStack(stack);
-        const card = stack.notused[0];
-
-        const m = new MouseableCard(card);
-        m.x = PillarsConstants.TRIALX;
-        m.y = PillarsConstants.TRIALY;
-        m.zindex = PillarsConstants.MODALZ + 1;
-
-
-        m.onclick = () => {
-
-        }
-
-        m.render = () => {
-            this.renderCard(m);
-        };
-
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_trialcard', m);
-
-        this.resizeCanvas();
-
-    }
 
     /**
      * Initialize in play cards each time there is a change.
@@ -1616,6 +1573,15 @@ class PillarsGame implements IPillarsGame {
             }
         }
 
+        if (card.trial) {
+
+            ctx.font = this.getFont(24 * scale, 'bold');
+            ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+            ctx.textAlign = 'center';
+            ctx.fillText(card.trial + '', x, y + 30 * scale);
+
+        }
+
     }
 
     /**
@@ -1884,7 +1850,7 @@ class PillarsGame implements IPillarsGame {
 
                     const player = this.gameState.players[i];
 
-                    const animKey = DieAnimation.GetKey(i, pidx);
+                    const animKey = PillarDieAnimation.GetKey(i, pidx);
                     const a = <PillarsAnimation>this.animations.get(animKey);
 
                     this.renderDie(x + p[i].x, y + p[i].y, i, player.pillarRanks[pidx], scale, a);
@@ -1952,7 +1918,7 @@ class PillarsGame implements IPillarsGame {
         }
 
         // Animate
-        const d: DieAnimation = new DieAnimation();
+        const d: PillarDieAnimation = new PillarDieAnimation();
         d.playerIndex = playerIndex;
         d.pillarIndex = pillarIndex;
         this.registerAnimation(d);
@@ -2008,10 +1974,7 @@ class PillarsGame implements IPillarsGame {
      * Summaries of the other players. Current scores, etc.
      */
     renderPlayerSummaries() {
-        const summaryx = 10;
-        const summaryy = 10;
-        const summaryw = 300;
-        const summaryh = 120;
+        
 
         for (let i = 0; i < 4; i++) {
             const p = this.gameState.players[i];
@@ -2020,20 +1983,20 @@ class PillarsGame implements IPillarsGame {
 
             switch (i) {
                 case 0:
-                    sx = summaryx;
-                    sy = summaryy;
+                    sx = PillarsConstants.SUMMARYX;
+                    sy = PillarsConstants.SUMMARYY;
                     break;
                 case 1:
-                    sx = summaryx + summaryw + 1;
-                    sy = summaryy;
+                    sx = PillarsConstants.SUMMARYX + PillarsConstants.SUMMARYW + 1;
+                    sy = PillarsConstants.SUMMARYY;
                     break;
                 case 2:
-                    sx = summaryx;
-                    sy = summaryy + summaryh + 1;
+                    sx = PillarsConstants.SUMMARYX;
+                    sy = PillarsConstants.SUMMARYY + PillarsConstants.SUMMARYH + 1;
                     break;
                 case 3:
-                    sx = summaryx + summaryw + 1;
-                    sy = summaryy + summaryh + 1;
+                    sx = PillarsConstants.SUMMARYX + PillarsConstants.SUMMARYW + 1;
+                    sy = PillarsConstants.SUMMARYY + PillarsConstants.SUMMARYH + 1;
                     break;
             }
 
@@ -2048,8 +2011,8 @@ class PillarsGame implements IPillarsGame {
 
             // Player summary area
             this.ctx.fillStyle = '#D8D8D8';
-            this.ctx.fillRect(sx, sy, summaryw, summaryh);
-            this.ctx.strokeRect(sx, sy, summaryw, summaryh);
+            this.ctx.fillRect(sx, sy, PillarsConstants.SUMMARYW, PillarsConstants.SUMMARYH);
+            this.ctx.strokeRect(sx, sy, PillarsConstants.SUMMARYW, PillarsConstants.SUMMARYH);
 
             // Player name
             this.ctx.font = this.getFont(14, 'bold');
@@ -2103,7 +2066,7 @@ class PillarsGame implements IPillarsGame {
                     img = yellow;
                     break;
             }
-            const custx = sx + summaryw - 105;
+            const custx = sx + PillarsConstants.SUMMARYW - 105;
             const custy = sy + 5;
             this.ctx.drawImage(img, custx, custy, 100, 100);
             this.ctx.textAlign = 'center';
@@ -2136,36 +2099,7 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
-     * Render the dice rolling area.
-     */
-    renderDice() {
-
-        const ctx = this.ctx;
-        const currentPlayer = this.gameState.currentPlayer;
-
-        // Dice rolling area
-        ctx.fillStyle = 'green';
-        ctx.strokeStyle = 'brown';
-        ctx.lineWidth = 10;
-        ctx.beginPath();
-        ctx.arc(PillarsConstants.DICEX, PillarsConstants.DICEY, 100, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.stroke();
-        ctx.lineWidth = 1;
-
-        // Draw rolled dice
-        if (currentPlayer.lastDiceRoll.length > 1) {
-            this.renderDie(PillarsConstants.DICEX - 50, PillarsConstants.DICEY - 50,
-                currentPlayer.index, currentPlayer.lastDiceRoll[0], 1);
-            if (currentPlayer.lastDiceRoll.length == 2) {
-                this.renderDie(PillarsConstants.DICEX + 15, PillarsConstants.DICEY + 15,
-                    currentPlayer.index, currentPlayer.lastDiceRoll[1], 1);
-            }
-        }
-    }
-
-    /**
-     * Draw the canvas, scaling by width.
+     * Draw the static parts of the canvas, scaling by width.
      */
     renderCanvas(w: number, h: number) {
 
@@ -2241,7 +2175,7 @@ class PillarsGame implements IPillarsGame {
                 PillarsConstants.CARD_RADIUS, false, true);
         }
 
-        this.renderDice();
+        //this.renderDice();
 
         // Player summaries
         this.renderPlayerSummaries();
