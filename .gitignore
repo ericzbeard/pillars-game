@@ -10,5 +10,5 @@ node_modules
 cdk.out
 cdk.context.json
 
-config/pillars-config.ts
+config/*-config.ts
 dist
