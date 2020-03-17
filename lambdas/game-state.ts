@@ -281,6 +281,8 @@ export class GameState {
 
         // Add specific cards to the top of the market stack so we can test quickly.
         this.marketStack.unshift(Object.assign(new Card(), 
+            this.cardMasters.get('Competitive Research')));
+        this.marketStack.unshift(Object.assign(new Card(), 
             this.cardMasters.get('Predictive Autoscaling')));
 
         // Fill the current market
@@ -367,6 +369,16 @@ export class GameState {
             }
             stack.used = [];
             GameState.shuffle(stack.notused);
+        }
+    }
+
+    /**
+     * Promote the current player.
+     */
+    promote(pillarIndex:number) { 
+        const r = this.currentPlayer.pillarRanks[pillarIndex];
+        if (r < this.pillarMax) {
+            this.currentPlayer.pillarRanks[pillarIndex]++;
         }
     }
 }

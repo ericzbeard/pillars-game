@@ -923,7 +923,7 @@ class PillarsGame implements IPillarsGame {
             if (!ignore) {
                 if (m.hitTest(this.mx, this.my)) {
 
-                    this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
+                    //this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
 
                     if (!alreadyHit) {
                         alreadyHit = true;
@@ -972,7 +972,7 @@ class PillarsGame implements IPillarsGame {
 
             if (m.hitTest(this.mx, this.my)) {
 
-                this.broadcast(`up hit ${m.key}, zindex ${m.zindex}`);
+                //this.broadcast(`up hit ${m.key}, zindex ${m.zindex}`);
 
                 // Find the mouseable being dragged, and if this m in droppable, drop it
                 for (let j = 0; j < marray.length; j++) {
@@ -984,6 +984,9 @@ class PillarsGame implements IPillarsGame {
                         if (m.key == PillarsConstants.INPLAY_AREA_KEY && 
                             d instanceof MouseableCard && 
                             this.gameState.isInHand(d.card)) {
+
+                            d.zindex = 2;
+
                             // Play the card
                             var self = this;
                             this.playCard(d.card, () => {
@@ -997,6 +1000,8 @@ class PillarsGame implements IPillarsGame {
                         if (m.key == PillarsConstants.DISCARD_AREA_KEY && 
                             d instanceof MouseableCard && 
                             this.gameState.isInMarket(d.card)) {
+                                
+                            d.zindex = 2;
                             
                             // Acquire the card
                             this.acquireCard(d.card, d.key);
@@ -1044,6 +1049,8 @@ class PillarsGame implements IPillarsGame {
             this.addSound('swoosh.wav');
             this.addSound('menuselect.wav');
             this.addSound('hint.wav');
+            this.addSound('jingle.wav');
+            this.addSound('dice.wav');
         }
 
         // Animate each click location
@@ -1071,7 +1078,6 @@ class PillarsGame implements IPillarsGame {
             if (!ignore && !clickedSomething && m.onclick && m.hitTest(mx, my)) {
                 m.onclick();
                 clickedSomething = true;
-                this.broadcast(`Clicked ${m.key}`);
                 break;
             }
         }
@@ -1196,6 +1202,12 @@ class PillarsGame implements IPillarsGame {
     playCard(card: Card, callback: Function) {
         this.playSound('menuselect.wav');
         const actions = new CardActions(this, card, callback);
+
+        // TODO - When we open a dialog, the player can choose to close it
+        // without taking an action, but this means we can't let them
+        // take the main action before doing the complex secondary action.
+        // In the real game, you do the main action first, like drawing a card
+        // or gaining resources.
         actions.play();
     }
 

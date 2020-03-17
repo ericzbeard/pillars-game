@@ -49,6 +49,7 @@ export class PillarsConstants {
     static readonly MODAL_KEY = 'modal';
     static readonly MODAL_CLOSE_KEY = 'modal_close';
     static readonly MODAL_HREF_KEY = 'modal_href';
+    static readonly MODAL_CARD_ACTION_SCALE = 1.5;
     static readonly TRIALX = PillarsConstants.BW/2 - PillarsConstants.CARD_WIDTH/2;
     static readonly TRIALY = PillarsConstants.MODALY + 200;
     static readonly TRIAL_START_KEY = 'trial_';
@@ -62,4 +63,6 @@ export class PillarsConstants {
     static readonly CHATY = 10;
     static readonly CHATW = 800;
     static readonly CHATH = 240;
+    static readonly COMPETITIVE_RESEARCH_KEY = PillarsConstants.MODAL_KEY + '_cr';
+    static readonly NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
 }

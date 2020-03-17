@@ -158,6 +158,7 @@ export class Mouseable {
     draggoffy: number;
     origx: number;
     origy: number;
+    data: any;
 
     hitx?: number;
     hity?: number;
@@ -338,6 +339,21 @@ export interface IPillarsGame {
      * Broadcast a change to the game state.
      */
     broadcast(summary: string):any ;
+
+    /**
+     * Register a running animation.
+     */
+    registerAnimation(animation: PillarsAnimation):any;
+
+    /**
+     * Get the die name for the player and rank.
+     */
+    getDieName(i: number, r: number):any;
+
+    /**
+     * Get a loaded image. (Does not load the image)
+     */
+    getImg(name: string): HTMLImageElement;
 }
 
 /**
@@ -389,6 +405,13 @@ export class Modal {
         }
 
         game.addMouseable(PillarsConstants.MODAL_CLOSE_KEY, modalClose);
+    }
+
+    /**
+     * Sometimes we don't want the modal to be closed before an action is finished.
+     */
+    hideCloseButton() {
+        this.game.removeMouseable(PillarsConstants.MODAL_CLOSE_KEY);
     }
 
     /**

@@ -1,5 +1,7 @@
 # Pillars of AWS Game (aka AWS Build)
 
+*Not yet functional! Still lots of cards to implement, and it only works in solo mode*
+
 This project has the backend and a web canvas UI for the AWS Deck Building game "AWS Build", codename "Pillars".
 
 It uses CDK for infrastructure deployment, Typescript as the default language, Lambda and API Gateway for the REST API, and DynamoDB for data storage.
@@ -8,9 +10,26 @@ This project is a prototype, with everything in one repo. Eventually we'll want 
 
 ## A few things you should install globally
 
+```
 npm install -g aws-cdk
 npm install -g typescript
 npm install -g browserify
+```
+
+## Building and deploying
+
+```
+# Compile and unit test
+npm run build
+npm run test
+
+# Local UI testing
+cd web/dist
+http-serve --cors
+
+# Deploy
+npm run build-{env}
+npm run deploy-{env}
 
 
 
