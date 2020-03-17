@@ -18,22 +18,40 @@ npm install -g browserify
 
 ## Building and deploying
 
-Before building, you will need to create config/local-config.ts, based on config/config.sample.ts.
+Before building, you will need to create config/local-web-config.ts and config/local-api-config.ts, based on config/web-config-sample.ts and config/api-config-sample.ts.
 
-If you want to deploy to your AWS account, add another config file similar to local-config.ts with your environment name and add it to bin/pillars-api.ts.
-
+Copy the config files:
 ```
+cp config/web-config-sample.ts config/local-web-config.ts
+cp config/api-config-sample.ts config/local-api-config.ts
+```
+Then edit them to remove the comments.
+
+If you want to deploy to your AWS account, add another config file similar to local-config.ts with your environment name.
+
+E.g.
+```
+cp config/web-config-sample.ts config/ezbeard-web-config.ts
+cp config/api-config-sample.ts config/ezbeard-api-config.ts
+```
+
 # Compile and unit test
+```
 npm run build
 npm run test
+```
 
 # Local UI testing
+```
 cd web/dist
 http-serve --cors
+```
 
 # Deploy
+```
 npm run build-{env}
 npm run deploy-{env}
+```
 
 
 
