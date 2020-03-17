@@ -234,6 +234,9 @@ class PillarsGame implements IPillarsGame {
         // Button to go to trial and end the turn
         this.initTrialButton();
 
+        // Rules
+        this.initRulesButton();
+
         // Hand
         this.initHand();
 
@@ -256,13 +259,29 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
+     * Show the rules.
+     */
+    initRulesButton() {
+        const self = this;
+        const button = new Button('Rules', this.ctx);
+        button.x = PillarsConstants.MENUX + 50;
+        button.y = PillarsConstants.MENUY + 25;
+        button.w = 150;
+        button.h = 50;
+        button.onclick = function () {
+            window.open('index.html#rules', '_new');
+        };
+        this.addMouseable('rulesbutton', button);
+    }
+
+    /**
      * Initialize buttons I use for testing things.
      */
     initTestButton() {
         const self = this;
         const button = new Button('Test', this.ctx);
         button.x = PillarsConstants.MENUX + 50;
-        button.y = PillarsConstants.MENUY + 50;
+        button.y = PillarsConstants.MENUY + 90;
         button.w = 150;
         button.h = 50;
         button.onclick = function () {
@@ -286,7 +305,7 @@ class PillarsGame implements IPillarsGame {
     initTrialButton() {
         const trialButton = new Button('Go to Trial', this.ctx);
         trialButton.x = PillarsConstants.MENUX + 50;
-        trialButton.y = PillarsConstants.MENUY + 150;
+        trialButton.y = PillarsConstants.MENUY + 155;
         trialButton.w = 150;
         trialButton.h = 50;
         trialButton.onclick = () => {

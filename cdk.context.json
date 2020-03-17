@@ -1,8 +1,0 @@
-{
-  "@aws-cdk/core:enableStackNameDuplicates": "true",
-  "aws-cdk:enableDiffNoFail": "true",
-  "hosted-zone:account=916662284357:domainName=pillars.click:region=us-east-1": {
-    "Id": "/hostedzone/ZJJYVF9EZOCDC",
-    "Name": "pillars.click."
-  }
-}
