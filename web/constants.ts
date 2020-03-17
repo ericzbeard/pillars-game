@@ -73,4 +73,6 @@ export class PillarsConstants {
     static readonly MENUY = 10;
     static readonly MENUW = 200;
     static readonly MENUH = 120;
+    static readonly MENU_BUTTON_W = 125;
+    static readonly MENU_BUTTON_H = 30;
 }

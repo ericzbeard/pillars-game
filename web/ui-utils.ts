@@ -284,7 +284,10 @@ export class Button extends Mouseable {
         super();
 
         this.render = () => {
-            this.ctx.font = 'normal normal 24px amazonember';
+            const standardh = 50;
+            const scale = this.h / standardh;
+            const fontSize = 24 * scale;
+            this.ctx.font = `normal normal ${fontSize}px amazonember`;
             this.ctx.textAlign = 'center';
             this.ctx.strokeStyle = PillarsConstants.COLOR_WHITEISH;
             this.ctx.fillStyle = '#084B8A';
@@ -293,7 +296,7 @@ export class Button extends Mouseable {
             }
             CanvasUtil.roundRect(this.ctx, this.x, this.y, this.w, this.h, 5, true, true);
             this.ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-            this.ctx.fillText(this.text, this.x + this.w / 2, this.y + 30, this.w);
+            this.ctx.fillText(this.text, this.x + this.w / 2, this.y + 30 * scale, this.w);
         };
 
         this.onhover = () => { 
@@ -451,6 +454,11 @@ export interface IPillarsGame {
      * Resize the canvas according to the window size.
      */
     resizeCanvas():any;
+
+    /**
+     * Get an animation by key.
+     */
+    getAnimation(key:string):PillarsAnimation | undefined;
 }
 
 /**
