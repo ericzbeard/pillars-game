@@ -20,14 +20,32 @@ export class PillarsApiStack extends cdk.Stack {
         super(scope, id, props);
 
         // Users Table - less necessary with Cognito, but we still need some fields
-        const usersTable = new dynamodb.Table(this, 'UsersTable', {
+        const userTable = new dynamodb.Table(this, 'UsersTable', {
             partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
             pointInTimeRecovery: true
         });
 
+        new cdk.CfnOutput(this, 'UserTableName', {
+            value: userTable.tableName,
+            exportName: 'UserTableName',
+        });
+
+        // Game table. Store game state.
+        const gameTable = new dynamodb.Table(this, 'GameTable', {
+            partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            pointInTimeRecovery: true
+        });
+
+        new cdk.CfnOutput(this, 'GameTableName', {
+            value: gameTable.tableName,
+            exportName: 'GameTableName',
+        });
+
         const envVars = {
-            "USER_TABLE": usersTable.tableName
+            "USER_TABLE": userTable.tableName,
+            "GAME_TABLE": gameTable.tableName
         };
 
         // Public REST API Lambda Function

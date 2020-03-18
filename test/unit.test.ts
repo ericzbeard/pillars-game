@@ -5,7 +5,7 @@ import { SynthUtils } from '@aws-cdk/assert';
 import apiLambda = require('../lambdas/api-handler');
 import {Card} from '../lambdas/card';
 import { cardDatabase } from '../lambdas/card-database';
-import { GameState } from '../lambdas/game-state';
+import { GameState, SerializedGameState } from '../lambdas/game-state';
 import {Player} from '../lambdas/player';
 import {LocalGame} from '../web/local-game';
 
@@ -105,4 +105,56 @@ test('Card lengths are correct', () => {
     
 
 });
+
+test('Game state serialization works', () => {
+
+    const g = new GameState();
+    g.initializeCards();
+    const s = new SerializedGameState(g);
+    const h = GameState.RehydrateGameState(s);
+
+    expect(h === g).toBeFalsy();
+    expect(h.isPublic).toEqual(g.isPublic);
+    expect(h.marketStack.length).toEqual(g.marketStack.length);
+    for (let i = 0; i < h.marketStack.length; i++) {
+        expect(h.marketStack[i].name).toEqual(g.marketStack[i].name);
+        expect(h.marketStack[i].uniqueIndex).toEqual(g.marketStack[i].uniqueIndex);
+    }
+    expect(h.name).toEqual(g.name);
+    expect(h.pillarMax).toEqual(g.pillarMax);
+    expect(h.pillars.length).toEqual(g.pillars.length);
+    for (let i = 0; i < h.pillars.length; i++) {
+        const hp = h.pillars[i];
+        const gp = g.pillars[i];
+        expect(hp.name).toEqual(gp.name);
+        expect(hp.pillarIndex).toEqual(gp.pillarIndex);
+        expect(hp.pillarNumeral).toEqual(gp.pillarNumeral);
+    }
+    expect(h.players.length).toEqual(g.players.length);
+    for (let i = 0; i < h.players.length; i++) {
+        const hp = h.players[i];
+        const gp = g.players[i];
+        expect(hp.id).toEqual(gp.id);
+        expect(hp.inPlay.length).toEqual(gp.inPlay.length);
+        for (let j = 0; j < hp.inPlay.length; j++) {
+            const hc = hp.inPlay[j];
+            const gc = gp.inPlay[j];
+            expect(hc.name).toEqual(gc.name);
+            expect(hc.uniqueIndex).toEqual(gc.uniqueIndex);
+            expect(hc.type).toEqual(gc.type);
+        }
+    }
+    expect(h.retiredCards.length).toEqual(g.retiredCards.length);
+    // TODO
+    expect(h.shareURL).toEqual(g.shareURL);
+    expect(h.startDateTime).toEqual(g.shareURL);
+    expect(h.status).toEqual(g.status);
+    expect(h.trialStacks.length).toEqual(g.trialStacks.length);
+    // TODO
+
+    // TODO - Check everything
+
+});
+
+
 // See integration.test.ts where we actually test the running API post-deployment.

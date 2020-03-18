@@ -5,4 +5,5 @@
 //     public static readonly CertificateArn = 'arn:aws:acm:us-east-1:X:certificate/guid';
 //     public static readonly Account = '';
 //     public static readonly Subdomain = '';
+//     public static readonly Region = ''us-east-1'';
 // }

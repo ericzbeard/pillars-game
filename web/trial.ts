@@ -115,7 +115,7 @@ export class Trial {
                     // TODO - Success and failure
 
                     game.closeModal();
-                    game.gameState.endTurn();
+                    game.endTurn();
                 }
             }, 990);
         };

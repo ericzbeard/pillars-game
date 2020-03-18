@@ -1,16 +1,9 @@
 import { Card } from '../lambdas/card';
-import { Player } from '../lambdas/player';
-import { GameState, TrialStack } from '../lambdas/game-state';
 import { CanvasUtil } from './canvas-util';
-import { Howl, Howler } from 'howler';
-import { PillarsWebConfig } from '../config/pillars-web-config';
 import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
-import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
-import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
-import { LocalGame } from './local-game';
-import { CardActions } from './card-actions';
+import { PillarsImages, PillarsAnimation } from './ui-utils';
+import { PillarDieAnimation, TextUtil } from './ui-utils';
 import { PillarsConstants } from './constants';
-import { Trial } from './trial';
 
 /**
  * Handles everything to do with rendering a card on screen.
@@ -100,19 +93,19 @@ export class CardRender {
 
             this.ctx.font = this.game.getFont(10 * scale, 'italic');
 
-            if (card.provides.CreditByPillar) {
+            if (card.provides.CreditByPillar !== undefined) {
                 const numeral = PillarsConstants.NUMERALS[card.provides.CreditByPillar];
                 const text = `(Provides 1 Credit for each rank on your pillar ${numeral})`;
                 TextUtil.wrapText(this.ctx, text, x, y,
                     PillarsConstants.CARD_WIDTH * scale, 12 * scale);
             } 
-            if (card.provides.TalentByPillar) {
+            if (card.provides.TalentByPillar !== undefined) {
                 const numeral = PillarsConstants.NUMERALS[card.provides.TalentByPillar];
                 const text = `(Provides 1 Talent for each rank on your pillar ${numeral})`;
                 TextUtil.wrapText(this.ctx, text, x, y,
                     PillarsConstants.CARD_WIDTH * scale, 12 * scale);
             } 
-            if (card.provides.CreativityByPillar) {
+            if (card.provides.CreativityByPillar !== undefined) {
                 const numeral = PillarsConstants.NUMERALS[card.provides.CreativityByPillar];
                 const text = `(Provides 1 Creativity for each rank on your pillar ${numeral})`;
                 TextUtil.wrapText(this.ctx, text, x, y,

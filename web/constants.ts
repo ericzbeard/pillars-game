@@ -7,7 +7,7 @@ export class PillarsConstants {
     static readonly BW = 1920;
     static readonly BH = 1080;
     static readonly PROPORTION = PillarsConstants.BW / PillarsConstants.BH;
-    static readonly MARKETX = 870;
+    static readonly MARKETX = 900;
     static readonly MARKETY = 275;
     static readonly INPLAYX = 10;
     static readonly INPLAYY = PillarsConstants.MARKETY;
@@ -16,7 +16,7 @@ export class PillarsConstants {
     static readonly INPLAY_START_KEY = 'inplay_start';
     static readonly INPLAY_HOVER_KEY = 'inplay_hover';
     static readonly INPLAY_AREA_KEY = PillarsConstants.INPLAY_START_KEY + '_area'
-    static readonly BIGCARDX = PillarsConstants.INPLAYX + PillarsConstants.INPLAYW + 5;
+    static readonly BIGCARDX = PillarsConstants.INPLAYX + PillarsConstants.INPLAYW + 15;
     static readonly BIGCARDY = PillarsConstants.MARKETY;
     static readonly MARKET_START_KEY = 'market_';
     static readonly MARKET_HOVER_KEY = 'market_hover';
@@ -42,7 +42,7 @@ export class PillarsConstants {
     static readonly COLOR_WHITEISH = '#FAFAFA';
     static readonly MODALX = 200;
     static readonly MODALY = 200;
-    static readonly MODALW = PillarsConstants.BW - 400;;
+    static readonly MODALW = PillarsConstants.BW - 400;
     static readonly MODALH = PillarsConstants.BH - 400;
     static readonly MODALR = 50;
     static readonly MODALZ = 900;

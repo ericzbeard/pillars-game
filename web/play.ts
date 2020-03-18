@@ -307,7 +307,7 @@ class PillarsGame implements IPillarsGame {
             self.promote(0, 0);
             self.roll(2);
             if (!self.gameState.drawOne(self.localPlayer)) {
-                self.gameState.endTurn();
+                self.endTurn();
             }
             self.initHand();
             self.initDiscard();
@@ -349,6 +349,31 @@ class PillarsGame implements IPillarsGame {
 
     }
 
+    /**
+     * Put all cards in play and hand into discard pile. Draw 6.
+     */
+    endTurn() {
+        let p = this.localPlayer;
+        for (let i = 0; i < p.inPlay.length; i++) {
+            p.discardPile.push(p.inPlay[i]);
+        }
+        p.inPlay = [];
+        for (let i = 0; i < p.hand.length; i++) {
+            p.discardPile.push(p.hand[i]);
+        }
+        p.hand= [];
+        for (let i = 0; i < 6; i++) {
+            this.gameState.drawOne(p);
+        }
+        p.numCreativity = 0;
+        p.numCredits = 0;
+        p.numTalents = 0;
+
+        // TODO - Move to the next player
+        // For now while testing, keep giving the human more turns
+
+        this.broadcast(`${p.name} ended their turn.`);
+    }
 
     /**
      * Remove all mouesables that start with the specified string.

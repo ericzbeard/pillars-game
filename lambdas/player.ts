@@ -1,13 +1,14 @@
-import {Card} from './card';
+import { Card, SerializedCard } from './card';
 
 /**
  * A Pillars player.
  */
 export class Player {
+
     /**
      * Id
      */
-    id:string;
+    id: string;
 
     /**
      * Name/Handle
@@ -57,7 +58,7 @@ export class Player {
     /**
      * Number of talents currently available to spend.
      */
-    numTalents:number;
+    numTalents: number;
 
     /**
      * Number of creativity currently available to spend.
@@ -125,5 +126,112 @@ export class Player {
         if (t < 18) return 2;
         return 3;
     }
+
+}
+
+/**
+ * A simplified version of the player that can be re-hydrated client-side.
+ */
+export class SerializedPlayer {
+
+    /**
+     * Id
+     */
+    id: string;
+
+    /**
+     * Name/Handle
+     */
+    name: string;
+
+    /**
+     * The player's deck.
+     */
+    deck: Array<SerializedCard>;
+
+    /**
+     * Hand
+     */
+    hand: Array<SerializedCard>;
+
+    /**
+     * Discard Pile
+     */
+    discardPile: Array<SerializedCard>;
+
+    /**
+     * In play
+     */
+    inPlay: Array<SerializedCard>;
+
+    /**
+     * Score (customers)
+     */
+    numCustomers: number;
+
+    /**
+     * Pillar ranks (I-V)
+     */
+    pillarRanks: number[];
+
+    /**
+     * Last dice roll
+     */
+    lastDiceRoll: number[];
+
+    /**
+     * Human or AI player.
+     */
+    isHuman: boolean;
+
+    /**
+     * Number of talents currently available to spend.
+     */
+    numTalents: number;
+
+    /**
+     * Number of creativity currently available to spend.
+     */
+    numCreativity: number;
+
+    /**
+     * Number of credits currently available to spend.
+     */
+    numCredits: number;
+
+    /**
+     * The player's array index. Play order.
+     */
+    index: number;
+
+    constructor(player: Player) {
+        this.id = player.id;
+        this.name = player.name;
+        this.deck = new Array<SerializedCard>();
+        for (const c of player.deck) {
+            this.deck.push(new SerializedCard(c));
+        }
+        this.hand = new Array<SerializedCard>();
+        for (const c of player.hand) {
+            this.hand.push(new SerializedCard(c));
+        }
+        this.discardPile = new Array<SerializedCard>();
+        for (const c of player.discardPile) {
+            this.discardPile.push(new SerializedCard(c));
+        }
+        this.inPlay = new Array<SerializedCard>();
+        for (const c of player.inPlay) {
+            this.inPlay.push(new SerializedCard(c));
+        }
+        this.numCustomers = player.numCustomers;
+        this.pillarRanks = player.pillarRanks.slice();
+        this.lastDiceRoll = player.lastDiceRoll.slice();
+        this.isHuman = player.isHuman;
+        this.numTalents = player.numTalents;
+        this.numCreativity = player.numCreativity;
+        this.numCredits = player.numCredits;
+        this.index = player.index;
+    }
+
 
 }

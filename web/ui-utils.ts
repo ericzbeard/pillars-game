@@ -459,6 +459,11 @@ export interface IPillarsGame {
      * Get an animation by key.
      */
     getAnimation(key:string):PillarsAnimation | undefined;
+
+    /**
+     * Put all cards in play and hand into discard pile. Draw 6.
+     */
+    endTurn():any;
 }
 
 /**

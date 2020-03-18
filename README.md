@@ -2,6 +2,8 @@
 
 *Not yet functional! Still lots of cards to implement, and it only works in solo mode*
 
+*Also, this is a hobby project coded by one person, and not an official AWS app*
+
 This project has the backend and a web canvas UI for the AWS Deck Building game "AWS Build", codename "Pillars".
 
 It uses CDK for infrastructure deployment, Typescript as the default language, Lambda and API Gateway for the REST API, and DynamoDB for data storage.

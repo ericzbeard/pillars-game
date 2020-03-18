@@ -1,4 +1,9 @@
-import { GameState } from './game-state';
+import { GameState, SerializedGameState } from './game-state';
+import * as queryString from 'query-string';
+import * as uuid from 'uuid';
+import * as AWS from 'aws-sdk';
+import { PillarsAPIConfig } from '../config/pillars-api-config';
+AWS.config.update({region:PillarsAPIConfig.Region});
 
 /**
  * A base class for REST API endpoints.
@@ -28,27 +33,49 @@ class GameEndpoint extends ApiEndpoint {
 
     /**
      * Create a new game.
+     * 
+     * data is a stringified SerializedGameState
      */
-    put(name: string): GameState {
-        return new GameState();
+    async put(params: any, data: string): Promise<GameState> {
+
+        let s = <SerializedGameState>JSON.parse(data);
+
+        // Generate a unique ID
+        s.id = uuid.v4();
+
+        const item = {
+            TableName: <string>process.env.GAME_TABLE,
+            Item: s
+        };
+
+        const documentClient = new AWS.DynamoDB.DocumentClient();
+
+        const result = await documentClient.put(item).promise();
+        
+        console.log(`put result: ${JSON.stringify(result, null, 0)}`);
+        
+        const gameState = GameState.RehydrateGameState(s);
+
+        // Return the updated game state
+        return gameState;
     }
 
     /**
      * Get the state of a game.
      */
-    get(id:string):GameState {
+    get(params: any, data: string): GameState {
         return new GameState();
     }
 
     /**
      * Delete a game.
      */
-    del(id:string) { }
+    del(params: any, data: string) { }
 
     /**
      * Update game state.
      */
-    post(gameState:GameState) { }
+    post(params: any, data: string) { }
 
 }
 
@@ -62,7 +89,7 @@ class UnitTestEndpoint extends ApiEndpoint {
         this.verbs.set('get', this.get);
     }
 
-    get(name:string) {
+    get(params: any, data: string) {
         return { result: "Ok" }
     }
 
@@ -71,7 +98,7 @@ class UnitTestEndpoint extends ApiEndpoint {
 /**
  * This class handles mapping between paths and imlementation functions.
  */
-class ApiHandler {
+export class ApiHandler {
 
     endpoints: Map<string, ApiEndpoint>;
 
@@ -84,7 +111,7 @@ class ApiHandler {
     /**
      * Parse the path and call the appropriate endpoint.
      */
-    handlePath = async (path: string, verb:string, data:string): Promise<any> => {
+    handlePath = async (path: string, verb: string, data: string): Promise<any> => {
 
         console.log(`handlePath got path ${path}, verb ${verb}`);
 
@@ -94,12 +121,16 @@ class ApiHandler {
             console.log(`Stripped / from path: ${path}`);
         }
 
+        let parsed = queryString.parseUrl(path);
+        let params = parsed.query;
+
         console.log(this.endpoints.keys());
 
         // e.g.
-        // GET /game/abc
+        // GET /game?gameId=x
         // PUT /game
 
+        // Iterate over endpoints and look for a matching key
         for (const [key, value] of this.endpoints.entries()) {
 
             console.log(`Testing path ${path} with key ${key}`);
@@ -109,12 +140,14 @@ class ApiHandler {
             if (r.test(path)) {
 
                 console.log(`Path ${path} matches`);
-                
+
                 const endpoint = value;
                 if (endpoint) {
                     const f = endpoint.verbs.get(verb.toLowerCase());
                     if (f) {
-                        const retval = f(data);
+
+                        // Call the endpoint function
+                        const retval = f(params, data);
 
                         console.log(`${path}.${verb} retval: ${retval}`);
 

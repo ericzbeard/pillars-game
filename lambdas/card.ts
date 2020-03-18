@@ -36,7 +36,7 @@ export class Card {
      * 
      * E.g. each Junior Developer will have its own index.
      */
-    uniqueIndex?: number;
+    uniqueIndex: number;
 
     constructor() {
         this.retired = false;
@@ -156,4 +156,28 @@ export class CardCost {
         this.talents = 0;
         this.credits = 0;
     }
+}
+
+/**
+ * A simplified version of the card used for serialization.
+ */
+export class SerializedCard {
+
+    /**
+     * The card name.
+     */
+    name: string;
+    
+    /**
+     * Each copy of a card used in the game is given a unique index.
+     * 
+     * E.g. each Junior Developer will have its own index.
+     */
+    uniqueIndex: number;
+
+    constructor(card:Card) {
+        this.name = card.name;
+        this.uniqueIndex = card.uniqueIndex;
+    }
+
 }

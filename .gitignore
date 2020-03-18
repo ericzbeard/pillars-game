@@ -12,3 +12,4 @@ cdk.context.json
 
 config/*-config.ts
 dist
+.env

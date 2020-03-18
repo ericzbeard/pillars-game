@@ -2,6 +2,7 @@ import { IPillarsGame, Mouseable, Modal } from '../ui-utils';
 import { Button, DieRollAnimation } from '../ui-utils';
 import { PillarsConstants } from '../constants';
 import { CanvasUtil } from '../canvas-util';
+import { promoteAny } from './promote-any';
 
 /**
  * Promote
@@ -31,7 +32,9 @@ export const promote = (game: IPillarsGame, callback?:Function) => {
     button.text = 'Roll!'
 
     button.onclick = () => {
-        const roll = Math.floor(Math.random() * 6) + 1;
+        //const roll = Math.floor(Math.random() * 6) + 1;
+        const roll = 6; // for testing
+        // TODO
 
         const a = new DieRollAnimation(game, roll, DIEX, DIEY, 0);
         game.registerAnimation(a);
@@ -49,10 +52,13 @@ export const promote = (game: IPillarsGame, callback?:Function) => {
             game.addMouseable(PillarsConstants.MODAL_KEY + '_promotedie', die);
 
             if (roll == 6) {
-                button.text = 'Choose a Pillar!';
-
-                // TODO - Call promote-any
-
+                modal.hideCloseButton();
+                modal.text = `You rolled a 6! You get to choose which pillar to promote.`;
+                button.text = 'Ok';
+                button.onclick = () => {
+                    game.closeModal();
+                    promoteAny(game, callback);
+                };
             } else {
                 modal.hideCloseButton();
                 modal.text = `You rolled a ${roll}!`;

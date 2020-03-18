@@ -1,0 +1,4 @@
+# Create a file called .env to run integration tests
+
+USER_TABLE=
+GAME_TABLE=
