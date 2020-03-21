@@ -12,6 +12,7 @@ import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
 import { Trial } from './trial';
 import { CardRender } from './card-render';
+import { bug } from './actions/bug';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -344,6 +345,7 @@ class PillarsGame implements IPillarsGame {
             self.localPlayer.numCreativity = 10;
             self.localPlayer.numTalents = 10;
             self.localPlayer.numCredits = 10;
+            self.initMarket();
         };
         this.addMouseable('freebutton', button);
 
@@ -959,7 +961,7 @@ class PillarsGame implements IPillarsGame {
             if (!ignore) {
                 if (m.hitTest(this.mx, this.my)) {
 
-                    //this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
+                    this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
 
                     if (!alreadyHit) {
                         alreadyHit = true;
@@ -968,6 +970,9 @@ class PillarsGame implements IPillarsGame {
                             if (m.ondragenter) {
                                 m.ondragenter();
                             }
+
+                            this.broadcast(`down dragging ${m.key}`);
+
                             m.dragging = true;
                             this.gameCanvas.style.cursor = 'grabbing'; 
                             m.dragoffx = this.mx - m.x;
@@ -1285,13 +1290,9 @@ class PillarsGame implements IPillarsGame {
         }
     }
 
-    /**
-     * Acquire a card from the marketplace.
-     */
-    acquireCard(card: Card, key: string) {
+    afterAcquireCard(card: Card, key: string) {
         
-        this.playSound('menuselect.wav');
-        this.localPlayer.discardPile.push(card);
+
         this.mouseables.delete(key);
         let indexToRemove = -1;
         for (let i = 0; i < this.gameState.currentMarket.length; i++) {
@@ -1314,7 +1315,27 @@ class PillarsGame implements IPillarsGame {
         this.initDiscard();
         this.initMarket();
 
-        this.broadcast(`${this.gameState.currentPlayer.name} acquired ${card.name}`);
+    }
+
+    /**
+     * Acquire a card from the marketplace.
+     */
+    acquireCard(card: Card, key: string) {
+        
+        this.playSound('menuselect.wav');
+
+        if (card.subtype == 'Bug') {
+            bug(this, card, () => {
+                this.afterAcquireCard(card, key);
+                this.playSound('menuselect.wav');
+        });
+        } else {
+            this.localPlayer.discardPile.push(card);
+            this.afterAcquireCard(card, key);
+            this.playSound('menuselect.wav');
+            this.broadcast(`${this.gameState.currentPlayer.name} acquired ${card.name}`);
+        }
+
     }
 
     /**
