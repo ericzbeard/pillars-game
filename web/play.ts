@@ -267,25 +267,32 @@ class PillarsGame implements IPillarsGame {
         // Free Stuff (for testing)
         this.initFreeButton();
 
-        // Hand
-        this.initHand();
-
-        // Discard
-        this.initDiscard();
-
-        // Pillars
-        this.initPillars();
-
-        // Market
-        this.initMarket();
-
-        // In Play
-        this.initInPlay();
+        this.initCardAreas();
 
         // Re-draw everthing at least a few times per second
         setInterval(() => {
             this.resizeCanvas();
         }, 250);
+    }
+
+    /**
+     * Initialize areas that hold cards.
+     */
+    initCardAreas() {
+         // Hand
+         this.initHand();
+
+         // Discard
+         this.initDiscard();
+ 
+         // Pillars
+         this.initPillars();
+ 
+         // Market
+         this.initMarket();
+ 
+         // In Play
+         this.initInPlay();
     }
 
     /**
@@ -426,7 +433,7 @@ class PillarsGame implements IPillarsGame {
             self.localPlayer.numCreativity = 10;
             self.localPlayer.numTalents = 10;
             self.localPlayer.numCredits = 10;
-            self.initMarket();
+            self.initCardAreas();
         };
         this.addMouseable('freebutton', button);
 
@@ -454,6 +461,8 @@ class PillarsGame implements IPillarsGame {
 
         // TODO - Move to the next player
         // For now while testing, keep giving the human more turns
+
+        this.initCardAreas();
 
         this.broadcast(`${p.name} ended their turn.`);
     }
@@ -643,7 +652,7 @@ class PillarsGame implements IPillarsGame {
             const hk = hoverKey + i;
 
             m.onmouseout = () => {
-                this.mouseables.delete(hk);
+                this.removeMouseable(hk);
             };
 
             // Draw a second copy unobstructed when hovering
@@ -685,6 +694,8 @@ class PillarsGame implements IPillarsGame {
      * Initialize the pillars.
      */
     initPillars() {
+        this.removeMouseableKeys(PillarsConstants.PILLAR_START_KEY);
+
         for (let i = 0; i < this.gameState.pillars.length; i++) {
             const pillar = this.gameState.pillars[i];
             const m = new MouseableCard(this.gameState.pillars[i]);
@@ -694,7 +705,7 @@ class PillarsGame implements IPillarsGame {
             m.render = () => {
                 this.renderCard(m);
             }
-            this.addMouseable('pillar_' + i, m);
+            this.addMouseable(PillarsConstants.PILLAR_START_KEY + i, m);
         }
 
     }
@@ -794,7 +805,7 @@ class PillarsGame implements IPillarsGame {
         this.modal?.close(this);
         for (const [k, v] of this.mouseables.entries()) {
             if (k.startsWith(PillarsConstants.MODAL_KEY)) {
-                this.mouseables.delete(k);
+                this.removeMouseable(k);
             }
         }
         this.modal = undefined;
@@ -833,7 +844,7 @@ class PillarsGame implements IPillarsGame {
         const tk = hoverKey + index;
 
         m.onmouseout = () => {
-            this.mouseables.delete(tk);
+            this.removeMouseable(tk);
         };
 
         // Draw a second copy unobstructed when hovering
@@ -990,6 +1001,8 @@ class PillarsGame implements IPillarsGame {
 
                     //console.log(`move hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
 
+                    // TODO - ? Remove hover mouseables?
+
                     if (!alreadyHit) {
                         alreadyHit = true;
 
@@ -999,6 +1012,10 @@ class PillarsGame implements IPillarsGame {
 
                         m.hovering = true;
                         if (m.onhover) {
+
+                            // Remove all other hover mouseables first
+                            this.removeMouseableKeys(PillarsConstants.HOVER_START);
+
                             m.onhover();
                         }
 
@@ -1241,16 +1258,13 @@ class PillarsGame implements IPillarsGame {
             this.localPlayer.inPlay.push(m.card);
         }
 
-        // Remove the mouseable
-        this.mouseables.delete(key);
-        this.removeMouseable(m.getInfoKey());
+        // Remove the mouseable card and any mouseables it contains
+        this.removeMouseableKeys(key);
 
         // Remove from hand
         this.gameState.removeCardFromHand(this.localPlayer, m.card);
 
-        this.initHand();
-        this.initInPlay();
-        this.initMarket();
+        this.initCardAreas();
 
         this.broadcast(`${this.localPlayer.name} played ${m.card.name}`);
     }
@@ -1392,7 +1406,8 @@ class PillarsGame implements IPillarsGame {
      */
     afterAcquireCard(card: Card, key: string) {
 
-        this.mouseables.delete(key);
+        this.removeMouseableKeys(key);
+
         let indexToRemove = -1;
         for (let i = 0; i < this.gameState.currentMarket.length; i++) {
             if (this.gameState.currentMarket[i].uniqueIndex == card.uniqueIndex) {
@@ -1410,9 +1425,7 @@ class PillarsGame implements IPillarsGame {
         this.localPlayer.numCredits -= cost.credits;
         this.localPlayer.numTalents -= cost.talents;
 
-        this.initHand();
-        this.initDiscard();
-        this.initMarket();
+        this.initCardAreas();
     }
 
     /**
@@ -1941,7 +1954,8 @@ class PillarsGame implements IPillarsGame {
             `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}, ` +
             `as:${this.animations.size}, ` +
             `a:${this.isAnimating()}, d:${this.isDoneLoading}, ` +
-            `FRa:${FrameRate.avg.toFixed(1)}, FRc:${FrameRate.cur.toFixed(1)}`,
+            `FRa:${FrameRate.avg.toFixed(1)}, FRc:${FrameRate.cur.toFixed(1)}` + 
+            `msbl: ${this.mouseables.size}`, 
             dbx, dby);
     }
 

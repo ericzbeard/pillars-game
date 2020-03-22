@@ -272,7 +272,7 @@ export class MouseableCard extends Mouseable {
      * Get the key for the info clickable.
      */
     getInfoKey(): string {
-        return PillarsConstants.INFO_KEY + '_' + this.card.name;
+        return this.key + ' - ' + PillarsConstants.INFO_KEY;
     }
 }
 

@@ -329,6 +329,7 @@ export class CardRender {
         if (isInMarket && m.card.canAcquire(p.numCredits, p.numTalents)) {
             highlight = true;
         }
+        
         if (isInHand && this.game.gameState.canPlayCard(m.card)) {
             highlight = true;
         }

@@ -79,8 +79,6 @@ export class CardActions {
      * Play the card's effects.
      */
     play() {
-       
-
         // Some cards need special handling for custom conditions
         const a = this.customEffects.get(this.card.name);
         if (a) {
@@ -147,6 +145,7 @@ export class CardActions {
             if (card.action.Draw) {
                 for (let i = 0; i < card.action.Draw; i++) {
                     this.game.gameState.drawOne(player);
+                    this.game.broadcast(`${player.name} drew a card`);
                 }
             }
         }
@@ -159,6 +158,7 @@ export class CardActions {
                     if (rank >= card.conditionalAction.Pillar.Rank) {
                         for (let i = 0; i < card.conditionalAction.Draw; i++) {
                             this.game.gameState.drawOne(player);
+                            this.game.broadcast(`${player.name} drew a card`);
                         }
                     }
                 }
@@ -169,26 +169,42 @@ export class CardActions {
         if (card.provides) {
             if (card.provides.Talent) {
                 player.numTalents += card.provides.Talent;
+                const s = card.provides.Talent > 1 ? 's' : '';
+                this.game.broadcast(`${player.name} added ${card.provides.Talent} Talent${s}`);
             }
             if (card.provides.Credit) {
                 player.numCredits += card.provides.Credit;
+                const s = card.provides.Credit > 1 ? 's' : '';
+                this.game.broadcast(`${player.name} added ${card.provides.Credit} Credit${s}`);
             }
             if (card.provides.Creativity) {
+                this.game.broadcast(
+                    `${player.name} added ${card.provides.Creativity} Creativity`);
                 player.numCreativity += card.provides.Creativity;
             }
 
             if (card.provides.Customer) {
+                const s = card.provides.Customer > 1 ? 's' : '';
+                this.game.broadcast(`${player.name} added ${card.provides.Customer} Customer${s}`);
                 player.numCustomers += card.provides.Customer;
             }
 
-            if (card.provides.CreditByPillar) {
-                player.numCredits += player.pillarRanks[card.provides.CreditByPillar];
+            if (card.provides.TalentByPillar !== undefined) {
+                const n = player.pillarRanks[card.provides.TalentByPillar];
+                player.numTalents += n;
+                const s = n > 1 ? 's' : '';
+                this.game.broadcast(`${player.name} added ${n} Talent${s}`);
             }
-            if (card.provides.TalentByPillar) {
-                player.numTalents += player.pillarRanks[card.provides.TalentByPillar];
+            if (card.provides.CreditByPillar !== undefined) {
+                const n = player.pillarRanks[card.provides.CreditByPillar]
+                player.numCredits += n;
+                const s = n > 1 ? 's' : '';
+                this.game.broadcast(`${player.name} added ${n} Credit${s}`);
             }
-            if (card.provides.CreativityByPillar) {
-                player.numCreativity += player.pillarRanks[card.provides.CreativityByPillar];
+            if (card.provides.CreativityByPillar !== undefined) {
+                const n = player.pillarRanks[card.provides.CreativityByPillar];
+                player.numCreativity += n;
+                this.game.broadcast(`${player.name} added ${n} Creativity`);
             }
         }
 
