@@ -989,7 +989,7 @@ export const cardDatabase = {
             href: "https://aws.amazon.com/kinesis/"
         },
         {
-            name: "Quicksight",
+            name: "Amazon Quicksight",
             type: "Resource",
             subtype: "Cloud",
             cost: "TT",
@@ -999,10 +999,13 @@ export const cardDatabase = {
             provides: {
                 "Credit": 1,
                 "Creativity": 1
-            }
+            }, 
+            info: "QuickSight makes it easy and fast to create interactive dashboards and reports for your users. You can securely share those dashboards with anyone in your organization via browsers or mobile devices.", 
+            href: "https://aws.amazon.com/quicksight/", 
+            marketing: "A fast, cloud-powered business intelligence service"
         },
         {
-            name: "Aurora",
+            name: "Amazon Aurora",
             type: "Resource",
             subtype: "Cloud",
             cost: "$$",
@@ -1012,7 +1015,10 @@ export const cardDatabase = {
             provides: {
                 "Credit": 1,
                 "Talent": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/rds/aurora/", 
+            info: "MySQL and PostgreSQL-compatible relational database built for the cloud. Performance and availability of commercial-grade databases at 1/10th the cost.", 
+            marketing: "High performance managed relational database service"
         },
         {
             name: "CloudFormation",
@@ -1061,7 +1067,7 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Guard Duty",
+            name: "Amazon GuardDuty",
             type: "Resource",
             subtype: "Cloud",
             text: "Reveal this from your hand to prevent an action that affects one of your pillars",
@@ -1071,7 +1077,10 @@ export const cardDatabase = {
             category: "Security", 
             provides: {
                 "Creativity": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/guardduty/",
+            info: "Amazon GuardDuty is a threat detection service that continuously monitors for malicious activity and unauthorized behavior to protect your AWS accounts and workloads. With the cloud, the collection and aggregation of account and network activities is simplified, but it can be time consuming for security teams to continuously analyze event log data for potential threats.", 
+            marketing: "Managed threat detection service"
         },
         {
             name: "Chaos Testing",
@@ -1107,7 +1116,10 @@ export const cardDatabase = {
             copies: 1, 
             provides: {
                 "Talent": 2
-            }
+            }, 
+            href: "https://aws.amazon.com/shield/", 
+            info: "AWS Shield is a managed Distributed Denial of Service (DDoS) protection service that safeguards applications running on AWS. AWS Shield provides always-on detection and automatic inline mitigations that minimize application downtime and latency, so there is no need to engage AWS Support to benefit from DDoS protection. There are two tiers of AWS Shield - Standard and Advanced.",
+            marketing: "Managed DDoS protection"
         },
         {
             name: "AWS Professional Certification",
@@ -1229,7 +1241,7 @@ export const cardDatabase = {
             }
         },
         {
-            name: "SQS",
+            name: "Amazon Simple Queue Service",
             type: "Resource",
             subtype: "Cloud",
             bigtext: "Discard 1",
@@ -1237,10 +1249,13 @@ export const cardDatabase = {
             cost: "$",
             starter: false,
             copies: 2,
-            category: "Integration"
+            category: "Integration", 
+            href: "https://aws.amazon.com/sqs/",
+            info: "Amazon Simple Queue Service (SQS) is a fully managed message queuing service that enables you to decouple and scale microservices, distributed systems, and serverless applications. SQS eliminates the complexity and overhead associated with managing and operating message oriented middleware, and empowers developers to focus on differentiating work.", 
+            marketing: "Fully managed message queuing service"
         },
         {
-            name: "EBS Volume",
+            name: "Amazon Elastic Block Store",
             type: "Resource",
             subtype: "Cloud",
             text: "Then discard 1 from your hand",
@@ -1250,7 +1265,10 @@ export const cardDatabase = {
             category: "Storage", 
             action: {
                 "Draw": 2
-            }
+            }, 
+            info: "Amazon Elastic Block Store (EBS) is an easy to use, high performance block storage service designed for use with Amazon Elastic Compute Cloud (EC2) for both throughput and transaction intensive workloads at any scale. A broad range of workloads, such as relational and non-relational databases, enterprise applications, containerized applications, big data analytics engines, file systems, and media workflows are widely deployed on Amazon EBS.", 
+            href: "https://aws.amazon.com/ebs", 
+            marketing: "Easy to use, high performance block storage at any scale"
         },
         {
             name: "Stack Overflow",
@@ -1273,7 +1291,7 @@ export const cardDatabase = {
             copies: 2
         },
         {
-            name: "VPC",
+            name: "Amazon Virtual Private Cloud",
             type: "Resource",
             subtype: "Cloud",
             cost: "TT",
@@ -1282,10 +1300,13 @@ export const cardDatabase = {
             category: "Networking", 
             provides: {
                 "Creativity": 2
-            }
+            }, 
+            href: "https://aws.amazon.com/vpc/", 
+            info: "Amazon Virtual Private Cloud (Amazon VPC) lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including selection of your own IP address range, creation of subnets, and configuration of route tables and network gateways. You can use both IPv4 and IPv6 in your VPC for secure and easy access to resources and applications.", 
+            marketing: "A logically isolated section of the AWS cloud"
         },
         {
-            name: "S3 Bucket",
+            name: "Amazon Simple Storage Service",
             type: "Resource",
             subtype: "Cloud",
             text: "Then retire 1",
@@ -1295,7 +1316,10 @@ export const cardDatabase = {
             category: "Storage", 
             action: {
                 "Draw": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/s3/", 
+            info: "Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance. This means customers of all sizes and industries can use it to store and protect any amount of data for a range of use cases, such as websites, mobile applications, backup and restore, archive, enterprise applications, IoT devices, and big data analytics.", 
+            marketing: "Store and retrieve any amount of data from anywhere"
         },
         {
             name: "First to Market",
@@ -1311,7 +1335,7 @@ export const cardDatabase = {
             }
         },
         {
-            name: "WAF",
+            name: "AWS WAF",
             type: "Resource",
             subtype: "Cloud",
             text: "Reveal this from your hand to prevent a discard from affecting you",
@@ -1321,10 +1345,13 @@ export const cardDatabase = {
             category: "Security", 
             provides: {
                 "Creativity": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/waf/", 
+            marketing: "Web Application Firewall", 
+            info: "AWS WAF is a web application firewall that helps protect your web applications or APIs against common web exploits that may affect availability, compromise security, or consume excessive resources. AWS WAF gives you control over how traffic reaches your applications by enabling you to create security rules that block common attack patterns, such as SQL injection or cross-site scripting, and rules that filter out specific traffic patterns you define."
         },
         {
-            name: "X-Ray",
+            name: "AWS X-Ray",
             type: "Resource",
             subtype: "Augment Cloud",
             cost: "$T",
@@ -1333,7 +1360,10 @@ export const cardDatabase = {
             category: "Development", 
             provides: {
                 "Creativity": 1
-            }
+            }, 
+            marketing: "Analyze and debug your applications", 
+            href: "https://aws.amazon.com/xray/", 
+            info: "AWS X-Ray helps developers analyze and debug production, distributed applications, such as those built using a microservices architecture. With X-Ray, you can understand how your application and its underlying services are performing to identify and troubleshoot the root cause of performance issues and errors. "
         },
         {
             name: "Marketing Event",
