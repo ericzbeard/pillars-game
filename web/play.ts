@@ -7,12 +7,14 @@ import { PillarsWebConfig } from '../config/pillars-web-config';
 import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
 import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
+import { ModalCardClick } from './ui-utils';
 import { LocalGame } from './local-game';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
 import { Trial } from './trial';
 import { CardRender } from './card-render';
 import { bug } from './actions/bug';
+import { AIChatter } from './ai-chatter';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -97,12 +99,22 @@ class PillarsGame implements IPillarsGame {
     /**
      * True if a card is being dragged by the mouse.
      */
-    dragging:boolean;
+    dragging: boolean;
 
     /**
      * Card rendering functions.
      */
     cardRender: CardRender;
+
+    /**
+     * Robot chat.
+     */
+    aiChatter: AIChatter;
+
+    /**
+     * True if this is a non-networked solo game, Human vs AI
+     */
+    isSoloGame: boolean;
 
     /**
      * PillarsGame constructor.
@@ -240,6 +252,12 @@ class PillarsGame implements IPillarsGame {
         // A button
         this.initTestButton();
 
+        // Retired cards
+        this.initRetiredButton();
+
+        // Robots
+        this.initRobotsButton();
+
         // Button to go to trial and end the turn
         this.initTrialButton();
 
@@ -297,25 +315,88 @@ class PillarsGame implements IPillarsGame {
      * Initialize buttons I use for testing things.
      */
     initTestButton() {
-        const self = this;
         const button = new Button('Test', this.ctx);
         button.x = PillarsConstants.MENUX + 10;
         button.y = PillarsConstants.MENUY + 80;
         button.w = PillarsConstants.MENU_BUTTON_W;
         button.h = PillarsConstants.MENU_BUTTON_H;
-        button.onclick = function () {
-            self.playSound('menuselect.wav');
-            self.promote(0, 0);
-            self.roll(2);
-            if (!self.gameState.drawOne(self.localPlayer)) {
-                self.endTurn();
+        button.onclick = () => {
+            this.playSound('menuselect.wav');
+            this.promote(0, 0);
+            this.roll(2);
+            if (!this.gameState.drawOne(this.localPlayer)) {
+                this.endTurn();
             }
-            self.initHand();
-            self.initDiscard();
-            //self.showModal('This is a test');
-            self.localPlayer.numCustomers++;
+            this.initHand();
+            this.initDiscard();
+            //this.showModal('This is a test');
+            this.localPlayer.numCustomers++;
         };
         this.addMouseable('testbutton', button);
+    }
+
+    /**
+     * Unleash the robot revolution.
+     */
+    initRobotsButton() {
+
+        const button = new Button('Robots!', this.ctx);
+        button.x = PillarsConstants.MENUX + PillarsConstants.MENU_BUTTON_W + 20;
+        button.y = PillarsConstants.MENUY + 80;
+        button.w = PillarsConstants.MENU_BUTTON_W;
+        button.h = PillarsConstants.MENU_BUTTON_H;
+        button.onclick = () => {
+            this.aiChatter = new AIChatter(this);
+            this.aiChatter.chat();
+        };
+        this.addMouseable('robotsbutton', button);
+
+    }
+
+    /**
+     * Initialize the button to show retired cards.
+     */
+    initRetiredButton() {
+        const button = new Button('Retired', this.ctx);
+        button.x = PillarsConstants.MENUX + PillarsConstants.MENU_BUTTON_W + 20;
+        button.y = PillarsConstants.MENUY + 120;
+        button.w = PillarsConstants.MENU_BUTTON_W;
+        button.h = PillarsConstants.MENU_BUTTON_H;
+        button.onclick = () => {
+
+            const modal = this.showModal("Retired Cards");
+
+            let cards = this.gameState.retiredCards;
+
+            let len = cards.length;
+            if (len == 0) {
+                len = 1;
+            }
+
+            let x = PillarsConstants.MODALX + 200;
+            let y = PillarsConstants.MODALY + 300;
+            let w = PillarsConstants.MODALW - 300;
+
+            const cardOffset = (w - PillarsConstants.CARD_WIDTH) / len;
+
+            for (let i = 0; i < cards.length; i++) {
+                const card = cards[i];
+                const m = new MouseableCard(card);
+                m.x = x + 10 + (i * cardOffset);
+                m.y = y;
+                m.origx = m.x;
+                m.origy = m.y;
+                m.zindex = i + 1;
+                m.zindex = PillarsConstants.MODALZ + 1;
+                m.render = () => {
+                    this.renderCard(m);
+                };
+                this.addMouseable(PillarsConstants.MODAL_KEY + i, m);
+                this.resizeCanvas();
+            }
+
+        };
+        this.addMouseable('retired_button', button);
     }
 
     /**
@@ -333,7 +414,7 @@ class PillarsGame implements IPillarsGame {
         };
         this.addMouseable('trialbutton', button);
     }
-    
+
     initFreeButton() {
         const self = this;
         const button = new Button('Free Stuff', this.ctx);
@@ -363,7 +444,7 @@ class PillarsGame implements IPillarsGame {
         for (let i = 0; i < p.hand.length; i++) {
             p.discardPile.push(p.hand[i]);
         }
-        p.hand= [];
+        p.hand = [];
         for (let i = 0; i < 6; i++) {
             this.gameState.drawOne(p);
         }
@@ -485,7 +566,8 @@ class PillarsGame implements IPillarsGame {
     /**
      * Initialize the local player's hand or discard pile.
      */
-    initHandOrDiscard(isHand: boolean, isModal?: boolean, modalClick?: Function): any {
+    initHandOrDiscard(isHand: boolean, isModal?: boolean, modalClick?: ModalCardClick, 
+        hideCard?: Card): any {
 
         let startKey = PillarsConstants.HAND_START_KEY;
         let hoverKey = PillarsConstants.HAND_HOVER_KEY;
@@ -528,6 +610,13 @@ class PillarsGame implements IPillarsGame {
 
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
+
+            // In modals, we don't want to show the card being played as 
+            // a choice for things like retire and discard.
+            if (hideCard && hideCard.uniqueIndex == card.uniqueIndex) {
+                continue;
+            }
+
             const m = new MouseableCard(card);
             m.x = x + 10 + (i * cardOffset);
             m.y = y;
@@ -571,7 +660,9 @@ class PillarsGame implements IPillarsGame {
             if (isModal === true) {
                 // Select the card
                 if (modalClick) {
-                    m.onclick = modalClick;
+                    m.onclick = () => {
+                        modalClick(m);
+                    };
                 } else {
                     throw Error(`${card.name} missing modal click`);
                 }
@@ -636,7 +727,7 @@ class PillarsGame implements IPillarsGame {
                 this.initHoverCard(card, curx, markety,
                     PillarsConstants.MARKET_START_KEY,
                     PillarsConstants.MARKET_HOVER_KEY,
-                    i, 
+                    i,
                     card.canAcquire(p.numCredits, p.numTalents));
             }
             curx += cw;
@@ -802,6 +893,7 @@ class PillarsGame implements IPillarsGame {
      */
     startLocalGame() {
         this.gameState = new GameState();
+        this.isSoloGame = true;
         const localGame = new LocalGame(this.gameState);
         localGame.start();
         this.localPlayer = this.gameState.players[0];
@@ -913,7 +1005,7 @@ class PillarsGame implements IPillarsGame {
                         if (this.gameCanvas.style.cursor != 'grabbing') {
                             this.gameCanvas.style.cursor = 'pointer';
                         }
-                        
+
                     }
                 } else {
                     if (m.hovering) {
@@ -961,7 +1053,7 @@ class PillarsGame implements IPillarsGame {
             if (!ignore) {
                 if (m.hitTest(this.mx, this.my)) {
 
-                    this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
+                    //this.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
 
                     if (!alreadyHit) {
                         alreadyHit = true;
@@ -971,10 +1063,10 @@ class PillarsGame implements IPillarsGame {
                                 m.ondragenter();
                             }
 
-                            this.broadcast(`down dragging ${m.key}`);
+                            //this.broadcast(`down dragging ${m.key}`);
 
                             m.dragging = true;
-                            this.gameCanvas.style.cursor = 'grabbing'; 
+                            this.gameCanvas.style.cursor = 'grabbing';
                             m.dragoffx = this.mx - m.x;
                             m.draggoffy = this.my - m.y;
                         }
@@ -1008,7 +1100,7 @@ class PillarsGame implements IPillarsGame {
 
         for (let i = 0; i < marray.length; i++) {
             const m = marray[i];
-            
+
             const key = m.key;
 
             if (m.hitTest(this.mx, this.my)) {
@@ -1022,15 +1114,15 @@ class PillarsGame implements IPillarsGame {
                     if (d.dragging && m.droppable) {
 
                         // Dropping a card from hand into play
-                        if (m.key == PillarsConstants.INPLAY_AREA_KEY && 
-                            d instanceof MouseableCard && 
+                        if (m.key == PillarsConstants.INPLAY_AREA_KEY &&
+                            d instanceof MouseableCard &&
                             this.gameState.isInHand(d.card)) {
 
                             d.zindex = 2;
 
                             // Play the card
                             var self = this;
-                            this.playCard(d.card, () => {
+                            this.playCard(d, () => {
                                 self.finishPlayingCard.call(self, d, key);
                             });
 
@@ -1038,12 +1130,12 @@ class PillarsGame implements IPillarsGame {
                         }
 
                         // Dropping a card from the market to discard
-                        if (m.key == PillarsConstants.DISCARD_AREA_KEY && 
-                            d instanceof MouseableCard && 
+                        if (m.key == PillarsConstants.DISCARD_AREA_KEY &&
+                            d instanceof MouseableCard &&
                             this.gameState.isInMarket(d.card)) {
-                                
+
                             d.zindex = 2;
-                            
+
                             // Acquire the card
                             this.acquireCard(d.card, d.key);
 
@@ -1092,6 +1184,7 @@ class PillarsGame implements IPillarsGame {
             this.addSound('hint.wav');
             this.addSound('jingle.wav');
             this.addSound('dice.wav');
+            this.addSound('gameover.wav');
         }
 
         // Animate each click location
@@ -1135,6 +1228,7 @@ class PillarsGame implements IPillarsGame {
         this.resizeCanvas();
     }
 
+
     /**
      * After the players finishes choosing custom actions, finish playing the card.
      */
@@ -1149,24 +1243,14 @@ class PillarsGame implements IPillarsGame {
 
         // Remove the mouseable
         this.mouseables.delete(key);
+        this.removeMouseable(m.getInfoKey());
 
-        // Remove it from hand
-        let indexToRemove = -1;
-        for (let i = 0; i < this.localPlayer.hand.length; i++) {
-            if (this.localPlayer.hand[i].uniqueIndex == m.card.uniqueIndex) {
-                indexToRemove = i;
-            }
-        }
-        if (indexToRemove > -1) {
-            this.removeMouseable(m.getInfoKey());
-            this.localPlayer.hand.splice(indexToRemove, 1);
-        } else {
-            throw Error('Unable to remove card from hand');
-        }
-
+        // Remove from hand
+        this.gameState.removeCardFromHand(this.localPlayer, m.card);
 
         this.initHand();
         this.initInPlay();
+        this.initMarket();
 
         this.broadcast(`${this.localPlayer.name} played ${m.card.name}`);
     }
@@ -1208,7 +1292,7 @@ class PillarsGame implements IPillarsGame {
 
             // Play the card's effects!
             var self = this;
-            this.playCard(m.card, () => {
+            this.playCard(m, () => {
                 self.finishPlayingCard.call(self, m, key);
             });
         }
@@ -1227,10 +1311,16 @@ class PillarsGame implements IPillarsGame {
             this.typing += e.key;
         } else {
             if (e.key == 'Enter') {
+                const chat = this.typing;
                 this.broadcast(`[${this.localPlayer.name}] ${this.typing}`);
                 this.typing = '';
+                if (this.aiChatter) {
+                    this.aiChatter.respond(chat);
+                }
             }
             if (e.key == 'Backspace') {
+                e.preventDefault();
+                e.stopPropagation();
                 this.typing = this.typing.substr(0, this.typing.length - 1);
             }
         }
@@ -1240,15 +1330,19 @@ class PillarsGame implements IPillarsGame {
     /**
      * Play a card from the local player's hand.
      */
-    playCard(card: Card, callback: Function) {
+    playCard(mcard: MouseableCard, callback: Function) {
+
+        console.log(`About to play ${mcard.card.name}. ${mcard.card.uniqueIndex}`);
+
         this.playSound('menuselect.wav');
-        const actions = new CardActions(this, card, callback);
+        const actions = new CardActions(this, mcard, callback);
 
         // TODO - When we open a dialog, the player can choose to close it
         // without taking an action, but this means we can't let them
         // take the main action before doing the complex secondary action.
         // In the real game, you do the main action first, like drawing a card
         // or gaining resources.
+
         actions.play();
     }
 
@@ -1290,8 +1384,13 @@ class PillarsGame implements IPillarsGame {
         }
     }
 
+    /**
+     * Actions to take after acquiring a card.
+     * 
+     * Some cards have different behaviors when they are acquired.
+     * All the common stuff that always happens goes here.
+     */
     afterAcquireCard(card: Card, key: string) {
-        
 
         this.mouseables.delete(key);
         let indexToRemove = -1;
@@ -1314,21 +1413,22 @@ class PillarsGame implements IPillarsGame {
         this.initHand();
         this.initDiscard();
         this.initMarket();
-
     }
 
     /**
      * Acquire a card from the marketplace.
      */
     acquireCard(card: Card, key: string) {
-        
+
+        console.log(`About to acquire ${card.name}. ${card.uniqueIndex}`);
+
         this.playSound('menuselect.wav');
 
         if (card.subtype == 'Bug') {
             bug(this, card, () => {
                 this.afterAcquireCard(card, key);
-                this.playSound('menuselect.wav');
-        });
+                this.playSound('gameover.wav');
+            });
         } else {
             this.localPlayer.discardPile.push(card);
             this.afterAcquireCard(card, key);
@@ -1490,7 +1590,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Get an animation by key.
      */
-    getAnimation(key:string):PillarsAnimation | undefined {
+    getAnimation(key: string): PillarsAnimation | undefined {
         const a = this.animations.get(key);
         if (a) {
             return <PillarsAnimation>a;
@@ -1591,7 +1691,7 @@ class PillarsGame implements IPillarsGame {
      * Summaries of the other players. Current scores, etc.
      */
     renderPlayerSummaries() {
-        
+
 
         for (let i = 0; i < 4; i++) {
             const p = this.gameState.players[i];

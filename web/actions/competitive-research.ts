@@ -1,4 +1,4 @@
-import { IPillarsGame, Mouseable, } from '../ui-utils';
+import { IPillarsGame, Mouseable, MouseableCard } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { Player } from '../../lambdas/player';
 import { PillarsConstants } from '../constants';
@@ -9,7 +9,9 @@ import { CanvasUtil } from '../canvas-util';
  * 
  * Acquire a random card from an opponent's hand.
  */
-export const competitiveResearch = (game: IPillarsGame, card: Card, callback: Function) => {
+export const competitiveResearch = (game: IPillarsGame, 
+                                    mcard: MouseableCard, 
+                                    callback: Function) => {
 
     // Show a modal that allows the player to select an opponent.
     // Show how many cards are in that opponent's hand

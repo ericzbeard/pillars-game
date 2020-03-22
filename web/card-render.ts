@@ -333,6 +333,10 @@ export class CardRender {
             highlight = true;
         }
 
+        if (m.key.startsWith(PillarsConstants.MODAL_KEY)) {
+            highlight = false;
+        }
+
         if (highlight) {
             ctx.save()
             ctx.strokeStyle = 'yellow';

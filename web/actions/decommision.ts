@@ -8,7 +8,9 @@ import { retireCardFromHand } from './retire';
  * 
  * Retire 1 or Retire this and add one credit.
  */
-export const decommision = (game:IPillarsGame, card:Card, callback:Function) => {
+export const decommision = (game:IPillarsGame, 
+                            mcard: MouseableCard, 
+                            callback:Function) => {
 
     const modal = game.showModal(
         "Choose whether to retire a card from hand or " + 
@@ -25,7 +27,7 @@ export const decommision = (game:IPillarsGame, card:Card, callback:Function) => 
 
     choice1.onclick = () => {
         game.closeModal();
-        retireCardFromHand(game, card, callback);
+        retireCardFromHand(game, mcard, callback);
     };
 
     choice1.render = () => {
@@ -51,7 +53,7 @@ export const decommision = (game:IPillarsGame, card:Card, callback:Function) => 
         game.localPlayer.numCredits++;
 
         // Retire this card
-        card.retired = true;
+        mcard.card.retired = true;
         
         game.playSound('menuselect.wav');
 

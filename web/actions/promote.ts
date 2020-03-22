@@ -32,9 +32,7 @@ export const promote = (game: IPillarsGame, callback?:Function) => {
     button.text = 'Roll!'
 
     button.onclick = () => {
-        //const roll = Math.floor(Math.random() * 6) + 1;
-        const roll = 6; // for testing
-        // TODO
+        const roll = Math.floor(Math.random() * 6) + 1;
 
         const a = new DieRollAnimation(game, roll, DIEX, DIEY, 0);
         game.registerAnimation(a);

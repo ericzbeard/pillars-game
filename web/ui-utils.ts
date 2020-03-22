@@ -423,7 +423,7 @@ export interface IPillarsGame {
     /**
      * Initialize the local player's hand or discard pile.
      */
-    initHandOrDiscard(isHand: boolean, isModal?: boolean, modalClick?: Function): any
+    initHandOrDiscard(isHand: boolean, isModal?: boolean, modalClick?: Function, hideCard?:Card): any
 
     /**
      * Play a sound.
@@ -635,3 +635,7 @@ export class Modal {
 
 }
 
+/**
+ * Signature for the callback function called in initHandOrDiscard.
+ */
+export type ModalCardClick = (cardToDiscard:MouseableCard) => any;

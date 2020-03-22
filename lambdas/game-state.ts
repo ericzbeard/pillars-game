@@ -261,8 +261,10 @@ export class GameState {
         // // Add specific cards to the top of the market stack so we can test quickly.
         // this.marketStack.unshift(Object.assign(new Card(), 
         //     this.cardMasters.get('Competitive Research')));
-        // this.marketStack.unshift(Object.assign(new Card(), 
-        //     this.cardMasters.get('Predictive Autoscaling')));
+
+        const ak = Object.assign(new Card(), this.cardMasters.get('Amazon Kinesis'));
+        ak.uniqueIndex = 1000;
+        this.marketStack.unshift(ak);
 
         // Fill the current market
         this.refillMarket();
@@ -348,6 +350,27 @@ export class GameState {
             }
             stack.used = [];
             GameState.shuffle(stack.notused);
+        }
+    }
+
+    /**
+     * Remove the card from hand.
+     */
+    removeCardFromHand(player:Player, card:Card) {
+
+        console.log(`About to remove ${card.name} from hand. ${card.uniqueIndex}`);
+
+        // Remove it from hand
+        let indexToRemove = -1;
+        for (let i = 0; i < player.hand.length; i++) {
+            if (player.hand[i].uniqueIndex == card.uniqueIndex) {
+                indexToRemove = i;
+            }
+        }
+        if (indexToRemove > -1) {
+            player.hand.splice(indexToRemove, 1);
+        } else {
+            throw Error('Unable to remove card from hand');
         }
     }
 

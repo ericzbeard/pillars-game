@@ -9,6 +9,18 @@ import { competitiveResearch } from './actions/competitive-research';
 import { retireCardFromHand } from './actions/retire';
 import { promoteAny } from './actions/promote-any';
 import { promote } from './actions/promote';
+import { amazonKinesis } from './actions/amazon-kinesis';
+
+/**
+ * This is the signature for a custom card effect.
+ * 
+ * mcard is the card being played, which generally ends up being different 
+ * than the card that gets affected. Be careful with differentiating them, 
+ * e.g. mcard is not cardToRetire or cardToDiscard.
+ */
+export type CustomEffect = (game: IPillarsGame, 
+                            mcard: MouseableCard, 
+                            callback:Function) => any;
 
 /**
  * Custom card action logic is handled here.
@@ -17,22 +29,25 @@ import { promote } from './actions/promote';
  */
 export class CardActions {
 
-    customEffects: Map<string, Function>;
-
+    customEffects: Map<string, CustomEffect>;
+    card:Card;
 
     /**
      * The callback is called when we are done with any custom actions.
      */
     constructor(
         public game: IPillarsGame,
-        public card: Card,
+        public mcard: MouseableCard,
         public callback: Function) {
 
-        this.customEffects = new Map<string, Function>();
+        this.card = mcard.card;
+
+        this.customEffects = new Map<string, CustomEffect>();
 
         this.customEffects.set("Decommision", decommision);
         this.customEffects.set("Predictive Autoscaling", predictiveAutoscaling);
         this.customEffects.set("Competitive Research", competitiveResearch);
+        this.customEffects.set("Amazon Kinesis", amazonKinesis);
 
         // CloudFormation
         // Poach
@@ -69,10 +84,10 @@ export class CardActions {
         // Some cards need special handling for custom conditions
         const a = this.customEffects.get(this.card.name);
         if (a) {
-            this.doStandardEffects(this.card);
-            a.call(this, this.game, this.card, this.callback);
+            this.doStandardEffects(this.mcard);
+            a.call(this, this.game, this.mcard, this.callback);
         } else {
-            this.doStandardEffects(this.card, this.callback);
+            this.doStandardEffects(this.mcard, this.callback);
         }
     }
 
@@ -81,17 +96,17 @@ export class CardActions {
      * 
      * Returns false if we should cancel
      */
-    doStandardEffects(card: Card, callback?:Function) {
+    doStandardEffects(mcard: MouseableCard, callback?:Function) {
 
         const player = this.game.localPlayer;
         let delegatedCallback = false;
-
+        const card = mcard.card;
 
         if (card.action) {
 
             // Retire
             if (card.action.Retire) {
-                retireCardFromHand(this.game, this.card);
+                retireCardFromHand(this.game, mcard);
             }
 
             // Promote

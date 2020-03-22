@@ -6,7 +6,9 @@ import { PillarsConstants } from '../constants';
  * Look at the top card of any trial stack. 
  * You may put it on the bottom of that stack face up.
  */
-export const predictiveAutoscaling = (game: IPillarsGame, card: Card, callback: Function) => {
+export const predictiveAutoscaling = (game: IPillarsGame, 
+                                      mcard: MouseableCard, 
+                                      callback: Function) => {
 
     const modal = game.showModal(
         "Look at the top card of any trial stack. " +
