@@ -1078,9 +1078,7 @@ export const cardDatabase = {
             cost: "T",
             starter: false,
             copies: 2, 
-            action: { 
-                "Demote": 6
-            }
+            text: "Demote to retire this from your hand"
         },
         {
             name: "Amazon GuardDuty",
@@ -1293,15 +1291,13 @@ export const cardDatabase = {
             cost: "T",
             starter: false,
             copies: 2, 
-            provides: {
-                "Customer": -1
-            }
+            text: "Lose 1 customer to retire this from your hand"
         },
         {
             name: "Off By 1",
             type: "Resource",
             subtype: "Bug",
-            bigtext: "Discard 1",
+            text: "Discard 1 from hand to retire this",
             cost: "T",
             starter: false,
             copies: 2

@@ -1421,8 +1421,6 @@ class PillarsGame implements IPillarsGame {
 
         console.log(`About to acquire ${card.name}. ${card.uniqueIndex}`);
 
-        this.playSound('menuselect.wav');
-
         if (card.subtype == 'Bug') {
             bug(this, card, () => {
                 this.afterAcquireCard(card, key);
