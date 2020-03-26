@@ -269,10 +269,7 @@ class PillarsGame implements IPillarsGame {
 
         this.initCardAreas();
 
-        // Re-draw everthing at least a few times per second
-        setInterval(() => {
-            this.resizeCanvas();
-        }, 250);
+       
     }
 
     /**
@@ -330,6 +327,10 @@ class PillarsGame implements IPillarsGame {
         button.onclick = () => {
             this.playSound('menuselect.wav');
             this.promote(0, 0);
+            this.promote(0, 1);
+            this.promote(0, 2);
+            this.promote(0, 3);
+            this.promote(0, 4);
             this.roll(2);
             if (!this.gameState.drawOne(this.localPlayer)) {
                 this.endTurn();
@@ -443,28 +444,14 @@ class PillarsGame implements IPillarsGame {
      * Put all cards in play and hand into discard pile. Draw 6.
      */
     endTurn() {
-        let p = this.localPlayer;
-        for (let i = 0; i < p.inPlay.length; i++) {
-            p.discardPile.push(p.inPlay[i]);
-        }
-        p.inPlay = [];
-        for (let i = 0; i < p.hand.length; i++) {
-            p.discardPile.push(p.hand[i]);
-        }
-        p.hand = [];
-        for (let i = 0; i < 6; i++) {
-            this.gameState.drawOne(p);
-        }
-        p.numCreativity = 0;
-        p.numCredits = 0;
-        p.numTalents = 0;
+        const player = this.localPlayer;
 
         // TODO - Move to the next player
         // For now while testing, keep giving the human more turns
 
         this.initCardAreas();
 
-        this.broadcast(`${p.name} ended their turn.`);
+        this.broadcast(`${player.name} ended their turn.`);
     }
 
     /**
@@ -802,7 +789,6 @@ class PillarsGame implements IPillarsGame {
      * Close the modal.
      */
     closeModal() {
-        this.modal?.close(this);
         for (const [k, v] of this.mouseables.entries()) {
             if (k.startsWith(PillarsConstants.MODAL_KEY)) {
                 this.removeMouseable(k);
@@ -1927,6 +1913,7 @@ class PillarsGame implements IPillarsGame {
                 (PillarsConstants.BW / 2) - 50, PillarsConstants.BH / 2);
         }
 
+
         // Mouseables, drawn in zindex order
         const marray = this.sortMouseables();
 
@@ -1935,6 +1922,7 @@ class PillarsGame implements IPillarsGame {
                 m.render();
             }
         }
+
 
         // Run animation logic
         for (const [key, value] of this.animations.entries()) {
@@ -1945,8 +1933,9 @@ class PillarsGame implements IPillarsGame {
 
         // Debugging data
         ctx.font = this.getFont(9);
+        ctx.textAlign = 'left';
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        const dbx = 10;
+        const dbx = 500;
         const dby = PillarsConstants.BH - 3;
         ctx.fillText(`w: ${w.toFixed(1)}, h: ${h.toFixed(1)}, ` +
             `P: ${PillarsConstants.PROPORTION.toFixed(1)}, s: ${s.toFixed(1)}, ` +
@@ -1954,9 +1943,10 @@ class PillarsGame implements IPillarsGame {
             `mx: ${mx.toFixed(1)}, my: ${my.toFixed(1)}, ` +
             `as:${this.animations.size}, ` +
             `a:${this.isAnimating()}, d:${this.isDoneLoading}, ` +
-            `FRa:${FrameRate.avg.toFixed(1)}, FRc:${FrameRate.cur.toFixed(1)}` + 
+            `FRa:${FrameRate.avg.toFixed(1)}, FRc:${FrameRate.cur.toFixed(1)}, ` + 
             `msbl: ${this.mouseables.size}`, 
             dbx, dby);
+
     }
 
     /**

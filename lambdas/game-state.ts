@@ -384,6 +384,31 @@ export class GameState {
         }
     }
 
+    /**
+     * End a trial.
+     */
+    endTrial(stack:TrialStack, winner:boolean) {
+       
+        // Move the trial we just faced to the used pile
+        stack.used.push(<Card>stack.notused.shift());
+
+        let p = this.currentPlayer;
+        for (let i = 0; i < p.inPlay.length; i++) {
+            p.discardPile.push(p.inPlay[i]);
+        }
+        p.inPlay = [];
+        for (let i = 0; i < p.hand.length; i++) {
+            p.discardPile.push(p.hand[i]);
+        }
+        p.hand = [];
+        for (let i = 0; i < 6; i++) {
+            this.drawOne(p);
+        }
+        p.numCreativity = 0;
+        p.numCredits = 0;
+        p.numTalents = 0;
+
+    }
 
     /**
      * Create a real player object.

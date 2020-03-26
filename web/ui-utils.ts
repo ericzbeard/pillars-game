@@ -625,12 +625,6 @@ export class Modal {
         this.renderCloseButton();
     }
 
-    /**
-     * Close the modal.
-     */
-    close(game: IPillarsGame) {
-
-    }
 
 
 }

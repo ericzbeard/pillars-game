@@ -1,4 +1,16 @@
 /**
+ * Success or fail after a trial.
+ */
+export class TrialResult {
+    customers?: number;
+    promote?: number;
+    demote?: number;
+    custom?: string;
+
+    constructor() {}
+}
+
+/**
  * A Pillars Card.
  */
 export class Card {
@@ -16,8 +28,8 @@ export class Card {
     category?: string;
     flavor?: string;
     marketing?: string;
-    success?: Array<string>;
-    fail?: Array<string>;
+    success?: TrialResult;
+    fail?: TrialResult;
     cost?: string;
     auction?: string;
     pillarIndex?: number;

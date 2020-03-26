@@ -1,5 +1,7 @@
 import { MouseableCard, IPillarsGame, Button, DieRollAnimation, Mouseable } from './ui-utils';
 import { PillarsConstants } from './constants';
+import { GameState } from '../lambdas/game-state';
+import { CardActions } from './card-actions';  
 
 export class Trial {
 
@@ -111,11 +113,12 @@ export class Trial {
                 modal.text = `You rolled ${roll}. Your total is ${total}. ${sf}!`;
                 button.text = 'Ok';
                 button.onclick = () => {
-                        
-                    // TODO - Success and failure
-
-                    game.closeModal();
-                    game.endTurn();
+                    const actions = new CardActions(this.game, m, () => {
+                        game.gameState.endTrial(stack, winner);
+                        game.closeModal();
+                        game.endTurn();
+                    });
+                    actions.endTrial(winner);
                 }
             }, 990);
         };

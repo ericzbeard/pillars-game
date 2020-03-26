@@ -124,13 +124,13 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 7,
             text: "",
-            success: [
-                "+2 Customers",
-                "You may retire a card you played this turn."
-            ],
-            fail: [
-                "-1 Customer"
-            ],
+            success: {
+                customers: 2, 
+                custom: "You may retire a card you played this turn."
+            },
+            fail: {
+                customers: -1
+            },
             starter: false,
             copies: 1,
             flavor: "Our site is getting a ton of unique visitors today! Wait a minute... Uh Oh..."
@@ -141,11 +141,11 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 6,
             text: "",
-            success: [
-                "+1 Customer",
-                "Promote"
-            ],
-            fail: ["Demote"],
+            success: {
+                customers: 1,
+                promote: 6
+            },
+            fail: { demote: 5 },
             starter: false,
             copies: 1
         },
@@ -155,8 +155,11 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 7,
             text: "",
-            success: ["+2 Customers","Promote"],
-            fail: ["-1 Customer"],
+            success: { 
+                customers: 2, 
+                promote: 6
+            },
+            fail: { customers: -1},
             starter: false,
             copies: 1
         },
@@ -166,8 +169,8 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 6,
             text: "",
-            success: ["+1 Customer"],
-            fail: ["Draw 1 less card at the end of this turn"],
+            success: { customers: 1 },
+            fail: { custom: "Draw 1 less card at the end of this turn" },
             starter: false,
             copies: 1
         },
@@ -177,8 +180,8 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 7,
             text: "",
-            success: ["+1 Customer","Promote I"],
-            fail: ["-1 Customer"],
+            success: { customers: 1, promote: 1 },
+            fail: { customer: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 0, 
@@ -190,7 +193,7 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 7,
             text: "",
-            success: ["+1 Customer","Promote III"],
+            success: { customers: 1, promote: 2},
             fail: ["-1 Customer"],
             starter: false,
             copies: 1, 
@@ -203,8 +206,8 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 7,
             text: "",
-            success: ["+1 Customer","Promote IV"],
-            fail: ["-1 Customer"],
+            success: { customers: 1, promote: 3 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
@@ -216,8 +219,8 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 7,
             text: "",
-            success: ["+1 Customer","Promote V"],
-            fail: ["-1 Customer"],
+            success: { customers: 1, promote: 4 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
@@ -229,8 +232,8 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 5,
             text: "",
-            success: ["+2 Customers"],
-            fail: ["-1 Customer"],
+            success: { customers: 2},
+            fail: { customers: -1 },
             starter: false,
             copies: 1
         },
@@ -240,8 +243,8 @@ export const cardDatabase = {
             subtype: "Phase 1",
             trial: 8,
             text: "",
-            success: ["+2 Customers","Promote Any"],
-            fail: ["Demote"],
+            success: { customers: 2, promote: 5 },
+            fail: { demote: 6 },
             starter: false,
             copies: 1
         },
@@ -251,8 +254,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 8,
             text: "",
-            success: ["+3 Customers"],
-            fail: ["-2 Customers"],
+            success: { customers: 3 },
+            fail: { customers: -2 },
             starter: false,
             copies: 1
         },
@@ -262,8 +265,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 8,
             text: "",
-            success: ["+2 Customers","Promote"],
-            fail: ["Demote"],
+            success: { customers: 2, promote: 6 },
+            fail: { demote: 6 },
             starter: false,
             copies: 1
         },
@@ -273,8 +276,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 9,
             text: "If you have any cards in play that provide Creativity, place one of them in the discard pile before rolling",
-            success: ["+2 Customers","Promote"],
-            fail: ["-1 Customer"],
+            success: { customers: 2, promote: 6 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1
         },
@@ -284,8 +287,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * I to your roll",
-            success: ["+3 Customers","Promote I"],
-            fail: ["-1 Customer"],
+            success: { customers: 3, promote: 0},
+            fail: { customers: -1 },
             starter: false,
             copies: 1,
             flavor: "I told you that was my red stapler.", 
@@ -298,8 +301,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * II to your roll",
-            success: ["+3 Customers","Promote II"],
-            fail: ["-1 Customer"],
+            success: { customers: 3, promote: 1 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 1, 
@@ -311,8 +314,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * IV to your roll",
-            success: ["+3 Customers","Promote IV"],
-            fail: ["-1 Customer"],
+            success: { customers: 3, promote: 3 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
@@ -324,8 +327,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * V to your roll",
-            success: ["+3 Customers","Promote V"],
-            fail: ["-1 Customer"],
+            success: { customers: 3, promote: 4 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
@@ -337,8 +340,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * III to your roll",
-            success: ["+3 Customers","Promote III"],
-            fail: ["-1 Customer"],
+            success: { customers: 3, promote: 2 },
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
@@ -350,8 +353,11 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 10,
             text: "",
-            success: ["+1 Customer","Promote your lowest pillars"],
-            fail: ["-1 Customer","Demote"],
+            success: { 
+                customers: 1 , 
+                custom: "Promote your lowest pillars"
+            },
+            fail: { customers: -1, demote: 6 },
             starter: false,
             copies: 1
         },
@@ -361,8 +367,8 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "",
-            success: ["Acquire a resource card from the market for free"],
-            fail: ["Demote twice"],
+            success: { custom: "Acquire a resource card from the market for free" },
+            fail: { custom: "Demote twice" },
             starter: false,
             copies: 1
         },
@@ -372,8 +378,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 13,
             text: "You must retire a resource in play that provides Creativity or subtract 2 from your roll",
-            success: ["+3 Customers","Promote V"],
-            fail: ["-2 Customers"],
+            success: { customers: 3, promote: 4 },
+            fail: { customers: -2 },
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
@@ -385,8 +391,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 11,
             text: "",
-            success: ["+4 Customers"],
-            fail: ["-2 Customers"],
+            success: { customers: 4 },
+            fail: { customers: -2 },
             starter: false,
             copies: 1
         },
@@ -396,8 +402,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 11,
             text: "Subtract 1 from your roll if your pillar I is not maxed",
-            success: ["+4 Customers","Promote Any"],
-            fail: ["-1 Cusotomer","Demote"],
+            success: { customers: 4, promote: 5 },
+            fail: { customers: -1, demote: 6 },
             starter: false,
             copies: 1, 
             pillarIndex: 0, 
@@ -409,8 +415,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 12,
             text: "Subtract 1 from your roll if your pillar II is not maxed",
-            success: ["+4 Customers","Promote Any"],
-            fail: ["-2 Cusotomers","Demote"],
+            success: { customers: 4, promote: 5 },
+            fail: { customers: -2, demote: 6 },
             starter: false,
             copies: 1, 
             pillarIndex: 1, 
@@ -422,8 +428,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 12,
             text: "Subtract 1 from your roll if your pillar IV is not maxed",
-            success: ["+4 Customers","Promote Any"],
-            fail: ["-1 Cusotomer","Demote"],
+            success: { customers: 4, promote: 5 },
+            fail: { customers: -1, demote: 6 },
             starter: false,
             copies: 1, 
             pillarIndex: 3, 
@@ -435,8 +441,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 12,
             text: "Subtract 1 from your roll if your pillar V is not maxed",
-            success: ["+4 Customers","Promote Any"],
-            fail: ["-1 Cusotomer","Demote"],
+            success: { customers: 4, promote: 5},
+            fail: { customers: -1, demote: 6 },
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
@@ -448,8 +454,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 12,
             text: "Subtract 1 from your roll if your pillar III is not maxed",
-            success: ["+4 Customers","Promote Any"],
-            fail: ["-1 Cusotomer","Demote"],
+            success: { customers: 4, promote: 5},
+            fail: { customers: -1, demote: 6 },
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
@@ -461,8 +467,8 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 13,
             text: "+2 to your roll if you spent at least one Credit and at least one Talent this turn",
-            success: ["+2 Customers","Promote twice"],
-            fail: ["Demote your highest non-maxed Pillar"],
+            success: { customers: 2, custom: "Promote twice" },
+            fail: { custom: "Demote your highest non-maxed Pillar" },
             starter: false,
             copies: 1
         },
@@ -472,8 +478,13 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 14,
             text: "+2 Creativity for each of your maxed pillars",
-            success: ["+1 Customer","Acquire a card from an opponent's discard pile"],
-            fail: ["Opponents may put a card from their hand into your discard pile"],
+            success: { 
+                customers: 1, 
+                custom: "Acquire a card from an opponent's discard pile" 
+            },
+            fail: {
+                custom: "Opponents may put a card from their hand into your discard pile" 
+            },
             starter: false,
             copies: 1
         },
@@ -483,8 +494,13 @@ export const cardDatabase = {
             subtype: "Phase 3",
             trial: 15,
             text: "Add Creativity to your roll equal to your lowest pillar",
-            success: ["+1 Customer","Max one non-maxed pillar"],
-            fail: ["The opponent to your right demotes any one of your non-maxed pillars"],
+            success: { 
+                customers: 1, 
+                custom: "Max one non-maxed pillar" 
+            },
+            fail: { 
+                custom: "The opponent to your right demotes any one of your non-maxed pillars" 
+            },
             starter: false,
             copies: 1
         },
@@ -1291,7 +1307,7 @@ export const cardDatabase = {
             copies: 2
         },
         {
-            name: "Amazon Virtual Private Cloud",
+            name: "Amazon VPC",
             type: "Resource",
             subtype: "Cloud",
             cost: "TT",
@@ -1303,7 +1319,7 @@ export const cardDatabase = {
             }, 
             href: "https://aws.amazon.com/vpc/", 
             info: "Amazon Virtual Private Cloud (Amazon VPC) lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including selection of your own IP address range, creation of subnets, and configuration of route tables and network gateways. You can use both IPv4 and IPv6 in your VPC for secure and easy access to resources and applications.", 
-            marketing: "A logically isolated section of the AWS cloud"
+            marketing: "Virtual Private Cloud"
         },
         {
             name: "Amazon Simple Storage Service",

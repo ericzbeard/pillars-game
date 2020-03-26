@@ -76,6 +76,16 @@ export class CardActions {
     }
 
     /**
+     * Do success or fail actions.
+     */
+    endTrial(winner:boolean) {
+        
+        // TODO
+
+        if (this.callback) this.callback();
+    }
+
+    /**
      * Play the card's effects.
      */
     play() {

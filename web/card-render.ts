@@ -265,6 +265,96 @@ export class CardRender {
     }
 
     /**
+     * Render parts of the card unique to trials.
+     * 
+     * Success/Fail
+     */
+    renderTrial(card:Card, x:number, y:number, scale: number) {
+
+        console.log(`renderTrial x:${x}, y:${y}, scale:${scale}`);
+
+        const sx = x + 11 * scale;
+        const ty = y + 170 * scale;
+        const fx = x + PillarsConstants.CARD_WIDTH / 2 * scale;
+        const lh = 15 * scale;
+        const maxw = PillarsConstants.CARD_WIDTH / 2 * scale - 10 * scale;
+
+        console.log(`renderTrial sx:${sx}`);
+
+        this.ctx.font = this.game.getFont(9 * scale);
+        this.ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
+        this.ctx.textAlign = 'left';
+        let cury = ty;
+
+        // Success
+        if (card.success) {
+            if (!card.success.custom) {
+                cury += 10;
+            }
+            if (card.success.customers) {
+                const s = card.success.customers > 1 ? 's' : '';
+                this.ctx.fillText(`+${card.success.customers} Customer${s}`, sx, cury);
+                cury += lh;
+            }
+            if (card.success.promote) {
+                if (card.success.promote < 5) {
+                    const numeral = PillarsConstants.NUMERALS[card.success.promote];
+                    this.ctx.fillText(`Promote ${numeral}`, sx, cury);
+                    cury += lh;
+                }
+                if (card.success.promote == 5) {
+                    this.ctx.fillText('Promote Any', sx, cury);
+                    cury += lh;
+                }
+                if (card.success.promote == 6) {
+                    this.ctx.fillText('Promote', sx, cury);
+                    cury += lh;
+                }
+            }
+            if (card.success.custom) {
+                this.ctx.font = this.game.getFont(7 * scale);
+                TextUtil.wrapText(this.ctx, card.success.custom, sx, cury, 
+                    maxw, 9 * scale);
+            }
+        }
+
+        this.ctx.font = this.game.getFont(9 * scale);
+        cury = ty;
+
+        // Fail
+        if (card.fail) {
+            if (!card.fail.custom) {
+                cury += 10;
+            }
+            if (card.fail.customers) {
+                const s = card.fail.customers > 1 ? 's' : '';
+                this.ctx.fillText(`${card.fail.customers} Customer${s}`, fx, cury);
+                cury += lh;
+            }
+            if (card.fail.demote) {
+                if (card.fail.demote < 5) {
+                    const numeral = PillarsConstants.NUMERALS[card.fail.demote];
+                    this.ctx.fillText(`Demote ${numeral}`, fx, cury);
+                    cury += lh;
+                }
+                if (card.fail.demote == 5) {
+                    this.ctx.fillText('Demote Any', fx, cury); // ?
+                    cury += lh;
+                }
+                if (card.fail.demote == 6) {
+                    this.ctx.fillText('Demote', fx, cury);
+                    cury += lh;
+                }
+            }
+            if (card.fail.custom) {
+                this.ctx.font = this.game.getFont(7 * scale);
+                TextUtil.wrapText(this.ctx, card.fail.custom, fx, cury, 
+                    maxw, 9 * scale);
+            }
+        }
+    }
+
+    /**
      * Render a card.
      */
     renderCard(m: MouseableCard, isPopup?: boolean, scale?: number): any {
@@ -536,6 +626,10 @@ export class CardRender {
 
                 this.renderDie(x + p[i].x, y + p[i].y, i, player.pillarRanks[pidx], scale, a);
             }
+        }
+
+        if (card.trial !== undefined) {
+            this.renderTrial(card, x, y, scale);
         }
 
         // Reset alignment
