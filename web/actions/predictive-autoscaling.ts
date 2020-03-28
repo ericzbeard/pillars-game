@@ -1,6 +1,7 @@
 import { IPillarsGame, Mouseable, MouseableCard, PillarsImages } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { PillarsConstants } from '../constants';
+import { CardRender } from '../card-render';
 
 /**
  * Look at the top card of any trial stack. 
@@ -13,6 +14,8 @@ export const predictiveAutoscaling = (game: IPillarsGame,
     const modal = game.showModal(
         "Look at the top card of any trial stack. " +
         "You may put it on the bottom of that stack face up.");
+
+    const cardRender = new CardRender(game);
 
     const scale = PillarsConstants.MODAL_CARD_ACTION_SCALE;
 
@@ -106,8 +109,8 @@ export const predictiveAutoscaling = (game: IPillarsGame,
     p1.zindex = PillarsConstants.MODALZ + 1;
     p1.render = () => {
         game.ctx.fillText('Phase 1', p1.x + textoffset, p1.y - 10);
-        game.renderCardImage(PillarsImages.IMG_BACK_GREEN, p1.x, p1.y, scale);
-        game.renderCardImage(PillarsImages.IMG_BACK_GREEN, p1.x + 5, p1.y + 5, scale);
+        cardRender.renderCardImage(PillarsImages.IMG_BACK_GREEN, p1.x, p1.y, scale);
+        cardRender.renderCardImage(PillarsImages.IMG_BACK_GREEN, p1.x + 5, p1.y + 5, scale);
     };
     p1.onclick = () => {
         game.closeModal();
@@ -126,8 +129,8 @@ export const predictiveAutoscaling = (game: IPillarsGame,
     p2.zindex = PillarsConstants.MODALZ + 1;
     p2.render = () => {
         game.ctx.fillText('Phase 2', p2.x + textoffset, p2.y - 10);
-        game.renderCardImage(PillarsImages.IMG_BACK_ORANGE, p2.x, p2.y, scale);
-        game.renderCardImage(PillarsImages.IMG_BACK_ORANGE, p2.x + 5, p2.y + 5, scale);
+        cardRender.renderCardImage(PillarsImages.IMG_BACK_ORANGE, p2.x, p2.y, scale);
+        cardRender.renderCardImage(PillarsImages.IMG_BACK_ORANGE, p2.x + 5, p2.y + 5, scale);
     };
     p2.onclick = () => {
         game.closeModal();
@@ -145,8 +148,8 @@ export const predictiveAutoscaling = (game: IPillarsGame,
     p3.zindex = PillarsConstants.MODALZ + 1;
     p3.render = () => {
         game.ctx.fillText('Phase 3', p3.x + textoffset, p3.y - 10);
-        game.renderCardImage(PillarsImages.IMG_BACK_PINK, p3.x, p3.y, scale);
-        game.renderCardImage(PillarsImages.IMG_BACK_PINK, p3.x + 5, p3.y + 5, scale);
+        cardRender.renderCardImage(PillarsImages.IMG_BACK_PINK, p3.x, p3.y, scale);
+        cardRender.renderCardImage(PillarsImages.IMG_BACK_PINK, p3.x + 5, p3.y + 5, scale);
     };
     p3.onclick = () => {
         game.closeModal();

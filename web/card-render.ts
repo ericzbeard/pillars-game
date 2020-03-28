@@ -355,6 +355,63 @@ export class CardRender {
     }
 
     /**
+     * Render a card using an image file.
+     * 
+     * The image has to be scaled and masked.
+     */
+    renderCardImage(name: string, x: number, y: number, scale?: number) {
+
+        if (!this.game.getDoneLoading()) {
+            return;
+        }
+
+        if (scale === undefined) {
+            scale = 1.0;
+        }
+
+        const ctx = this.ctx;
+
+        ctx.save();
+
+        // Draw a mask
+
+        let radius = PillarsConstants.CARD_RADIUS;
+        let width = PillarsConstants.CARD_WIDTH;
+        let height = PillarsConstants.CARD_HEIGHT;
+
+        radius = radius * scale;
+        width = width * scale;
+        height = height * scale;
+
+        const radii = { tl: radius, tr: radius, br: radius, bl: radius };
+
+        ctx.beginPath();
+        ctx.moveTo(x + radii.tl, y);
+        ctx.lineTo(x + width - radii.tr, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radii.tr);
+        ctx.lineTo(x + width, y + height - radii.br);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radii.br, y + height);
+        ctx.lineTo(x + radii.bl, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radii.bl);
+        ctx.lineTo(x, y + radii.tl);
+        ctx.quadraticCurveTo(x, y, x + radii.tl, y);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.clip();
+
+        // Draw the image in the mask
+        const img = this.game.getImg(name);
+        let imgScale = PillarsConstants.CARD_IMAGE_SCALE * scale;
+        let offset = 14 * scale;
+        ctx.drawImage(img, x - offset, y - offset, 
+            img.width * imgScale, img.height * imgScale);
+
+        ctx.restore();
+    }
+
+
+    /**
      * Render a card.
      */
     renderCard(m: MouseableCard, isPopup?: boolean, scale?: number): any {
@@ -432,7 +489,8 @@ export class CardRender {
             ctx.save()
             ctx.strokeStyle = 'yellow';
             ctx.lineWidth = 5;
-            CanvasUtil.roundRect(this.ctx, x - 2, y - 2, w + 4, h + 4, radius, false, true);
+            CanvasUtil.roundRect(this.ctx, x - 2, y - 2, w + 4, h + 4, 
+                radius, false, true);
             ctx.restore();
         }
 
@@ -445,7 +503,7 @@ export class CardRender {
         const imgFileName = m.card.getImageName();
         const img = this.game.getImg(imgFileName);
         if (img) {
-            this.game.renderCardImage(imgFileName, x, y, scale);
+            this.renderCardImage(imgFileName, x, y, scale);
         } else {
             console.log(`[Log] Unable to get img ${imgFileName}`);
         }
@@ -487,6 +545,7 @@ export class CardRender {
                 }
             };
             infoLink.onclick = () => {
+                this.game.closeModal();
                 this.game.showModal(<string>card.info, card.href);
                 this.game.playSound('menuselect.wav');
             };

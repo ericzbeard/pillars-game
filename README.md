@@ -55,5 +55,11 @@ npm run build-{env}
 npm run deploy-{env}
 ```
 
+# TODO
+
+- Tutorial
+- Finish card actions
+- Safari/iOS drag and drop
+- Safari scaling
 
 

@@ -411,19 +411,13 @@ export interface IPillarsGame {
     /**
      * Render a card.
      */
-    renderCard(m: MouseableCard, isPopup?: boolean, scale?:number): any
-
-    /**
-     * Render a card using an image file.
-     * 
-     * The image has to be scaled and masked.
-     */
-    renderCardImage(name: string, x: number, y: number, scale?: number):any;
+    renderCard(m: MouseableCard, isPopup?: boolean, scale?:number): any;
 
     /**
      * Initialize the local player's hand or discard pile.
      */
-    initHandOrDiscard(isHand: boolean, isModal?: boolean, modalClick?: Function, hideCard?:Card): any
+    initHandOrDiscard(isHand: boolean, isModal?: boolean, 
+        modalClick?: Function, hideCard?:Card): any
 
     /**
      * Play a sound.
@@ -464,20 +458,109 @@ export interface IPillarsGame {
      * Put all cards in play and hand into discard pile. Draw 6.
      */
     endTurn():any;
+
+    /**
+     * Get the position of the mouse within the canvas.
+     * Coordinates are relative to base width and height.
+     */
+    getMousePos(evt: MouseEvent): any;
+
+    /**
+     * Get the position of the touch within the canvas.
+     * Coordinates are relative to base width and height.
+     */
+    getTouchPos(evt: TouchEvent): any;
+
+    /**
+     * Load sound files. This can only be done after user input.
+     */
+    initSounds():any;
+
+    /**
+     * Return a z-index sorted array of mouseables.
+     */
+    sortMouseables(reverse?: boolean): Array<Mouseable>;
+
+    /**
+     * Returns true if the mouseable key doesn't belong to the modal dialong
+     * and we are currently showing a modal.
+     */
+    checkModal(key: string): boolean;
+
+    /**
+     * After the players finishes choosing custom actions, finish playing the card.
+     */
+    finishPlayingCard(m: MouseableCard, key: string):any;
+
+    /**
+     * Remove all mouesables that start with the specified string.
+     */
+    removeMouseableKeys(startsWith: string):any;
+
+    /**
+     * Return a reference to the canvas.
+     */
+    getCanvas(): HTMLCanvasElement;
+
+    /**
+     * Play a card from the local player's hand.
+     */
+    playCard(mcard: MouseableCard, callback: Function):any;
+
+    /**
+     * Acquire a card from the marketplace.
+     */
+    acquireCard(card: Card, key: string):any;
+
+    /**
+     * Get the mousables map.
+     */
+    getMouseables(): Map<string, Mouseable>;
+
+    /**
+     * Respond to chat messages if ai is running.
+     */
+    respondToChat(chat:string):any;
+
+    /**
+     * Returns true if the mouseable key doesn't belong to the modal dialong
+     * and we are currently showing a modal.
+     */
+    checkModal(key: string): boolean;
+
+    /**
+     * Done loading images.
+     */
+    getDoneLoading():boolean;
+}
+
+/**
+ * x, y, w, h
+ */
+export class Xywh {
+    constructor(public x:number, 
+        public y:number, public w:number, public h:number) {}
 }
 
 /**
  * A modal dialog.
  */
 export class Modal {
-    text: string;
-    href?: string;
-    game: IPillarsGame;
 
-    constructor(game: IPillarsGame, text: string, href?: string) {
-        this.game = game;
-        this.text = text;
-        this.href = href;
+    public x:number;
+    public y:number;
+    public w:number;
+    public h:number;
+
+    constructor(
+        private game: IPillarsGame, 
+        public text: string, 
+        private href?: string) {
+        
+        this.x = PillarsConstants.MODALX;
+        this.y = PillarsConstants.MODALY;
+        this.w = PillarsConstants.MODALW;
+        this.h = PillarsConstants.MODALH;
     }
 
     /**
@@ -490,8 +573,8 @@ export class Modal {
         const closew = 50;
 
         const modalClose = new Mouseable();
-        modalClose.x = PillarsConstants.MODALX + PillarsConstants.MODALW - 100;
-        modalClose.y = PillarsConstants.MODALY + 10;
+        modalClose.x = this.x + this.w - 100;
+        modalClose.y = this.y + 10;
         modalClose.w = closew;
         modalClose.h = closew;
         modalClose.zindex = 1000;
@@ -535,8 +618,8 @@ export class Modal {
         ctx.strokeStyle = PillarsConstants.COLOR_WHITEISH;
         ctx.globalAlpha = 0.98;
         CanvasUtil.roundRect(ctx,
-            PillarsConstants.MODALX, PillarsConstants.MODALY,
-            PillarsConstants.MODALW, PillarsConstants.MODALH,
+            this.x, this.y,
+            this.w, this.h,
             PillarsConstants.MODALR, true, true);
         ctx.globalAlpha = 1;
 
@@ -553,9 +636,9 @@ export class Modal {
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
         ctx.textAlign = 'center';
         TextUtil.wrapText(ctx, this.text,
-            PillarsConstants.MODALX + (PillarsConstants.MODALW / 2),
-            PillarsConstants.MODALY + 100,
-            PillarsConstants.MODALW - 200, 50);
+            this.x + (this.w / 2),
+            this.y + 100,
+            this.w - 200, 50);
 
     }
 
@@ -568,8 +651,8 @@ export class Modal {
 
         if (this.href) {
             const hm = new Mouseable();
-            const hx = PillarsConstants.MODALX + (PillarsConstants.MODALW / 2);
-            const hy = PillarsConstants.MODALY + PillarsConstants.MODALH - 50;
+            const hx = this.x + (this.w / 2);
+            const hy = this.y + this.h - 50;
             const tm = ctx.measureText(this.href);
             const hw = tm.width;
             const hh = 40;
@@ -601,8 +684,8 @@ export class Modal {
         const ctx = game.ctx;
 
         const modalBox = new Mouseable();
-        modalBox.x = PillarsConstants.MODALX;
-        modalBox.y = PillarsConstants.MODALY;
+        modalBox.x = this.x;
+        modalBox.y = this.y;
         modalBox.w = 0; // Don't actually want this to cause mouse events
         modalBox.h = 0;
         modalBox.zindex = PillarsConstants.MODALZ;
