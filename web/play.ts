@@ -7,7 +7,7 @@ import { PillarsWebConfig } from '../config/pillars-web-config';
 import { MouseableCard, Mouseable, IPillarsGame, Xywh } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
 import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
-import { ModalCardClick } from './ui-utils';
+import { ModalCardClick, PillarsSounds } from './ui-utils';
 import { LocalGame } from './local-game';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
@@ -206,23 +206,31 @@ class PillarsGame implements IPillarsGame {
 
         // Listen to mouse moves
         self.gameCanvas.addEventListener('mousemove', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
             self.input.handleMouseMove.call(self.input, e);
         });
 
         // Listen to mouse ups
         self.gameCanvas.addEventListener('mouseup', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
             self.input.handleMouseUp.call(self.input, e);
         });
 
         // Listen to mouse downs
         self.gameCanvas.addEventListener('mousedown', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
             self.input.handleMouseDown.call(self.input, e);
         });
 
-        // Listen for clicks
-        self.gameCanvas.addEventListener('click', function (e) {
-            self.input.handleClick.call(self.input, e);
-        });
+        // // Listen for clicks
+        // self.gameCanvas.addEventListener('click', function (e) {
+        //     e.stopPropagation();
+        //     e.preventDefault();
+        //     self.input.handleClick.call(self.input, e);
+        // });
 
         // // Listen for double clicks
         // self.gameCanvas.addEventListener('dblclick', function (e) {
@@ -231,12 +239,15 @@ class PillarsGame implements IPillarsGame {
 
         // Listen for touch start events
         self.gameCanvas.addEventListener('touchstart', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
             self.diag('touchstart');
             self.input.handleTouchStart.call(self.input, e);
         });
 
         // Listen for touch move events
         self.gameCanvas.addEventListener('touchmove', function (e) {
+            e.stopPropagation();
             e.preventDefault();
             self.diag('touchmove');
             self.input.handleTouchMove.call(self.input, e);
@@ -244,12 +255,16 @@ class PillarsGame implements IPillarsGame {
 
         // THIS NEVER FIRES!  ARGGH!
         self.gameCanvas.addEventListener('touchend', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
             self.diag('touchend');
             self.input.handleTouchUp.call(self.input, e);
         });
 
         // Listen for touch cancel events
         self.gameCanvas.addEventListener('touchcancel', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
             self.diag('touchcancel');
             self.input.handleTouchUp.call(self.input, e);
         });
@@ -334,8 +349,8 @@ class PillarsGame implements IPillarsGame {
         if (this.sounds.size == 0 && !this.initializingSound) {
             this.initializingSound = true;
             this.addSound('swoosh.wav');
-            this.addSound('menuselect.wav');
-            this.addSound('hint.wav');
+            this.addSound(PillarsSounds.CLICK);
+            this.addSound(PillarsSounds.CLOSE);
             this.addSound('jingle.wav');
             this.addSound('dice.wav');
             this.addSound('gameover.wav');
@@ -400,7 +415,7 @@ class PillarsGame implements IPillarsGame {
         button.zindex = PillarsConstants.MODALZ + 1;
         button.onclick = () => {
             this.closeModal();
-            this.playSound('menuselect.wav');
+            this.playSound(PillarsSounds.CLICK);
             this.promote(0, 0);
             this.promote(0, 1);
             this.promote(0, 2);
@@ -585,16 +600,15 @@ class PillarsGame implements IPillarsGame {
         //     PillarsConstants.BIGCARDX, PillarsConstants.BIGCARDY, PillarsConstants.POPUP_SCALE);
 
         // Deck Label
-        //ctx.save();
-        //ctx.translate(30, PillarsConstants.HAND_Y + 50);
-        //ctx.rotate(-Math.PI / 2);
+        ctx.save();
+        ctx.translate(PillarsConstants.DECKX - 5, 
+            PillarsConstants.HAND_Y + PillarsConstants.CARD_HEIGHT / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.textAlign = "center";
         ctx.font = this.getFont(16);
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText(`DECK (${this.localPlayer.deck.length})`,
-            PillarsConstants.CARD_WIDTH / 2 + PillarsConstants.DECKX,
-            PillarsConstants.DECKY - 10);
-        //ctx.restore();
+        ctx.fillText(`DECK (${this.localPlayer.deck.length})`, 0, 0);
+        ctx.restore();
 
         // Draw the deck if it has any cards in it
         if (this.localPlayer.deck.length > 0) {
@@ -619,16 +633,15 @@ class PillarsGame implements IPillarsGame {
         }
 
         // Hand label
-        // ctx.save();
-        // ctx.translate(PillarsConstants.HAND_X - 5, PillarsConstants.HAND_Y + 50);
-        // ctx.rotate(-Math.PI / 2);
+        ctx.save();
+        ctx.translate(PillarsConstants.HAND_X - 5, 
+            PillarsConstants.HAND_Y + PillarsConstants.CARD_HEIGHT / 2);
+        ctx.rotate(-Math.PI / 2);
         ctx.textAlign = "center";
         ctx.font = this.getFont(16);
         ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText(`HAND (${this.localPlayer.hand.length})`,
-            PillarsConstants.HAND_X + PillarsConstants.HAND_WIDTH / 2,
-            PillarsConstants.HAND_Y - 10);
-        //ctx.restore();
+        ctx.fillText(`HAND (${this.localPlayer.hand.length})`, 0, 0);
+        ctx.restore();
 
         ctx.fillStyle = 'green';
         CanvasUtil.roundRect(this.ctx,
@@ -636,7 +649,7 @@ class PillarsGame implements IPillarsGame {
             PillarsConstants.HAND_Y - 10,
             PillarsConstants.HAND_WIDTH + 10,
             PillarsConstants.CARD_HEIGHT + 20,
-            10, true, true);
+            PillarsConstants.FELT_RADIUS, true, true);
 
     }
 
@@ -670,17 +683,18 @@ class PillarsGame implements IPillarsGame {
                 PillarsConstants.DISCARD_Y - 10,
                 PillarsConstants.HAND_WIDTH + 10,
                 PillarsConstants.CARD_HEIGHT + 20,
-                10, true, true);
+                PillarsConstants.FELT_RADIUS, true, true);
 
             
             // Discard label
+            this.ctx.save();
+            this.ctx.translate(discard.x - 5, discard.y + PillarsConstants.CARD_HEIGHT / 2);
+            this.ctx.rotate(-Math.PI / 2);
             this.ctx.textAlign = "center";
             this.ctx.font = this.getFont(16);
             this.ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-            this.ctx.fillText(`DISCARD (${this.localPlayer.discardPile.length})`,
-                PillarsConstants.DISCARD_X + PillarsConstants.HAND_WIDTH / 2,
-                PillarsConstants.DISCARD_Y - 20);
-                
+            this.ctx.fillText(`DISCARD (${this.localPlayer.discardPile.length})`, 0, 0)
+            this.ctx.restore();
         };
 
         this.addMouseable(PillarsConstants.DISCARD_AREA_KEY, discard);
@@ -911,13 +925,12 @@ class PillarsGame implements IPillarsGame {
             //     30,
             //     true, true);
 
-            const stackx = marketx + 30;
-            const stacky = markety + 15;
+            const stackx = marketx + 25;
+            const stacky = markety;
 
             // Sideways label
             this.ctx.save();
-            this.ctx.translate(stackx - 5,
-                stacky + 50);
+            this.ctx.translate(stackx - 5, stacky + PillarsConstants.CARD_HEIGHT / 2);
             this.ctx.rotate(-Math.PI / 2);
             this.ctx.textAlign = "center";
             this.ctx.font = this.getFont(16);
@@ -983,8 +996,7 @@ class PillarsGame implements IPillarsGame {
 
             // Sideways label
             this.ctx.save();
-            this.ctx.translate(inPlay.x - 5,
-                inPlay.y + 50);
+            this.ctx.translate(inPlay.x - 5, inPlay.y + PillarsConstants.CARD_HEIGHT / 2);
             this.ctx.rotate(-Math.PI / 2);
             this.ctx.textAlign = "center";
             this.ctx.font = this.getFont(16);
@@ -997,7 +1009,7 @@ class PillarsGame implements IPillarsGame {
             CanvasUtil.roundRect(this.ctx,
                 inPlay.x, inPlay.y,
                 inPlay.w, inPlay.h,
-                30, true, true);
+                PillarsConstants.FELT_RADIUS, true, true);
         }
         this.addMouseable(PillarsConstants.INPLAY_AREA_KEY, inPlay);
 
@@ -1017,8 +1029,8 @@ class PillarsGame implements IPillarsGame {
             //     PillarsConstants.REGION_INPLAY);
 
             const m = this.initHoverCard(card,
-                PillarsConstants.INPLAYX + 10 + (50 * i),
-                PillarsConstants.INPLAYY + 10,
+                PillarsConstants.INPLAYX + 30 + (50 * i),
+                PillarsConstants.INPLAYY + 15,
                 PillarsConstants.INPLAY_START_KEY,
                 PillarsConstants.INPLAY_HOVER_KEY, i, false,
                 PillarsConstants.REGION_INPLAY);
@@ -1054,7 +1066,7 @@ class PillarsGame implements IPillarsGame {
                 }
             }
             this.modal = undefined;
-            this.playSound('hint.wav');
+            this.playSound(PillarsSounds.CLOSE);
         }
     }
 
@@ -1239,7 +1251,6 @@ class PillarsGame implements IPillarsGame {
         this.broadcast(`${this.localPlayer.name} played ${m.card.name}`);
     }
 
-
     /**
      * Play a card from the local player's hand.
      */
@@ -1247,7 +1258,7 @@ class PillarsGame implements IPillarsGame {
 
         console.log(`About to play ${mcard.card.name}. ${mcard.card.uniqueIndex}`);
 
-        this.playSound('menuselect.wav');
+        this.playSound(PillarsSounds.CLICK);
         const actions = new CardActions(this, mcard, callback);
 
         // TODO - When we open a dialog, the player can choose to close it
@@ -1326,12 +1337,12 @@ class PillarsGame implements IPillarsGame {
         if (card.subtype == 'Bug') {
             bug(this, card, () => {
                 this.afterAcquireCard(card, key);
-                this.playSound('gameover.wav');
+                this.playSound(PillarsSounds.FAIL);
             });
         } else {
             this.localPlayer.discardPile.push(card);
             this.afterAcquireCard(card, key);
-            this.playSound('menuselect.wav');
+            this.playSound(PillarsSounds.CLICK);
             this.broadcast(`${this.gameState.currentPlayer.name} acquired ${card.name}`);
         }
 
@@ -1476,7 +1487,7 @@ class PillarsGame implements IPillarsGame {
         d.pillarIndex = pillarIndex;
         this.registerAnimation(d);
 
-        this.playSound('swoosh.wav');
+        this.playSound(PillarsSounds.PROMOTE);
 
         // TODO - Game end?
     }

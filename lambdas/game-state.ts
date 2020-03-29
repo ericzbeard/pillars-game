@@ -375,12 +375,19 @@ export class GameState {
     }
 
     /**
-     * Promote the current player.
+     * Promote or demote the current player.
      */
-    promote(pillarIndex: number) {
+    promote(pillarIndex: number, isDemote: boolean) {
         const r = this.currentPlayer.pillarRanks[pillarIndex];
-        if (r < this.pillarMax) {
-            this.currentPlayer.pillarRanks[pillarIndex]++;
+
+        if (isDemote) {
+            if (r > 1) {
+                this.currentPlayer.pillarRanks[pillarIndex]--;
+            }
+        } else {
+            if (r < this.pillarMax) {
+                this.currentPlayer.pillarRanks[pillarIndex]++;
+            }
         }
     }
 

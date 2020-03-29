@@ -1,19 +1,26 @@
 import { IPillarsGame, Mouseable, Modal } from '../ui-utils';
-import { Button, DieRollAnimation } from '../ui-utils';
+import { Button, DieRollAnimation, PillarsSounds } from '../ui-utils';
 import { PillarsConstants } from '../constants';
 import { CanvasUtil } from '../canvas-util';
 import { promoteAny } from './promote-any';
 
 /**
- * Promote
+ * Promote (or demote)
  * 
  * Roll a d6 and promote that pillar, unless it's maxed.
  * 
  * On a 6, choose a non-maxed pillar to promote.
  */
-export const promote = (game: IPillarsGame, callback?:Function) => {
+export const promote = (game: IPillarsGame, callback?:Function, isDemote?:boolean) => {
 
-    const modal = game.showModal('Roll a d6 and promote that pillar! On a 6, you get to choose');
+    if (isDemote === undefined) {
+        isDemote = false;
+    }
+    let msg = 'Roll a d6 and promote that pillar! On a 6, you get to choose.';
+    if (isDemote) {
+        msg = 'Roll a d6 and demote that pillar. On a 6, you get to choose.'
+    }
+    const modal = game.showModal(msg);
 
     const DIEX = PillarsConstants.MODALX + PillarsConstants.MODALW / 2 - 50;
     const DIEY = PillarsConstants.MODALY + 350;
@@ -36,7 +43,7 @@ export const promote = (game: IPillarsGame, callback?:Function) => {
 
         const a = new DieRollAnimation(game, roll, DIEX, DIEY, 0);
         game.registerAnimation(a);
-        game.playSound('dice.wav');
+        game.playSound(PillarsSounds.DICE);
 
         // Replace the animation with the actual number rolled after 1 second.
         setTimeout(() => {
@@ -51,20 +58,21 @@ export const promote = (game: IPillarsGame, callback?:Function) => {
 
             if (roll == 6) {
                 modal.hideCloseButton();
-                modal.text = `You rolled a 6! You get to choose which pillar to promote.`;
+                modal.text = `You rolled a 6! You get to choose the pillar.`;
                 button.text = 'Ok';
                 button.onclick = () => {
                     game.closeModal();
-                    promoteAny(game, callback);
+                    promoteAny(game, callback, isDemote);
                 };
             } else {
                 modal.hideCloseButton();
                 modal.text = `You rolled a ${roll}!`;
                 button.text = 'Ok';
                 button.onclick = () => {
-                    game.gameState.promote(roll - 1);
+                    game.gameState.promote(roll - 1, <boolean>isDemote);
                     const numeral = PillarsConstants.NUMERALS[roll - 1];
-                    game.broadcast(`${player.name} promoted pillar ${numeral}`);
+                    let pd = isDemote ? 'demoted' : 'promoted';
+                    game.broadcast(`${player.name} ${pd} pillar ${numeral}`);
                     game.closeModal();
                     if (callback) callback();
                 };

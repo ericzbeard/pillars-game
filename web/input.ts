@@ -42,6 +42,11 @@ export class PillarsInput {
     dragging: boolean;
 
     /**
+     * The mouseable being dragged.
+     */
+    draggingKey: string;
+
+    /**
      * The canvas we're drawing on.
      */
     gameCanvas: HTMLCanvasElement;
@@ -93,11 +98,13 @@ export class PillarsInput {
         let alreadyHit = false; // Only hover the top element by zindex
 
         for (let i = 0; i < marray.length; i++) {
+
             const m = marray[i];
             const key = m.key;
 
             if (m.dragging) {
                 // Move the mouseable
+
                 m.x = this.mx - m.dragoffx;
                 m.y = this.my - m.draggoffy;
                 m.zindex = 1000;
@@ -106,7 +113,7 @@ export class PillarsInput {
                 // If we're dragging something, we don't want to handle any 
                 // other actions associated with mouse moves.
                 // TODO - What about highlighting the droppable area?
-                break;
+                continue;
             }
 
             let ignore = false;
@@ -126,21 +133,43 @@ export class PillarsInput {
                     if (!alreadyHit) {
                         alreadyHit = true;
 
-                        if (m.onmouseover) {
-                            m.onmouseover();
-                        }
+                        if (!m.dragging) {
 
-                        m.hovering = true;
-                        if (m.onhover) {
+                            if (m.draggable && 
+                                m.down && 
+                                (this.mx != m.downx || this.my != m.downy)) {
 
-                            // Remove all other hover mouseables first
-                            this.game.removeMouseableKeys(PillarsConstants.HOVER_START);
+                                if (m.ondragenter) {
+                                    m.ondragenter();
+                                }
 
-                            m.onhover();
-                        }
+                                this.game.diag(`dragging ${m.key}`);
 
-                        if (this.gameCanvas.style.cursor != 'grabbing') {
-                            this.gameCanvas.style.cursor = 'pointer';
+                                m.dragging = true;
+                                this.dragging = true;
+                                this.draggingKey = m.key;
+                                this.gameCanvas.style.cursor = 'grabbing';
+                                m.dragoffx = this.mx - m.x;
+                                m.draggoffy = this.my - m.y;
+
+                            } 
+
+                            if (m.onmouseover) {
+                                m.onmouseover();
+                            }
+
+                            m.hovering = true;
+                            if (m.onhover) {
+
+                                // Remove all other hover mouseables first
+                                this.game.removeMouseableKeys(PillarsConstants.HOVER_START);
+
+                                m.onhover();
+                            }
+
+                            if (this.gameCanvas.style.cursor != 'grabbing') {
+                                this.gameCanvas.style.cursor = 'pointer';
+                            }
                         }
 
                     }
@@ -221,20 +250,17 @@ export class PillarsInput {
                         alreadyHit = true;
 
                         if (m.draggable) {
-                            if (m.ondragenter) {
-                                m.ondragenter();
-                            }
 
-                            this.game.diag(`down dragging ${m.key}`);
-
-                            m.dragging = true;
-                            this.gameCanvas.style.cursor = 'grabbing';
-                            m.dragoffx = this.mx - m.x;
-                            m.draggoffy = this.my - m.y;
+                            m.down = true;
+                            m.downx = this.mx;
+                            m.downy = this.my;
                         }
                     }
                 } else {
                     m.dragging = false;
+                    m.down = false;
+                    m.downx = -1;
+                    m.downy = -1;
                     this.gameCanvas.style.cursor = 'default';
                 }
             }
@@ -258,6 +284,10 @@ export class PillarsInput {
 
         this.game.diag(`handleMouseup ${this.mx}, ${this.my}`);
 
+        if (!this.dragging) {
+            this.handleClick();
+        }
+
         this.handleInputUp();
     }
 
@@ -271,6 +301,9 @@ export class PillarsInput {
 
         this.game.diag(`handleTouchup ${this.mx}, ${this.my}`);
 
+        if (!this.dragging) {
+            this.handleClick();
+        }
         this.handleInputUp();
     }
 
@@ -328,6 +361,7 @@ export class PillarsInput {
 
                     }
 
+                    // If we dropped it in an invalid region, put it back in its original location
                     if (d.dragging && !dropped) {
                         d.x = d.origx;
                         d.y = d.origy;
@@ -343,10 +377,16 @@ export class PillarsInput {
         //this.gameCanvas.style.cursor = 'default';
 
         // Clear dragging flags
+
+        console.log(`up clearing all dragging flags`);
+
         this.dragging = false;
+        this.draggingKey = '';
         for (let i = 0; i < marray.length; i++) {
             const m = marray[i];
             m.dragging = false;
+            m.downx = -1;
+            m.downy = -1;
         }
 
         this.game.resizeCanvas();
@@ -356,10 +396,13 @@ export class PillarsInput {
     /**
      * Handle mouse clicks.
      */
-    handleClick(e: MouseEvent) {
-        const poz = this.game.getMousePos(e);
-        const mx = poz.x;
-        const my = poz.y;
+    handleClick(e?: MouseEvent) {
+        
+        if (e !== undefined) {
+            const poz = this.game.getMousePos(e);
+            this.mx = poz.x;
+            this.my = poz.y;
+        }
 
         this.game.diag(`handleClick ${this.mx}, ${this.my}`);
 
@@ -368,8 +411,8 @@ export class PillarsInput {
 
         // Animate each click location
         const click: ClickAnimation = new ClickAnimation();
-        click.x = mx;
-        click.y = my;
+        click.x = this.mx;
+        click.y = this.my;
         this.game.registerAnimation(click);
 
         let clickedSomething = false;
@@ -388,7 +431,7 @@ export class PillarsInput {
                 ignore = true;
             }
 
-            if (!ignore && !clickedSomething && m.onclick && m.hitTest(mx, my)) {
+            if (!ignore && !clickedSomething && m.onclick && m.hitTest(this.mx, this.my)) {
                 m.onclick();
                 clickedSomething = true;
                 break;

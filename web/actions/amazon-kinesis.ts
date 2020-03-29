@@ -1,4 +1,4 @@
-import { IPillarsGame, MouseableCard } from '../ui-utils';
+import { IPillarsGame, MouseableCard, PillarsSounds } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { retireCardFromHand} from './retire';
 
@@ -13,7 +13,7 @@ export const amazonKinesis = (game: IPillarsGame, mcard: MouseableCard, callback
         "Choose a card from your hand to discard");
 
     const modalClick = (cardToDiscard:MouseableCard) => {
-        game.playSound('menuselect.wav');
+        game.playSound(PillarsSounds.DISCARD);
         const player = game.gameState.currentPlayer;
         player.discardPile.push(cardToDiscard.card);
         game.removeMouseable(cardToDiscard.key);

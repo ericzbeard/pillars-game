@@ -1,5 +1,4 @@
-import { IPillarsGame, Modal, MouseableCard, PillarsImages } from './ui-utils';
-import { Mouseable } from './ui-utils';
+import { IPillarsGame, Modal, MouseableCard, PillarsSounds } from './ui-utils';
 import { Card } from '../lambdas/card';
 import { Player } from '../lambdas/player';
 import { PillarsConstants } from './constants';
@@ -18,9 +17,10 @@ import { amazonKinesis } from './actions/amazon-kinesis';
  * than the card that gets affected. Be careful with differentiating them, 
  * e.g. mcard is not cardToRetire or cardToDiscard.
  */
-export type CustomEffect = (game: IPillarsGame, 
-                            mcard: MouseableCard, 
-                            callback:Function) => any;
+export type CustomEffect = (game: IPillarsGame,
+    mcard: MouseableCard,
+    callback: Function, 
+    winner?: boolean) => any;
 
 /**
  * Custom card action logic is handled here.
@@ -30,7 +30,7 @@ export type CustomEffect = (game: IPillarsGame,
 export class CardActions {
 
     customEffects: Map<string, CustomEffect>;
-    card:Card;
+    card: Card;
 
     /**
      * The callback is called when we are done with any custom actions.
@@ -78,11 +78,80 @@ export class CardActions {
     /**
      * Do success or fail actions.
      */
-    endTrial(winner:boolean) {
-        
-        // TODO
+    endTrial(winner: boolean) {
+        const a = this.customEffects.get(this.card.name);
+        if (a) {
+            this.doTrialEffects(winner, this.mcard);
+            a.call(this, this.game, this.mcard, this.callback, winner);
+        } else {
+            this.doTrialEffects(winner, this.mcard, this.callback);
+        }
+    }
 
-        if (this.callback) this.callback();
+    /**
+     * Do the standard trial effects.
+     */
+    doTrialEffects(winner:boolean, mcard:MouseableCard, callback?:Function) {
+
+        const player = this.game.gameState.currentPlayer;
+        const card = this.card;
+        let delegatedCallback = false;
+
+        this.game.closeModal();
+
+        if (winner) {
+            if (card.success) {
+                this.game.playSound(PillarsSounds.SUCCESS);
+
+                if (card.success.customers !== undefined) {
+                    const n = card.success.customers
+                    player.numCustomers += n;
+                    const s = n > 1 ? 's' : '';
+                    this.game.broadcast(`${player.name} won ${n} customer${s}`);
+                }
+                if (card.success.promote !== undefined) {
+                    if (card.success.promote < 5) {
+                        promote(this.game, this.callback);
+                        delegatedCallback = true;
+                    }
+                    if (card.success.promote == 5) {
+                        this.promotePillar(card.success.promote, false);
+                    }
+                    if (card.success.promote == 6) {
+                        promoteAny(this.game, this.callback);
+                        delegatedCallback = true;
+                    }
+                }
+            }
+        } else {
+            if (card.fail) {
+                this.game.playSound(PillarsSounds.FAIL);
+
+                if (card.fail.customers !== undefined) {
+                    const n = Math.abs(card.fail.customers);
+                    player.numCustomers -= n;
+                    const s = n > 1 ? 's' : '';
+                    this.game.broadcast(`${player.name} lost ${n} customer${s}`);
+                }
+                if (card.fail.demote !== undefined) {
+                    if (card.fail.demote < 5) {
+                        promote(this.game, this.callback, true);
+                        delegatedCallback = true;
+                    }
+                    if (card.fail.demote == 5) {
+                        this.promotePillar(card.fail.demote, true);
+                    }
+                    if (card.fail.demote == 6) {
+                        promoteAny(this.game, this.callback, true);
+                        delegatedCallback = true;
+                    }
+                }
+            }
+        }
+
+        if (this.callback && !delegatedCallback) {
+            this.callback();
+        }
     }
 
     /**
@@ -100,11 +169,25 @@ export class CardActions {
     }
 
     /**
+     * Promote a specific pillar.
+     */
+    promotePillar(index: number, isDemote:boolean) {
+
+        // Modify game state
+        this.game.gameState.promote(index, isDemote);
+
+        const pd = isDemote ? 'demote' : 'promote';
+
+        const numeral = PillarsConstants.NUMERALS[index];
+        this.game.broadcast(`${this.game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
+    }
+
+    /**
      * Do the regular effects like adding resources and drawing cards.
      * 
      * Returns false if we should cancel
      */
-    doStandardEffects(mcard: MouseableCard, callback?:Function) {
+    doStandardEffects(mcard: MouseableCard, callback?: Function) {
 
         const player = this.game.localPlayer;
         let delegatedCallback = false;
@@ -122,14 +205,7 @@ export class CardActions {
 
                 // 0-4 means that pillar
                 if (card.action.Promote < 5) {
-
-                    // Modify game state
-                    this.game.gameState.promote(card.action.Promote);
-
-                    const numeral = PillarsConstants.NUMERALS[card.action.Promote];
-                    this.game.broadcast(`${player.name} promoted pillar ${numeral}`);
-
-
+                    this.promotePillar(card.action.Promote, true);
                 }
 
                 // 5 means any
@@ -142,7 +218,6 @@ export class CardActions {
 
                 // 6 means roll a d6 (6 means any)
                 if (card.action.Promote == 6) {
-
                     // Roll a d6
                     promote(this.game, this.callback);
                     if (callback) {

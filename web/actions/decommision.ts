@@ -1,4 +1,4 @@
-import { IPillarsGame, Modal, MouseableCard, PillarsImages } from '../ui-utils';
+import { IPillarsGame, Modal, MouseableCard, PillarsSounds } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { PillarsConstants } from '../constants';
 import { retireCardFromHand } from './retire';
@@ -55,7 +55,7 @@ export const decommision = (game:IPillarsGame,
         // Retire this card
         mcard.card.retired = true;
         
-        game.playSound('menuselect.wav');
+        game.playSound(PillarsSounds.DISCARD);
 
         // TODO - Animate something to show the card being retired
 

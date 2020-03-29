@@ -231,8 +231,15 @@ export class Mouseable {
     hitw?: number;
     hith?: number;
 
+    down: boolean;
+    downx: number;
+    downy: number;
+
     constructor() {
         this.zindex = 0;
+        this.down = false;
+        this.downx = -1;
+        this.downy = -1;
     }
 
     /**
@@ -722,3 +729,20 @@ export class Modal {
  * Signature for the callback function called in initHandOrDiscard.
  */
 export type ModalCardClick = (cardToDiscard:MouseableCard) => any;
+
+/**
+ * Sound file names.
+ */
+export class PillarsSounds {
+    constructor() {}
+
+    static readonly FAIL = 'gameover.wav';
+    static readonly SUCCESS = 'jingle.wav';
+    static readonly CLOSE = 'hint.wav';
+    static readonly SWOOSH = 'swoosh.wav';
+    static readonly CLICK = 'menuselect.wav';
+    static readonly PROMOTE = 'success.wav';
+    static readonly DICE = 'dice.wav';
+    static readonly DISCARD = 'discard.wav';
+
+}

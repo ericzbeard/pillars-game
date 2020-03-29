@@ -1,4 +1,4 @@
-import { IPillarsGame, MouseableCard } from '../ui-utils';
+import { IPillarsGame, MouseableCard, PillarsSounds } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 
 /**
@@ -12,7 +12,7 @@ export const retireCardFromHand = (game: IPillarsGame, mcard:MouseableCard, call
         "Choose a card from your hand to retire");
 
     const modalClick = (cardToRetire:MouseableCard) => {
-        game.playSound('menuselect.wav');
+        game.playSound(PillarsSounds.DISCARD);
         cardToRetire.card.retired = true;
         game.gameState.retiredCards.push(cardToRetire.card);
 

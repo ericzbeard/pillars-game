@@ -1,6 +1,6 @@
 import { MouseableCard, IPillarsGame, Button, DieRollAnimation, Mouseable } from './ui-utils';
+import { PillarsSounds } from './ui-utils';
 import { PillarsConstants } from './constants';
-import { GameState } from '../lambdas/game-state';
 import { CardActions } from './card-actions';  
 
 export class Trial {
@@ -85,7 +85,7 @@ export class Trial {
             game.registerAnimation(a0);
             const a1 = new DieRollAnimation(game, roll1, DIE1X, DIE1Y, 1);
             game.registerAnimation(a1);
-            game.playSound('dice.wav');
+            game.playSound(PillarsSounds.DICE);
 
             // Replace the animation with the actual number rolled after 1 second.
             setTimeout(() => {
