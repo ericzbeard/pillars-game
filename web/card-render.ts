@@ -47,7 +47,7 @@ export class CardRender {
     renderSmallText(card: Card, cardx: number, cardy: number, scale: number) {
         const ctx = this.ctx;
 
-        const y = cardy + 120 * scale;
+        const y = cardy + 135 * scale;
         let x = cardx + ((PillarsConstants.CARD_WIDTH * scale) / 2);
 
         this.ctx.font = this.game.getFont(10 * scale);
@@ -136,7 +136,7 @@ export class CardRender {
             }
         }
 
-        const y = cardy + 75 * scale;
+        const y = cardy + 90 * scale;
         const resourceScale = 0.3 * scale;
         const custScale = 0.075 * scale;
         let w = providesLen * 100 * resourceScale;
@@ -529,8 +529,8 @@ export class CardRender {
             const infoLink = new Mouseable();
             const infox = x + w - 25;
             const infoy = y + 5;
-            const infow = 20;
-            const infoh = 20;
+            const infow = 20 * scale;
+            const infoh = 20 * scale;
             infoLink.x = infox;
             infoLink.y = infoy;
             infoLink.w = infow;
@@ -539,7 +539,7 @@ export class CardRender {
             infoLink.render = () => {
                 const infoimg = this.game.getImg(PillarsImages.IMG_INFO);
                 if (infoimg) {
-                    ctx.drawImage(infoimg, infox, infoy, 20, 20);
+                    ctx.drawImage(infoimg, infox, infoy, infow, infoh);
                 } else {
                     console.log(`Unable to get img ${PillarsImages.IMG_INFO}`);
                 }
@@ -599,8 +599,8 @@ export class CardRender {
                 costw = 8;
                 costh = 8;
             }
-            let costoffx = 60 * scale;
-            let costoffy = 35 * scale;
+            let costoffx = 65 * scale;
+            let costoffy = 45 * scale;
             let cw = PillarsConstants.CARD_WIDTH;
             let ch = PillarsConstants.CARD_HEIGHT;
             costw *= scale;
@@ -667,8 +667,8 @@ export class CardRender {
             // Draw player rank dice
 
             const p: Array<any> = [];
-            p[0] = { x: 5 * scale, y: 40 * scale };
-            p[1] = { x: w - 55 * scale, y: 40 * scale };
+            p[0] = { x: 5 * scale, y: 45 * scale };
+            p[1] = { x: w - 55 * scale, y: 45 * scale };
             p[2] = { x: 5 * scale, y: h - 55 * scale };
             p[3] = { x: w - 55 * scale, y: h - 55 * scale };
 
@@ -683,7 +683,8 @@ export class CardRender {
                 const animKey = PillarDieAnimation.GetKey(i, pidx);
                 const a = <PillarsAnimation>this.game.getAnimation(animKey);
 
-                this.renderDie(x + p[i].x, y + p[i].y, i, player.pillarRanks[pidx], scale, a);
+                this.renderDie(x + p[i].x, y + p[i].y, 
+                    i, player.pillarRanks[pidx], scale, a);
             }
         }
 

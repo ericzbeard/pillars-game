@@ -334,6 +334,7 @@ export class PillarsImages {
     static readonly IMG_CUSTOMER_BLUE = 'img/customer-blue-400x400.png';
     static readonly IMG_CUSTOMER_ORANGE = 'img/customer-orange-400x400.png';
     static readonly IMG_CUSTOMER_YELLOW = 'img/customer-yellow-400x400.png';
+    static readonly IMG_GEAR = 'img/gear.png';
 }
 
 export class FrameRate {
@@ -532,6 +533,11 @@ export interface IPillarsGame {
      * Done loading images.
      */
     getDoneLoading():boolean;
+
+    /**
+     * Put a diagnostic message in the chat.
+     */
+    diag(msg: string):any;
 }
 
 /**

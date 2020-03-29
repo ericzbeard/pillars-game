@@ -187,7 +187,7 @@ export class PillarsInput {
 
         this.game.initSounds();
 
-        this.game.broadcast(`touch start ${this.mx}, ${this.my}`);
+        this.game.diag(`touch start ${this.mx}, ${this.my}`);
 
         this.handleInputDown();
     }
@@ -215,7 +215,7 @@ export class PillarsInput {
             if (!ignore) {
                 if (m.hitTest(this.mx, this.my)) {
 
-                    this.game.broadcast(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
+                    this.game.diag(`down hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
 
                     if (!alreadyHit) {
                         alreadyHit = true;
@@ -225,7 +225,7 @@ export class PillarsInput {
                                 m.ondragenter();
                             }
 
-                            this.game.broadcast(`down dragging ${m.key}`);
+                            this.game.diag(`down dragging ${m.key}`);
 
                             m.dragging = true;
                             this.gameCanvas.style.cursor = 'grabbing';
@@ -256,7 +256,7 @@ export class PillarsInput {
         this.mx = poz.x;
         this.my = poz.y;
 
-        this.game.broadcast(`handleMouseup ${this.mx}, ${this.my}`);
+        this.game.diag(`handleMouseup ${this.mx}, ${this.my}`);
 
         this.handleInputUp();
     }
@@ -269,7 +269,7 @@ export class PillarsInput {
         this.mx = poz.x;
         this.my = poz.y;
 
-        this.game.broadcast(`handleTouchup ${this.mx}, ${this.my}`);
+        this.game.diag(`handleTouchup ${this.mx}, ${this.my}`);
 
         this.handleInputUp();
     }
@@ -289,7 +289,7 @@ export class PillarsInput {
 
             if (m.hitTest(this.mx, this.my)) {
 
-                this.game.broadcast(`up hit ${m.key}, zindex ${m.zindex}`);
+                this.game.diag(`up hit ${m.key}, zindex ${m.zindex}`);
 
                 // Find the mouseable being dragged, and if this m in droppable, drop it
                 for (let j = 0; j < marray.length; j++) {
@@ -361,7 +361,7 @@ export class PillarsInput {
         const mx = poz.x;
         const my = poz.y;
 
-        this.game.broadcast(`handleClick ${this.mx}, ${this.my}`);
+        this.game.diag(`handleClick ${this.mx}, ${this.my}`);
 
         // We have to wait for user interaction to load sounds
         this.game.initSounds();
@@ -445,7 +445,7 @@ export class PillarsInput {
         const mx = poz.x;
         const my = poz.y;
 
-        this.game.broadcast(`handleDoubleClick ${this.mx}, ${this.my}`);
+        this.game.diag(`handleDoubleClick ${this.mx}, ${this.my}`);
 
         // Check to see if a card in hand was clicked
         if (this.game.localPlayer.index == this.game.gameState.currentPlayer.index) {
