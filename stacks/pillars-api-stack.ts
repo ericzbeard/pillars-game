@@ -5,6 +5,7 @@ import s3 = require('@aws-cdk/aws-s3');
 import dynamodb = require('@aws-cdk/aws-dynamodb');
 import { ProjectionType } from '@aws-cdk/aws-dynamodb';
 import { StaticSite } from './static-site';
+import { Cors } from '@aws-cdk/aws-apigateway';
 
 /**
  * This stack defines:
@@ -59,9 +60,16 @@ export class PillarsApiStack extends cdk.Stack {
             environment: envVars
         });
 
+        gameTable.grantReadWriteData(apiLambda);
+        userTable.grantReadWriteData(apiLambda);
+
         // API Gateway for the public API (no auth)
-        const api = new apigw.LambdaRestApi(this, "PublicApiGateway", {
-            handler: apiLambda
+        const api = new apigw.LambdaRestApi(this, "PillarsApi", {
+            handler: apiLambda,
+            defaultCorsPreflightOptions: {
+                allowOrigins: apigw.Cors.ALL_ORIGINS,
+                allowMethods: apigw.Cors.ALL_METHODS
+            }
         });
 
         const subdomain = this.node.tryGetContext('subdomain');

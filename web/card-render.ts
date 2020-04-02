@@ -255,12 +255,29 @@ export class CardRender {
     renderDie(x: number, y: number, playerIndex: number, rank: number,
         scale: number, a?: PillarsAnimation) {
         const img = this.game.getImg(this.game.getDieName(playerIndex, rank));
+
+        let w = img.width * scale;
+        let h = img.height * scale;
+
         if (a) {
-            x += 2;
-            y += 2;
+            x -= 2;
+            y -= 2;
+            w += 4;
+            h += 4;
         }
+       
         if (img) {
-            this.ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            this.ctx.drawImage(img, x, y, w, h);
+        }
+
+        if (a) {
+            let pct = a.percentComplete;
+            let ax = x - (pct * 5);
+            let ay = y - (pct * 5);
+            w = w + (pct * 10);
+            h = h + (pct * 10);
+            this.ctx.strokeStyle = 'white';
+            CanvasUtil.roundRect(this.ctx, ax, ay, w, h, 5, false, true);
         }
     }
 
@@ -271,15 +288,11 @@ export class CardRender {
      */
     renderTrial(card:Card, x:number, y:number, scale: number) {
 
-        console.log(`renderTrial x:${x}, y:${y}, scale:${scale}`);
-
-        const sx = x + 11 * scale;
-        const ty = y + 170 * scale;
-        const fx = x + PillarsConstants.CARD_WIDTH / 2 * scale;
+        const sx = x + 13 * scale;
+        const ty = y + 200 * scale;
+        const fx = x + PillarsConstants.CARD_WIDTH / 2 * scale + 2;
         const lh = 15 * scale;
         const maxw = PillarsConstants.CARD_WIDTH / 2 * scale - 10 * scale;
-
-        console.log(`renderTrial sx:${sx}`);
 
         this.ctx.font = this.game.getFont(9 * scale);
         this.ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
@@ -323,7 +336,7 @@ export class CardRender {
 
         // Fail
         if (card.fail) {
-            if (!card.fail.custom) {
+            if (!card.fail.custom && !card.success?.custom) {
                 cury += 10;
             }
             if (card.fail.customers) {
@@ -577,8 +590,8 @@ export class CardRender {
             ctx.fillText(<string>card.flavor, fx, fy, maxw);
         }
 
+        // Card Type and Subtype
         if (card.type != 'Pillar' && !card.hideType) {
-            // Card Type and Subtype
             ctx.font = this.game.getFont(10);
             let t = card.type.toLocaleUpperCase();
             if (card.subtype) {
@@ -586,7 +599,7 @@ export class CardRender {
             }
             ctx.textAlign = 'center';
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
-            let ty = y + 60 * scale;
+            let ty = y + 70 * scale;
             ctx.font = this.game.getFont(9 * scale, 'bold');
             ctx.fillText(t, x + w / 2, ty);
         }

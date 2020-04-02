@@ -1,5 +1,4 @@
 import { IPillarsGame, MouseableCard, PillarsSounds } from '../ui-utils';
-import { Card } from '../../lambdas/card';
 
 /**
  * Remove a card in hand from the game.
@@ -12,17 +11,8 @@ export const retireCardFromHand = (game: IPillarsGame, mcard:MouseableCard, call
         "Choose a card from your hand to retire");
 
     const modalClick = (cardToRetire:MouseableCard) => {
-        game.playSound(PillarsSounds.DISCARD);
-        cardToRetire.card.retired = true;
-        game.gameState.retiredCards.push(cardToRetire.card);
-
-        game.removeMouseable(cardToRetire.key);
-        game.removeMouseable(cardToRetire.getInfoKey());
         game.gameState.removeCardFromHand(game.gameState.currentPlayer, cardToRetire.card);
-
-        game.closeModal();
-        if (callback) callback();
-        game.broadcast(`${game.localPlayer.name} retired ${cardToRetire.card.name}`);
+        game.retireCard(cardToRetire, callback);
     }
 
     game.initHandOrDiscard(true, true, modalClick, mcard.card);

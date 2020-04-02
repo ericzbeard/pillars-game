@@ -110,6 +110,26 @@ test('Game state serialization works', () => {
 
     const g = new GameState();
     g.initializeCards();
+    g.pillarMax = 6;
+
+    // Create players (1 human and 3 AI)
+    const human = new Player();
+    human.isHuman = true;
+    human.name = "Human";
+    human.index = 0;
+
+    g.players.push(human);
+
+    for (let i = 0; i < 3; i++) {
+        const ai = new Player();
+        ai.isHuman = false;
+        ai.name = LocalGame.AI_NAMES[i];
+        ai.index = (i + 1);
+        g.players.push(ai);
+    }
+    
+    g.currentPlayer = g.players[2];
+
     const s = new SerializedGameState(g);
     const h = GameState.RehydrateGameState(s);
 
@@ -144,6 +164,7 @@ test('Game state serialization works', () => {
             expect(hc.type).toEqual(gc.type);
         }
     }
+    expect(g.currentPlayer.name).toEqual(h.currentPlayer.name);
     expect(h.retiredCards.length).toEqual(g.retiredCards.length);
     // TODO
     expect(h.shareURL).toEqual(g.shareURL);

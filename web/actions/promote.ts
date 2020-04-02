@@ -73,6 +73,7 @@ export const promote = (game: IPillarsGame, callback?:Function, isDemote?:boolea
                     const numeral = PillarsConstants.NUMERALS[roll - 1];
                     let pd = isDemote ? 'demoted' : 'promoted';
                     game.broadcast(`${player.name} ${pd} pillar ${numeral}`);
+                    game.playSound(PillarsSounds.PROMOTE);
                     game.closeModal();
                     if (callback) callback();
                 };

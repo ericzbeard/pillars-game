@@ -1,4 +1,5 @@
 import { IPillarsGame, Modal, MouseableCard, PillarsImages } from '../ui-utils';
+import { PillarsSounds } from '../ui-utils';
 import { PillarsConstants } from '../constants';
 
 /**
@@ -35,9 +36,10 @@ export const promoteAny = (game:IPillarsGame, callback?:Function, isDemote?: boo
         m.onclick = () => {
             game.gameState.promote(m.data, <boolean>isDemote);
             const numeral = PillarsConstants.NUMERALS[m.data];
-            if (callback) callback();
             game.broadcast(`${game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
+            game.playSound(PillarsSounds.PROMOTE);
             game.closeModal();
+            if (callback) callback();
         };
         game.addMouseable(PillarsConstants.MODAL_KEY + '_pillar_' + i, m);
     }

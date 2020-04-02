@@ -404,7 +404,7 @@ export interface IPillarsGame {
     /**
      * Close the modal.
      */
-    closeModal(): any;
+    closeModal(clickedClose?:boolean): any;
 
     /**
      * Add a mouseable UI element.
@@ -516,9 +516,21 @@ export interface IPillarsGame {
     playCard(mcard: MouseableCard, callback: Function):any;
 
     /**
+     * Retire a card.
+     */
+    retireCard(cardToRetire: MouseableCard, callback?:Function):any;
+
+    /**
+     * Discard a card.
+     * 
+     * This is called from modals where the player is choosing a card to retire.
+     */
+    discard(cardToDiscard: MouseableCard, callback?:Function):any;
+
+    /**
      * Acquire a card from the marketplace.
      */
-    acquireCard(card: Card, key: string):any;
+    acquireCard(card: Card, key: string, free?:boolean, callback?:Function):any;
 
     /**
      * Get the mousables map.
@@ -545,6 +557,31 @@ export interface IPillarsGame {
      * Put a diagnostic message in the chat.
      */
     diag(msg: string):any;
+
+    /**
+     * Promote a pillar rank die.
+     */
+    promote(playerIndex: number, pillarIndex: number):any;
+
+    /**
+     * Get them robots talking.
+     */
+    startAiChatter():any;
+
+    /**
+     * Turn diagnostics on or off.
+     */
+    toggleDiag():any;
+
+    /**
+     * Initialize areas that hold cards.
+     */
+    initCardAreas():any;
+
+    /**
+     * Mute or unmute.
+     */
+    muteSounds():any;
 }
 
 /**
@@ -606,8 +643,7 @@ export class Modal {
         };
 
         modalClose.onclick = () => {
-            console.log('modalClose.onclick');
-            game.closeModal();
+            game.closeModal(true);
         }
 
         game.addMouseable(PillarsConstants.MODAL_CLOSE_KEY, modalClose);
@@ -741,8 +777,11 @@ export class PillarsSounds {
     static readonly CLOSE = 'hint.wav';
     static readonly SWOOSH = 'swoosh.wav';
     static readonly CLICK = 'menuselect.wav';
-    static readonly PROMOTE = 'success.wav';
+    static readonly PROMOTE = 'promote.wav';
     static readonly DICE = 'dice.wav';
     static readonly DISCARD = 'discard.wav';
+    static readonly PLAY = 'play.wav';
+    static readonly SHUFFLE = 'shuffle.wav';
+    static readonly DING = 'ding.wav';
 
 }

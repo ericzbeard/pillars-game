@@ -2,8 +2,10 @@ import { GameState, SerializedGameState } from './game-state';
 import * as queryString from 'query-string';
 import * as uuid from 'uuid';
 import * as AWS from 'aws-sdk';
-import { PillarsAPIConfig } from '../config/pillars-api-config';
+import { PillarsAPIConfig } from './pillars-api-config';
 AWS.config.update({region:PillarsAPIConfig.Region});
+
+const documentClient = new AWS.DynamoDB.DocumentClient();
 
 /**
  * A base class for REST API endpoints.
@@ -29,6 +31,8 @@ class GameEndpoint extends ApiEndpoint {
     constructor() {
         super();
         this.verbs.set('put', this.put);
+        this.verbs.set('get', this.get);
+        this.verbs.set('post', this.post);
     }
 
     /**
@@ -36,7 +40,9 @@ class GameEndpoint extends ApiEndpoint {
      * 
      * data is a stringified SerializedGameState
      */
-    async put(params: any, data: string): Promise<GameState> {
+    async put(params: any, data: string): Promise<SerializedGameState> {
+
+        console.log(`put data: ${data}`);
 
         let s = <SerializedGameState>JSON.parse(data);
 
@@ -48,34 +54,42 @@ class GameEndpoint extends ApiEndpoint {
             Item: s
         };
 
-        const documentClient = new AWS.DynamoDB.DocumentClient();
-
         const result = await documentClient.put(item).promise();
         
         console.log(`put result: ${JSON.stringify(result, null, 0)}`);
         
-        const gameState = GameState.RehydrateGameState(s);
-
         // Return the updated game state
-        return gameState;
+        return s;
     }
 
     /**
      * Get the state of a game.
      */
-    get(params: any, data: string): GameState {
-        return new GameState();
+    async get(params: any, data: string): Promise<SerializedGameState> {
+        
+        const item = {
+            TableName: <string>process.env.GAME_TABLE,
+            Key: {
+                'id': params.id
+            }
+        };
+
+        const result = await documentClient.get(item).promise();
+        
+        console.log(`get result: ${JSON.stringify(result, null, 0)}`);
+
+        return <SerializedGameState>result.Item;
     }
 
     /**
      * Delete a game.
      */
-    del(params: any, data: string) { }
+    async del(params: any, data: string) { }
 
     /**
      * Update game state.
      */
-    post(params: any, data: string) { }
+    async post(params: any, data: string) { }
 
 }
 
@@ -111,7 +125,7 @@ export class ApiHandler {
     /**
      * Parse the path and call the appropriate endpoint.
      */
-    handlePath = async (path: string, verb: string, data: string): Promise<any> => {
+    handlePath = async (path: string, verb: string, data?: string): Promise<any> => {
 
         console.log(`handlePath got path ${path}, verb ${verb}`);
 
@@ -123,6 +137,7 @@ export class ApiHandler {
 
         let parsed = queryString.parseUrl(path);
         let params = parsed.query;
+        path = parsed.url;
 
         console.log(this.endpoints.keys());
 
@@ -147,11 +162,16 @@ export class ApiHandler {
                     if (f) {
 
                         // Call the endpoint function
-                        const retval = f(params, data);
+                        try {
+                            const retval = await f(params, data);
 
-                        console.log(`${path}.${verb} retval: ${retval}`);
+                            console.log(`${path}.${verb} retval: ${retval}`);
 
-                        return retval;
+                            return retval;
+                        } catch (apiError) {
+                            console.log(apiError);
+                            throw Error(`API call ${path} failed`);
+                        }
                     } else {
                         throw Error(`${key} has no ${verb} function`);
                     }
@@ -161,7 +181,7 @@ export class ApiHandler {
             }
         }
 
-        throw Error('Unexpected path');
+        throw Error('Unexpected path: ' + path);
     };
 
 }
@@ -178,7 +198,12 @@ export const handler = async (event: any): Promise<any> => { // APIGatewayEvent
 
         return {
             statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Headers': 'Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key',
+                'Access-Control-Allow-Origin': '*', 
+                "Access-Control-Allow-Credentials": true
+            },
             body: JSON.stringify(resp)
         };
 

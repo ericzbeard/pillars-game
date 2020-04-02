@@ -194,7 +194,7 @@ export const cardDatabase = {
             trial: 7,
             text: "",
             success: { customers: 1, promote: 2},
-            fail: ["-1 Customer"],
+            fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 2, 
@@ -287,6 +287,7 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * I to your roll",
+            add: true,
             success: { customers: 3, promote: 0},
             fail: { customers: -1 },
             starter: false,
@@ -301,6 +302,7 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * II to your roll",
+            add: true,
             success: { customers: 3, promote: 1 },
             fail: { customers: -1 },
             starter: false,
@@ -309,11 +311,26 @@ export const cardDatabase = {
             pillarNumeral: 'II'
         },
         {
+            name: "Server Crash",
+            type: "Trial",
+            subtype: "Phase 2",
+            trial: 11,
+            text: "Add Creativity * III to your roll",
+            add: true,
+            success: { customers: 3, promote: 2 },
+            fail: { customers: -1 },
+            starter: false,
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
+        },
+        {
             name: "Latency",
             type: "Trial",
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * IV to your roll",
+            add: true,
             success: { customers: 3, promote: 3 },
             fail: { customers: -1 },
             starter: false,
@@ -327,25 +344,13 @@ export const cardDatabase = {
             subtype: "Phase 2",
             trial: 11,
             text: "Add Creativity * V to your roll",
+            add: true,
             success: { customers: 3, promote: 4 },
             fail: { customers: -1 },
             starter: false,
             copies: 1, 
             pillarIndex: 4, 
             pillarNumeral: 'V'
-        },
-        {
-            name: "Server Crash",
-            type: "Trial",
-            subtype: "Phase 2",
-            trial: 11,
-            text: "Add Creativity * III to your roll",
-            success: { customers: 3, promote: 2 },
-            fail: { customers: -1 },
-            starter: false,
-            copies: 1, 
-            pillarIndex: 2, 
-            pillarNumeral: 'III'
         },
         {
             name: "Data Center Migration",
@@ -423,6 +428,19 @@ export const cardDatabase = {
             pillarNumeral: 'II'
         },
         {
+            name: "Segmentation Fault",
+            type: "Trial",
+            subtype: "Phase 3",
+            trial: 12,
+            text: "Subtract 1 from your roll if your pillar III is not maxed",
+            success: { customers: 4, promote: 5},
+            fail: { customers: -1, demote: 6 },
+            starter: false,
+            copies: 1, 
+            pillarIndex: 2, 
+            pillarNumeral: 'III'
+        },
+        {
             name: "Deadlocks",
             type: "Trial",
             subtype: "Phase 3",
@@ -447,19 +465,6 @@ export const cardDatabase = {
             copies: 1, 
             pillarIndex: 4, 
             pillarNumeral: 'V'
-        },
-        {
-            name: "Segmentation Fault",
-            type: "Trial",
-            subtype: "Phase 3",
-            trial: 12,
-            text: "Subtract 1 from your roll if your pillar III is not maxed",
-            success: { customers: 4, promote: 5},
-            fail: { customers: -1, demote: 6 },
-            starter: false,
-            copies: 1, 
-            pillarIndex: 2, 
-            pillarNumeral: 'III'
         },
         {
             name: "Unpatched OS",

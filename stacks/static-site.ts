@@ -7,7 +7,7 @@ import acm = require('@aws-cdk/aws-certificatemanager');
 import cdk = require('@aws-cdk/core');
 import targets = require('@aws-cdk/aws-route53-targets/lib');
 import { Construct } from '@aws-cdk/core';
-import { PillarsAPIConfig } from '../config/pillars-api-config';
+import { PillarsAPIConfig } from '../lambdas/pillars-api-config';
 import { PolicyStatement, CanonicalUserPrincipal } from '@aws-cdk/aws-iam';
 
 export interface StaticSiteProps {

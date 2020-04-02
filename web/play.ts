@@ -1,21 +1,22 @@
 import { Card } from '../lambdas/card';
 import { Player } from '../lambdas/player';
-import { GameState, TrialStack } from '../lambdas/game-state';
+import { GameState, SerializedGameState } from '../lambdas/game-state';
 import { CanvasUtil } from './canvas-util';
 import { Howl, Howler } from 'howler';
-import { PillarsWebConfig } from '../config/pillars-web-config';
+import { PillarsWebConfig } from './pillars-web-config';
 import { MouseableCard, Mouseable, IPillarsGame, Xywh } from './ui-utils';
-import { PillarsImages, PillarsAnimation, Modal, ClickAnimation } from './ui-utils';
+import { PillarsImages, PillarsAnimation, Modal } from './ui-utils';
 import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
 import { ModalCardClick, PillarsSounds } from './ui-utils';
 import { LocalGame } from './local-game';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
-import { Trial } from './trial';
 import { CardRender } from './card-render';
 import { bug } from './actions/bug';
 import { AIChatter } from './ai-chatter';
 import { PillarsInput } from './input';
+import { PillarsMenu } from './menu';
+import { uapi } from './comms';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -113,6 +114,21 @@ class PillarsGame implements IPillarsGame {
     isDiag: boolean;
 
     /**
+     * Menu buttons.
+     */
+    menu: PillarsMenu;
+
+    /**
+     * If true, don't play sounds.
+     */
+    muted: boolean;
+
+    /**
+     * If true, show the welcome screen and hide the rest.
+     */
+    welcome: boolean;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -125,6 +141,7 @@ class PillarsGame implements IPillarsGame {
         this.images = new Map<string, HTMLImageElement>();
         this.initializingSound = false;
         this.isDiag = false;
+        this.welcome = true;
 
         this.playerDiceColors = [];
         this.playerDiceColors[0] = 'orange';
@@ -133,8 +150,6 @@ class PillarsGame implements IPillarsGame {
         this.playerDiceColors[3] = 'yellow';
 
         this.loadedImages = new Map<string, boolean>();
-
-        this.loadGameState();
 
         const cel = document.getElementById('gameCanvas');
         if (cel) {
@@ -274,10 +289,59 @@ class PillarsGame implements IPillarsGame {
             self.input.handleKeyDown.call(self.input, e);
         });
 
-        // Menu
-        this.initMenuButton();
+        this.initWelcomePage();
+    }
 
+    /**
+     * Initialize the screen.
+     */
+    initGameScreen() {
+        this.menu = new PillarsMenu(this);
+        this.menu.show();
+        this.initPlayerDeck();
         this.initCardAreas();
+        this.initPlayerSummaries();
+    }
+
+    /**
+     * Player summaries.
+     */
+    initPlayerSummaries() {
+        const m = new Mouseable();
+        m.render = () => {
+            this.renderPlayerSummaries();
+        }
+        this.addMouseable('player_summaries', m);
+    }
+
+    /**
+     * Before showing the main game screen, show a welcome modal.
+     */
+    initWelcomePage() {
+        this.welcome = true;
+
+        const modal = this.showModal("Welcome");
+        modal.hideCloseButton();
+
+        const button = new Button('Start Local Game', this.ctx);
+        button.x = PillarsConstants.MODALX + PillarsConstants.MODALW / 2;
+        button.y = PillarsConstants.MODALY + 300;
+        button.w = PillarsConstants.MENU_BUTTON_W;
+        button.h = PillarsConstants.MENU_BUTTON_H;
+        button.zindex = PillarsConstants.MODALZ + 1;
+        button.onclick = () => {
+            
+            this.loadGameState(() => {
+                this.welcome = false;
+                this.broadcast(`Game id ${this.gameState.id}`);
+                this.closeModal();                
+                this.initGameScreen();
+            });
+
+        };
+        this.addMouseable(PillarsConstants.MODAL_KEY + '_welcome_ok_button', button);
+
+        // TODO - Tutorial, multi-player, ??
     }
 
     /**
@@ -289,51 +353,6 @@ class PillarsGame implements IPillarsGame {
         }
     }
 
-    /**
-     * Show the menu.
-     */
-    initMenuButton() {
-
-        const button = new Mouseable();
-        button.x = PillarsConstants.BW - 60;
-        button.y = 10;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.render = () => {
-            const img = this.getImg(PillarsImages.IMG_GEAR);
-            if (img) {
-                this.ctx.drawImage(img, button.x, button.y, 50, 50);
-            }
-        };
-        button.onclick = () => {
-
-            this.showModal('Menu');
-
-            // A button
-            this.initTestButton();
-
-            // Retired cards
-            this.initRetiredButton();
-
-            // Robots
-            this.initRobotsButton();
-
-            // Button to go to trial and end the turn
-            this.initTrialButton();
-
-            // Rules
-            this.initRulesButton();
-
-            // Free Stuff (for testing)
-            this.initFreeButton();
-
-            // Diagnostics
-            this.initDiagButton();
-        };
-        this.addMouseable('manubutton', button);
-
-
-    }
 
     /**
      * Return a reference to the canvas.
@@ -348,20 +367,33 @@ class PillarsGame implements IPillarsGame {
     initSounds() {
         if (this.sounds.size == 0 && !this.initializingSound) {
             this.initializingSound = true;
-            this.addSound('swoosh.wav');
+            this.addSound(PillarsSounds.SWOOSH);
             this.addSound(PillarsSounds.CLICK);
             this.addSound(PillarsSounds.CLOSE);
-            this.addSound('jingle.wav');
-            this.addSound('dice.wav');
-            this.addSound('gameover.wav');
+            this.addSound(PillarsSounds.SUCCESS);
+            this.addSound(PillarsSounds.DICE);
+            this.addSound(PillarsSounds.FAIL);
+            this.addSound(PillarsSounds.PLAY);
+            this.addSound(PillarsSounds.SHUFFLE);
+            this.addSound(PillarsSounds.DISCARD);
+            this.addSound(PillarsSounds.DING);
+            this.addSound(PillarsSounds.PROMOTE);
             this.initializingSound = false;
         }
+    }
+
+    /**
+     * Mute or unmute.
+     */
+    muteSounds() {
+        this.muted = !this.muted;
     }
 
     /**
      * Initialize areas that hold cards.
      */
     initCardAreas() {
+        
         // Hand
         this.initHand();
 
@@ -385,180 +417,6 @@ class PillarsGame implements IPillarsGame {
         this.cardRender.renderCard(m, isPopup, scale);
     }
 
-    /**
-     * Show the rules.
-     */
-    initRulesButton() {
-        const self = this;
-        const button = new Button('Rules', this.ctx);
-        button.x = PillarsConstants.MENUX + 10;
-        button.y = PillarsConstants.MENUY + 40;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            self.closeModal();
-            window.open('index.html#rules', '_new');
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_rulesbutton', button);
-    }
-
-    /**
-     * Initialize buttons I use for testing things.
-     */
-    initTestButton() {
-        const button = new Button('Test', this.ctx);
-        button.x = PillarsConstants.MENUX + 10;
-        button.y = PillarsConstants.MENUY + 80;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            this.closeModal();
-            this.playSound(PillarsSounds.CLICK);
-            this.promote(0, 0);
-            this.promote(0, 1);
-            this.promote(0, 2);
-            this.promote(0, 3);
-            this.promote(0, 4);
-            this.roll(2);
-            if (!this.gameState.drawOne(this.localPlayer)) {
-                this.endTurn();
-            }
-            this.initHand();
-            this.initDiscard();
-            //this.showModal('This is a test');
-            this.localPlayer.numCustomers++;
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_testbutton', button);
-    }
-
-    /**
-     * Unleash the robot revolution.
-     */
-    initRobotsButton() {
-
-        const button = new Button('Robots!', this.ctx);
-        button.x = PillarsConstants.MENUX + PillarsConstants.MENU_BUTTON_W + 20;
-        button.y = PillarsConstants.MENUY + 80;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            this.closeModal();
-            this.aiChatter = new AIChatter(this);
-            this.aiChatter.chat();
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_robotsbutton', button);
-
-    }
-
-    /**
-     * Initialize the button to show retired cards.
-     */
-    initRetiredButton() {
-        const button = new Button('Retired', this.ctx);
-        button.x = PillarsConstants.MENUX + PillarsConstants.MENU_BUTTON_W + 20;
-        button.y = PillarsConstants.MENUY + 120;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            this.closeModal();
-
-            const modal = this.showModal("Retired Cards");
-
-            let cards = this.gameState.retiredCards;
-
-            let len = cards.length;
-            if (len == 0) {
-                len = 1;
-            }
-
-            let x = PillarsConstants.MODALX + 200;
-            let y = PillarsConstants.MODALY + 300;
-            let w = PillarsConstants.MODALW - 300;
-
-            const cardOffset = (w - PillarsConstants.CARD_WIDTH) / len;
-
-            for (let i = 0; i < cards.length; i++) {
-                const card = cards[i];
-                const m = new MouseableCard(card);
-                m.x = x + 10 + (i * cardOffset);
-                m.y = y;
-                m.origx = m.x;
-                m.origy = m.y;
-                m.zindex = i + 1;
-                m.zindex = PillarsConstants.MODALZ + 1;
-                m.render = () => {
-                    this.renderCard(m);
-                };
-                this.addMouseable(PillarsConstants.MODAL_KEY + i, m);
-                this.resizeCanvas();
-            }
-
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_retired_button', button);
-    }
-
-    /**
-     * Initialize the trial button.
-     */
-    initTrialButton() {
-        const button = new Button('End Turn', this.ctx);
-        button.x = PillarsConstants.MENUX + 10;
-        button.y = PillarsConstants.MENUY + 120;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            this.closeModal();
-            const t = new Trial(this);
-            t.show();
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_trialbutton', button);
-    }
-
-    /**
-     * Free resources, for testing.
-     */
-    initFreeButton() {
-        const self = this;
-        const button = new Button('Free Stuff', this.ctx);
-        button.x = PillarsConstants.MENUX + 10;
-        button.y = PillarsConstants.MENUY + 160;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            this.closeModal();
-            self.localPlayer.numCreativity = 10;
-            self.localPlayer.numTalents = 10;
-            self.localPlayer.numCredits = 10;
-            self.initCardAreas();
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_freebutton', button);
-
-    }
-
-    /**
-     * Diagnostics.
-     */
-    initDiagButton() {
-        const self = this;
-        const button = new Button('Diagnostics', this.ctx);
-        button.x = PillarsConstants.MENUX + 10;
-        button.y = PillarsConstants.MENUY + 200;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            this.closeModal();
-            this.isDiag = !this.isDiag;
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_diagbutton', button);
-
-    }
     /**
      * Put all cards in play and hand into discard pile. Draw 6.
      */
@@ -595,61 +453,69 @@ class PillarsGame implements IPillarsGame {
 
         const ctx = this.ctx;
 
-        // // Draw the big card placeholder in the center
-        // this.renderCardImage(PillarsImages.IMG_BACK_BLUE,
-        //     PillarsConstants.BIGCARDX, PillarsConstants.BIGCARDY, PillarsConstants.POPUP_SCALE);
+        const m = new Mouseable();
 
-        // Deck Label
-        ctx.save();
-        ctx.translate(PillarsConstants.DECKX - 5, 
-            PillarsConstants.HAND_Y + PillarsConstants.CARD_HEIGHT / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = "center";
-        ctx.font = this.getFont(16);
-        ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText(`DECK (${this.localPlayer.deck.length})`, 0, 0);
-        ctx.restore();
+        m.render = () => {
 
-        // Draw the deck if it has any cards in it
-        if (this.localPlayer.deck.length > 0) {
-            this.cardRender.renderCardImage(
-                PillarsImages.IMG_BACK_BLUE,
-                PillarsConstants.DECKX,
-                PillarsConstants.DECKY);
-            if (this.localPlayer.deck.length > 1) {
+
+            // // Draw the big card placeholder in the center
+            // this.renderCardImage(PillarsImages.IMG_BACK_BLUE,
+            //     PillarsConstants.BIGCARDX, PillarsConstants.BIGCARDY, PillarsConstants.POPUP_SCALE);
+
+            // Deck Label
+            ctx.save();
+            ctx.translate(PillarsConstants.DECKX - 5, 
+                PillarsConstants.HAND_Y + PillarsConstants.CARD_HEIGHT / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = "center";
+            ctx.font = this.getFont(16);
+            ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
+            ctx.fillText(`DECK (${this.localPlayer.deck.length})`, 0, 0);
+            ctx.restore();
+
+            // Draw the deck if it has any cards in it
+            if (this.localPlayer.deck.length > 0) {
                 this.cardRender.renderCardImage(
                     PillarsImages.IMG_BACK_BLUE,
-                    PillarsConstants.DECKX + 5,
-                    PillarsConstants.DECKY - 5);
+                    PillarsConstants.DECKX,
+                    PillarsConstants.DECKY);
+                if (this.localPlayer.deck.length > 1) {
+                    this.cardRender.renderCardImage(
+                        PillarsImages.IMG_BACK_BLUE,
+                        PillarsConstants.DECKX + 5,
+                        PillarsConstants.DECKY - 5);
+                }
+            } else {
+                CanvasUtil.roundRect(this.ctx,
+                    PillarsConstants.DECKX,
+                    PillarsConstants.DECKY,
+                    PillarsConstants.CARD_WIDTH,
+                    PillarsConstants.CARD_HEIGHT,
+                    PillarsConstants.CARD_RADIUS,
+                    false, true);
             }
-        } else {
+
+            // Hand label
+            ctx.save();
+            ctx.translate(PillarsConstants.HAND_X - 5, 
+                PillarsConstants.HAND_Y + PillarsConstants.CARD_HEIGHT / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = "center";
+            ctx.font = this.getFont(16);
+            ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
+            ctx.fillText(`HAND (${this.localPlayer.hand.length})`, 0, 0);
+            ctx.restore();
+
+            ctx.fillStyle = 'green';
             CanvasUtil.roundRect(this.ctx,
-                PillarsConstants.DECKX,
-                PillarsConstants.DECKY,
-                PillarsConstants.CARD_WIDTH,
-                PillarsConstants.CARD_HEIGHT,
-                PillarsConstants.CARD_RADIUS,
-                false, true);
+                PillarsConstants.HAND_X,
+                PillarsConstants.HAND_Y - 10,
+                PillarsConstants.HAND_WIDTH + 10,
+                PillarsConstants.CARD_HEIGHT + 20,
+                PillarsConstants.FELT_RADIUS, true, true);
         }
 
-        // Hand label
-        ctx.save();
-        ctx.translate(PillarsConstants.HAND_X - 5, 
-            PillarsConstants.HAND_Y + PillarsConstants.CARD_HEIGHT / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = "center";
-        ctx.font = this.getFont(16);
-        ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-        ctx.fillText(`HAND (${this.localPlayer.hand.length})`, 0, 0);
-        ctx.restore();
-
-        ctx.fillStyle = 'green';
-        CanvasUtil.roundRect(this.ctx,
-            PillarsConstants.HAND_X,
-            PillarsConstants.HAND_Y - 10,
-            PillarsConstants.HAND_WIDTH + 10,
-            PillarsConstants.CARD_HEIGHT + 20,
-            PillarsConstants.FELT_RADIUS, true, true);
+        this.addMouseable('deck_static', m);
 
     }
 
@@ -664,7 +530,6 @@ class PillarsGame implements IPillarsGame {
      * Initialize the local player's discard pile.
      */
     initDiscard() {
-
 
         // Discard area needs to be mouseable
         const discard = new Mouseable();
@@ -956,11 +821,6 @@ class PillarsGame implements IPillarsGame {
 
         for (let i = 0; i < this.gameState.currentMarket.length; i++) {
             const card = this.gameState.currentMarket[i];
-            // if (i == 3) {
-            //     // 2nd row
-            //     markety += 300;
-            //     curx = marketx + 25;
-            // }
             if (card) {
                 this.initHoverCard(card, curx, markety,
                     PillarsConstants.MARKET_START_KEY,
@@ -1058,7 +918,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Close the modal.
      */
-    closeModal() {
+    closeModal(clickedClose?:boolean) {
         if (this.modal) {
             for (const [k, v] of this.mouseables.entries()) {
                 if (k.startsWith(PillarsConstants.MODAL_KEY)) {
@@ -1066,7 +926,9 @@ class PillarsGame implements IPillarsGame {
                 }
             }
             this.modal = undefined;
-            this.playSound(PillarsSounds.CLOSE);
+            if (clickedClose) {
+                this.playSound(PillarsSounds.CLOSE);
+            }
         }
     }
 
@@ -1170,22 +1032,59 @@ class PillarsGame implements IPillarsGame {
     /**
      * Play a local game against the AI with no connection to the back end.
      */
-    startLocalGame() {
+    startLocalGame(callback:Function) {
         this.gameState = new GameState();
         this.isSoloGame = true;
         const localGame = new LocalGame(this.gameState);
         localGame.start();
+        this.playSound(PillarsSounds.SHUFFLE);
         this.localPlayer = this.gameState.players[0];
 
-        //console.log(JSON.stringify(this.gameState, null, 1));
+        const gs = JSON.stringify(new SerializedGameState(this.gameState));
+
+        // Send the game to the server
+        uapi('game', 'PUT', gs, (data:SerializedGameState) => {
+            console.log(data);
+            const rgs = GameState.RehydrateGameState(data);
+
+            this.gameState = rgs;
+
+            callback();
+        }, (error:string) => {
+            console.log(error);
+        });
+        
     }
+
+    /**
+     * Get them robots talking.
+     */
+    startAiChatter() {
+        this.aiChatter = new AIChatter(this);
+        this.aiChatter.chat();
+    }
+
+    /**
+     * Turn diagnostics on or off.
+     */
+    toggleDiag() {
+        this.isDiag = !this.isDiag;
+    }
+
 
     /**
      * Load game state from the server.
      */
-    loadGameState() {
-        // For now, let's do everything locally
-        this.startLocalGame();
+    loadGameState(callback:Function) {
+
+        const hash = window.location.hash;
+        if (hash) {
+
+        } else {
+
+            // For now, let's do everything locally
+            this.startLocalGame(callback);
+        }
     }
 
     /**
@@ -1258,7 +1157,7 @@ class PillarsGame implements IPillarsGame {
 
         console.log(`About to play ${mcard.card.name}. ${mcard.card.uniqueIndex}`);
 
-        this.playSound(PillarsSounds.CLICK);
+        this.playSound(PillarsSounds.PLAY);
         const actions = new CardActions(this, mcard, callback);
 
         // TODO - When we open a dialog, the player can choose to close it
@@ -1271,44 +1170,45 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
+     * Retire a card.
+     * 
+     * This is called from modals where the player is choosing a card to retire.
+     */
+    retireCard(cardToRetire: MouseableCard, callback?:Function) {
+        this.playSound(PillarsSounds.DISCARD);
+        cardToRetire.card.retired = true;
+        this.gameState.retiredCards.push(cardToRetire.card);
+        this.removeMouseable(cardToRetire.key);
+        this.removeMouseable(cardToRetire.getInfoKey());
+        this.closeModal();
+        if (callback) callback();
+        this.broadcast(`${this.localPlayer.name} retired ${cardToRetire.card.name}`);
+    }
+
+    /**
+     * Discard a card.
+     * 
+     * This is called from modals where the player is choosing a card to retire.
+     */
+    discard(cardToDiscard: MouseableCard, callback?:Function) {
+        this.playSound(PillarsSounds.DISCARD);
+        this.gameState.currentPlayer.discardPile.push(cardToDiscard.card);
+        this.removeMouseable(cardToDiscard.key);
+        this.removeMouseable(cardToDiscard.getInfoKey());
+        this.closeModal();
+        if (callback) callback();
+        this.broadcast(`${this.localPlayer.name} discarded ${cardToDiscard.card.name}`);
+    }
+
+    /**
      * Broadcast a change to the game state.
      */
     broadcast(summary: string) {
-        // TODO
+        
+        // TODO - Send game state to the server and deliver it to other players
 
         this.gameState.broadcastSummaries.push(summary);
-    }
-
-
-
-    /**
-     * Actions to take after acquiring a card.
-     * 
-     * Some cards have different behaviors when they are acquired.
-     * All the common stuff that always happens goes here.
-     */
-    afterAcquireCard(card: Card, key: string) {
-
-        this.removeMouseableKeys(key);
-
-        let indexToRemove = -1;
-        for (let i = 0; i < this.gameState.currentMarket.length; i++) {
-            if (this.gameState.currentMarket[i].uniqueIndex == card.uniqueIndex) {
-                indexToRemove = i;
-            }
-        }
-        if (indexToRemove > -1) {
-            this.gameState.currentMarket.splice(indexToRemove, 1);
-        } else {
-            throw Error('Unable to remove card from current market');
-        }
-
-        // Subtract the cost from the player's current resources
-        const cost = card.convertCost();
-        this.localPlayer.numCredits -= cost.credits;
-        this.localPlayer.numTalents -= cost.talents;
-
-        this.initCardAreas();
+        this.resizeCanvas();
     }
 
     /**
@@ -1328,33 +1228,67 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
+     * Actions to take after acquiring a card.
+     * 
+     * Some cards have different behaviors when they are acquired.
+     * All the common stuff that always happens goes here.
+     */
+    afterAcquireCard(card: Card, key: string, free?:boolean, callback?:Function) {
+
+        this.removeMouseableKeys(key);
+
+        let indexToRemove = -1;
+        for (let i = 0; i < this.gameState.currentMarket.length; i++) {
+            if (this.gameState.currentMarket[i].uniqueIndex == card.uniqueIndex) {
+                indexToRemove = i;
+            }
+        }
+        if (indexToRemove > -1) {
+            this.gameState.currentMarket.splice(indexToRemove, 1);
+        } else {
+            throw Error('Unable to remove card from current market');
+        }
+
+        if (!free) {
+            // Subtract the cost from the player's current resources
+            const cost = card.convertCost();
+            this.localPlayer.numCredits -= cost.credits;
+            this.localPlayer.numTalents -= cost.talents;
+        }
+
+        this.initCardAreas();
+
+        callback?.();
+    }
+
+    /**
      * Acquire a card from the marketplace.
      */
-    acquireCard(card: Card, key: string) {
+    acquireCard(card: Card, key: string, free?:boolean, callback?:Function) {
 
         console.log(`About to acquire ${card.name}. ${card.uniqueIndex}`);
 
         if (card.subtype == 'Bug') {
             bug(this, card, () => {
-                this.afterAcquireCard(card, key);
+                this.afterAcquireCard(card, key, free, callback);
                 this.playSound(PillarsSounds.FAIL);
             });
         } else {
             this.localPlayer.discardPile.push(card);
-            this.afterAcquireCard(card, key);
+            this.afterAcquireCard(card, key, free);
             this.playSound(PillarsSounds.CLICK);
             this.broadcast(`${this.gameState.currentPlayer.name} acquired ${card.name}`);
         }
 
     }
 
-
     /**
      * Add a sound.
      */
     addSound(name: string) {
-        const baseUrl = PillarsWebConfig.AudioUrl;
+        const baseUrl = '/audio/';
         const h = new Howl({ src: [`${baseUrl}${name}`] });
+        h.volume(0.5); // ?
         this.sounds.set(name, h);
     }
 
@@ -1362,9 +1296,10 @@ class PillarsGame implements IPillarsGame {
      * Play a sound.
      */
     playSound(name: string): any {
-        if (this.sounds) {
+        if (this.sounds && !this.muted) {
             const s = this.sounds.get(name);
             if (s) {
+                s.volume(0.5); // Doesn't seem to work
                 s.play();
             }
         }
@@ -1706,9 +1641,9 @@ class PillarsGame implements IPillarsGame {
         ctx.fillRect(0, 0, PillarsConstants.BW, PillarsConstants.BH);
 
         // TODO - Remove this
-        ctx.strokeStyle = 'white';
-        CanvasUtil.roundRect(this.ctx, 0, 0,
-            PillarsConstants.BW, PillarsConstants.BH, 20, false, true);
+        // ctx.strokeStyle = 'white';
+        // CanvasUtil.roundRect(this.ctx, 0, 0,
+        //     PillarsConstants.BW, PillarsConstants.BH, 20, false, true);
 
         // if (this.isDoneLoading) {
         //     ctx.globalAlpha = 0.3;
@@ -1726,11 +1661,9 @@ class PillarsGame implements IPillarsGame {
         //     ctx.restore();
         // }
 
-        // Deck
-        this.initPlayerDeck();
 
-        const currentPlayer = this.gameState.currentPlayer;
-        const currentColor = this.playerDiceColors[currentPlayer.index];
+        // const currentPlayer = this.gameState.currentPlayer;
+        // const currentColor = this.playerDiceColors[currentPlayer.index];
 
         // // Credits, Creativity, and Talent
         // if (this.isDoneLoading) {
@@ -1747,36 +1680,45 @@ class PillarsGame implements IPillarsGame {
 
         //this.renderDice();
 
-        // Player summaries
-        this.renderPlayerSummaries();
 
-        // Loading
-        const numImages = this.images.size;
-        let numLoaded = 0;
-        if (this.loadedImages) {
-            for (const [key, value] of this.loadedImages.entries()) {
-                if (value === true) {
-                    numLoaded++;
-                }
-            }
-        }
-        if (numLoaded < numImages) {
-            ctx.font = this.getFont(36, 'bold');
-            ctx.fillStyle = 'black';
-            ctx.fillText(`Loaded ${numLoaded} of ${numImages} images`,
-                (PillarsConstants.BW / 2) - 50, PillarsConstants.BH / 2);
-        }
+        // // Loading
+        // const numImages = this.images.size;
+        // let numLoaded = 0;
+        // if (this.loadedImages) {
+        //     for (const [key, value] of this.loadedImages.entries()) {
+        //         if (value === true) {
+        //             numLoaded++;
+        //         }
+        //     }
+        // }
+        // if (numLoaded < numImages) {
+        //     ctx.font = this.getFont(36, 'bold');
+        //     ctx.fillStyle = 'black';
+        //     ctx.fillText(`Loaded ${numLoaded} of ${numImages} images`,
+        //         (PillarsConstants.BW / 2) - 50, PillarsConstants.BH / 2);
+        // }
 
 
         // Mouseables, drawn in zindex order
         const marray = this.sortMouseables();
 
         for (const m of marray) {
-            if (m.render) {
+
+            let shouldRender = false;
+            
+            // Don't render anything but the welcome modal at first.
+            if (this.welcome) {   
+                if (m.key.startsWith(PillarsConstants.MODAL_KEY)) {
+                    shouldRender = true;
+                }
+            } else {
+                shouldRender = true;
+            }
+
+            if (m.render && shouldRender) {
                 m.render();
             }
         }
-
 
         // Run animation logic
         for (const [key, value] of this.animations.entries()) {

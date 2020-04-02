@@ -151,8 +151,12 @@ export class GameState {
 
     /**
      * Draw a card for the player from their deck.
+     * 
+     * Returns true if the deck was shuffled
      */
     drawOne(player: Player): boolean {
+
+        let shuffled = false;
 
         if (player.deck.length == 0 && player.discardPile.length == 0) {
 
@@ -166,11 +170,12 @@ export class GameState {
             player.deck = player.discardPile;
             player.discardPile = [];
             GameState.shuffle(player.deck);
+            shuffled = true;
         }
 
         player.hand.push(<Card>player.deck.shift());
 
-        return true;
+        return shuffled;
     }
 
     /**
@@ -262,9 +267,6 @@ export class GameState {
         // this.marketStack.unshift(Object.assign(new Card(), 
         //     this.cardMasters.get('Competitive Research')));
 
-        const ak = Object.assign(new Card(), this.cardMasters.get('Amazon Kinesis'));
-        ak.uniqueIndex = 1000;
-        this.marketStack.unshift(ak);
 
         // Fill the current market
         this.refillMarket();
@@ -286,6 +288,12 @@ export class GameState {
         for (const t of this.trialStacks) {
             GameState.shuffle(t.notused);
         }
+        
+        // TESTING
+        // TODO - Remove this
+        const ak = Object.assign(new Card(), this.cardMasters.get('Employees Poached'));
+        ak.uniqueIndex = 1000;
+        this.trialStacks[0].notused.unshift(ak);
 
     }
 
@@ -375,6 +383,27 @@ export class GameState {
     }
 
     /**
+     * Remove the card from in play.
+     */
+    removeCardFromInPlay(player:Player, card:Card) {
+
+        console.log(`About to remove ${card.name} from in play. ${card.uniqueIndex}`);
+
+        // Remove it from hand
+        let indexToRemove = -1;
+        for (let i = 0; i < player.inPlay.length; i++) {
+            if (player.inPlay[i].uniqueIndex == card.uniqueIndex) {
+                indexToRemove = i;
+            }
+        }
+        if (indexToRemove > -1) {
+            player.inPlay.splice(indexToRemove, 1);
+        } else {
+            throw Error('Unable to remove card from in play');
+        }
+    }
+
+    /**
      * Promote or demote the current player.
      */
     promote(pillarIndex: number, isDemote: boolean) {
@@ -392,10 +421,17 @@ export class GameState {
     }
 
     /**
-     * End a trial.
+     * End a trial (and end the turn).
      */
-    endTrial(stack:TrialStack, winner:boolean) {
+    endTrial(stack:TrialStack, winner:boolean, drawNum?:number):boolean {
        
+        let shuffled = false;
+
+        // Default hand size is 6 unless it's been overridden
+        if (drawNum === undefined) {
+            drawNum = 6;
+        }
+
         // Move the trial we just faced to the used pile
         stack.used.push(<Card>stack.notused.shift());
 
@@ -408,13 +444,14 @@ export class GameState {
             p.discardPile.push(p.hand[i]);
         }
         p.hand = [];
-        for (let i = 0; i < 6; i++) {
-            this.drawOne(p);
+        for (let i = 0; i < drawNum; i++) {
+            shuffled = this.drawOne(p);
         }
         p.numCreativity = 0;
         p.numCredits = 0;
         p.numTalents = 0;
 
+        return shuffled;
     }
 
     /**
@@ -514,6 +551,9 @@ export class GameState {
             if (p.index == s.currentPlayer) {
                 gameState.currentPlayer = player;
             }
+        }
+        if (!gameState.currentPlayer) {
+            gameState.currentPlayer = gameState.players[0];
         }
         gameState.pillarMax = s.pillarMax;
         gameState.startDateTime = s.startDateTime;

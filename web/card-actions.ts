@@ -1,6 +1,5 @@
 import { IPillarsGame, Modal, MouseableCard, PillarsSounds } from './ui-utils';
 import { Card } from '../lambdas/card';
-import { Player } from '../lambdas/player';
 import { PillarsConstants } from './constants';
 import { decommision } from './actions/decommision';
 import { predictiveAutoscaling } from './actions/predictive-autoscaling';
@@ -9,6 +8,10 @@ import { retireCardFromHand } from './actions/retire';
 import { promoteAny } from './actions/promote-any';
 import { promote } from './actions/promote';
 import { amazonKinesis } from './actions/amazon-kinesis';
+import { ddosAttack } from './actions/ddos-attack';
+import { talentShortage } from './actions/talent-shortage';
+import { dataCenterMigration } from './actions/data-center-migration';
+import { employeesPoached } from './actions/employees-poached';
 
 /**
  * This is the signature for a custom card effect.
@@ -48,30 +51,10 @@ export class CardActions {
         this.customEffects.set("Predictive Autoscaling", predictiveAutoscaling);
         this.customEffects.set("Competitive Research", competitiveResearch);
         this.customEffects.set("Amazon Kinesis", amazonKinesis);
-
-        // CloudFormation
-        // Poach
-        // Guard Duty
-        // Chaos Testing
-        // Think Tank
-        // Talented Jerk (maybe throw in an Easter Egg. "Well, actually...")
-        // Promoted to VP
-        // Cloud 9
-        // Outsourcing
-        // Senior Developer
-        // AWS Lambda
-        // SQS
-        // EBS Volume
-        // Stack Overflow
-        // S3 Bucket
-        // First to Market
-        // WAF
-        // Job Fair
-        // Forecast
-        // Sagemaker
-        // Database Migration
-        // Collaboration
-        // Patent Awarded
+        this.customEffects.set("DDoS Attack", ddosAttack);
+        this.customEffects.set("Talent Shortage", talentShortage);
+        this.customEffects.set("Data Center Migration", dataCenterMigration);
+        this.customEffects.set('Employees Poached', employeesPoached);
 
     }
 
@@ -79,6 +62,7 @@ export class CardActions {
      * Do success or fail actions.
      */
     endTrial(winner: boolean) {
+
         const a = this.customEffects.get(this.card.name);
         if (a) {
             this.doTrialEffects(winner, this.mcard);
@@ -86,12 +70,13 @@ export class CardActions {
         } else {
             this.doTrialEffects(winner, this.mcard, this.callback);
         }
+
     }
 
     /**
      * Do the standard trial effects.
      */
-    doTrialEffects(winner:boolean, mcard:MouseableCard, callback?:Function) {
+    doTrialEffects(winner:boolean, mcard:MouseableCard, trialCallback?:Function) {
 
         const player = this.game.gameState.currentPlayer;
         const card = this.card;
@@ -101,8 +86,6 @@ export class CardActions {
 
         if (winner) {
             if (card.success) {
-                this.game.playSound(PillarsSounds.SUCCESS);
-
                 if (card.success.customers !== undefined) {
                     const n = card.success.customers
                     player.numCustomers += n;
@@ -110,47 +93,49 @@ export class CardActions {
                     this.game.broadcast(`${player.name} won ${n} customer${s}`);
                 }
                 if (card.success.promote !== undefined) {
-                    if (card.success.promote < 5) {
-                        promote(this.game, this.callback);
+                    if (card.success.promote == 6) {
+                        promote(this.game, trialCallback);
                         delegatedCallback = true;
                     }
-                    if (card.success.promote == 5) {
+                    if (card.success.promote < 5) {
                         this.promotePillar(card.success.promote, false);
                     }
-                    if (card.success.promote == 6) {
-                        promoteAny(this.game, this.callback);
+                    if (card.success.promote == 5) {
+                        promoteAny(this.game, trialCallback);
                         delegatedCallback = true;
                     }
                 }
             }
         } else {
             if (card.fail) {
-                this.game.playSound(PillarsSounds.FAIL);
-
                 if (card.fail.customers !== undefined) {
                     const n = Math.abs(card.fail.customers);
-                    player.numCustomers -= n;
-                    const s = n > 1 ? 's' : '';
-                    this.game.broadcast(`${player.name} lost ${n} customer${s}`);
+                    if (player.numCustomers > 0) {
+                        player.numCustomers -= n;
+                        const s = n > 1 ? 's' : '';
+                        this.game.broadcast(`${player.name} lost ${n} customer${s}.`);
+                    } else {
+                        this.game.broadcast(`${player.name} is already at zero customers.`);
+                    }
                 }
                 if (card.fail.demote !== undefined) {
                     if (card.fail.demote < 5) {
-                        promote(this.game, this.callback, true);
+                        promote(this.game, trialCallback, true);
                         delegatedCallback = true;
                     }
                     if (card.fail.demote == 5) {
                         this.promotePillar(card.fail.demote, true);
                     }
                     if (card.fail.demote == 6) {
-                        promoteAny(this.game, this.callback, true);
+                        promoteAny(this.game, trialCallback, true);
                         delegatedCallback = true;
                     }
                 }
             }
         }
 
-        if (this.callback && !delegatedCallback) {
-            this.callback();
+        if (trialCallback && !delegatedCallback) {
+            trialCallback();
         }
     }
 
@@ -180,6 +165,7 @@ export class CardActions {
 
         const numeral = PillarsConstants.NUMERALS[index];
         this.game.broadcast(`${this.game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
+        this.game.playSound(PillarsSounds.PROMOTE);
     }
 
     /**
@@ -187,7 +173,7 @@ export class CardActions {
      * 
      * Returns false if we should cancel
      */
-    doStandardEffects(mcard: MouseableCard, callback?: Function) {
+    doStandardEffects(mcard: MouseableCard, standardCallback?: Function) {
 
         const player = this.game.localPlayer;
         let delegatedCallback = false;
@@ -210,8 +196,8 @@ export class CardActions {
 
                 // 5 means any
                 if (card.action.Promote == 5) {
-                    promoteAny(this.game, callback);
-                    if (callback) {
+                    promoteAny(this.game, standardCallback);
+                    if (standardCallback) {
                         delegatedCallback = true;
                     }
                 }
@@ -219,8 +205,8 @@ export class CardActions {
                 // 6 means roll a d6 (6 means any)
                 if (card.action.Promote == 6) {
                     // Roll a d6
-                    promote(this.game, this.callback);
-                    if (callback) {
+                    promote(this.game, standardCallback);
+                    if (standardCallback) {
                         delegatedCallback = true;
                     }
                 }
@@ -294,8 +280,8 @@ export class CardActions {
         }
 
         // Check to see if we need to call the callback now
-        if (callback && !delegatedCallback) {
-            callback();
+        if (standardCallback && !delegatedCallback) {
+            standardCallback();
         }
 
     }
