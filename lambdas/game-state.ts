@@ -7,6 +7,8 @@ import { cardDatabase } from './card-database';
  */
 export class GameState {
 
+    static readonly AI_NAMES = ['Skynet', 'HAL 9000', 'Agent Smith'];
+
     /**
      * Id
      */
@@ -92,6 +94,11 @@ export class GameState {
      */
     cardMasters: Map<string, Card>;
 
+    /**
+     * Solo game.
+     */
+    isSolo: boolean;
+
     // *** If you add new fields here, don't forget SerializedGameState! ***
 
     /**
@@ -109,6 +116,39 @@ export class GameState {
         this.broadcastSummaries = [];
         this.pillars = [];
         this.cardMasters = new Map<string, Card>();
+        this.isSolo = false;
+    }
+
+    // TODO - 1 player game? Play against the clock? Win in x turns?
+
+    /**
+     * Start a game.
+     */
+    start(numPlayers:number, pillarMax:number, name:string, isSolo:boolean) {
+
+        this.pillarMax = pillarMax;
+
+        // Create players (1 human and 3 AI)
+        const human = new Player();
+        human.isHuman = true;
+        human.name = name;
+        human.index = 0;
+
+        this.players.push(human);
+        this.currentPlayer = human;
+
+        for (let i = 1; i < numPlayers; i++) {
+            const player = new Player();
+            player.isHuman = !isSolo;
+            if (isSolo) {
+                player.name = GameState.AI_NAMES[i - 1];
+            }
+            // Empty player name indicates an open invite
+            player.index = i;
+            this.players.push(player);
+        }
+
+        this.initializeCards();
     }
 
     /**
@@ -587,6 +627,7 @@ export class GameState {
             card.uniqueIndex = c.uniqueIndex;
             gameState.pillars.push(card);
         }
+        gameState.isSolo = s.isSolo;
 
         return gameState;
     }
@@ -711,6 +752,11 @@ export class SerializedGameState {
     pillars: Array<SerializedCard>;
 
     /**
+     * Solo game.
+     */
+    isSolo: boolean;
+
+    /**
      * Constructor.
      */
     constructor(gameState: GameState) {
@@ -749,6 +795,7 @@ export class SerializedGameState {
         for (const c of gameState.pillars) {
             this.pillars.push(new SerializedCard(c));
         }
+        this.isSolo = gameState.isSolo;
     }
 
 }

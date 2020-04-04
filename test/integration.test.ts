@@ -24,16 +24,20 @@ test('Create a new game ddb put', async () => {
     gameState.initializeCards();
     const s = new SerializedGameState(gameState);
 
-    let resp = await h.handlePath('/game', 'put', JSON.stringify(s));
+    const js = JSON.stringify(s);
 
+    //console.log(`js: ${js}`);
+
+    let resp = await h.handlePath('/game', 'put', null, js);
     const gameState2 = GameState.RehydrateGameState(<SerializedGameState>resp);
-
     expect(gameState2.name).toEqual(gameState.name);
 
-    resp = await h.handlePath('/game?id=' + gameState2.id, 'get', undefined); 
-
+    resp = await h.handlePath('/game?id=' + gameState2.id, 'get', null, undefined); 
     const gameState3 = GameState.RehydrateGameState(<SerializedGameState>resp);
-
     expect(gameState3.name).toEqual(gameState.name);
+
+    resp = await h.handlePath('/game', 'get', {id: gameState2.id}, undefined);
+    const gameState4 = GameState.RehydrateGameState(<SerializedGameState>resp);
+    expect(gameState4.name).toEqual(gameState.name);
 
 });

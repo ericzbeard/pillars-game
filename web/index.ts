@@ -1,15 +1,16 @@
 import { uapi } from './comms';
 import { GameState, SerializedGameState } from '../lambdas/game-state';
 import { Player } from '../lambdas/player';
+import * as Cookies from 'js-cookie';
 
 export class Index {
 
     /**
      * Load a content page and insert it into the dom.
      */
-    loadContent(path:string, callback?:Function) {
+    loadContent(path: string, callback?: Function) {
         $.ajax(path, {
-            method: 'get', 
+            method: 'get',
             success: (content) => {
                 $('#content').html(content);
                 callback?.();
@@ -18,77 +19,96 @@ export class Index {
     };
 
     /**
-     * Start a multi-player game.
+     * Start a game by sending it to the server and getting a unique id.
      */
-    startMulti(callback:Function) {
-        const gameState = new GameState();
-
-        // Players
-        const numPlayers = <number>$('input[name=playersRadio]:checked', '#multi-form').val();
-        for (let i = 0; i < numPlayers; i++) {
-            const player = new Player();
-            if (i == 0) {
-                player.name = <string>$('#txt-your-name').val();
-            }
-            // Empty name indicates an open slot for others to join
-            player.isHuman = true;
-            player.index = i;
-            gameState.players.push(player);
-        }
-        gameState.pillarMax = <number>$('input[name=pillarsRadio]:checked', '#multi-form').val();
+    put(gameState: GameState, callback: Function) {
 
         const gs = JSON.stringify(new SerializedGameState(gameState));
 
         // Send the game to the server
-        uapi('game', 'PUT', gs, (data:SerializedGameState) => {
+        uapi('game', 'PUT', gs, (data: SerializedGameState) => {
             console.log(data);
             const rgs = GameState.RehydrateGameState(data);
 
             callback(rgs.id);
 
-        }, (error:string) => {
+        }, (error: string) => {
             console.log(error);
         });
+    }
+
+    /**
+     * Start a new game.
+     */
+    start() {
+        const soloMulti = $('input[name=soloRadio]:checked', '#start-form').val();
+        const numPlayers = $('input[name=playersRadio]:checked', '#start-form').val();
+        const pillarMax = $('input[name=pillarsRadio]:checked', '#start-form').val();
+        const name = $('#txt-your-name').val();
+
+        console.log(`soloMulti: ${soloMulti}`);
+        console.log(`numPlayers: ${numPlayers}`);
+        console.log(`pillarMax: ${pillarMax}`);
+        console.log(`name: ${name}`);
+
+        const isSolo = soloMulti == 'solo';
+
+        const gameState = new GameState();
+        gameState.start(<number>numPlayers, <number>pillarMax, <string>name, isSolo);
+
+        const d = $('#game-url');
+
+        d.html('Please wait...');
+        this.put(gameState, (id: string) => {
+            let url = `\"play.html#${id}\"`;
+
+            // Set a cookie so we know which player this is later
+            Cookies.set(id + '-name', <string>name);
+
+            let msg = `Click here to start playing: <a href=${url}>${url}</a>`;
+            if (!isSolo) {
+                msg += '<br/>(Share this link with other players)';
+            }
+            d.html(msg);
+        });
+
     }
 
     /**
      * Load the home page and wire up buttons.
      */
     loadHomePage() {
-        
         this.loadContent('pages/home.html', () => {
 
-            const form = <HTMLFormElement>document.getElementById("multi-form");
-            form.addEventListener('submit', (e:Event) => {
+            const form = <HTMLFormElement>document.getElementById("start-form");
+            form.addEventListener('submit', (e: Event) => {
                 e.preventDefault();
                 e.stopPropagation();
                 form.classList.add('was-validated');
             });
-            
-            $('#btn-multi').on('click', (e) => {
 
-                if (form.checkValidity() === false) { 
+            $('#btn-start').on('click', (e) => {
+
+                //e.preventDefault();
+
+                if (form.checkValidity() === false) {
                     console.log('Invalid form');
+
+                    const d = $('#game-url');
+
+                    d.html('Please provide all required fields.');
+
                     return;
                 }
 
-                console.log('btn-multi click');
-
-                e.preventDefault();
-
-                const d = $('#game-url');
-                d.html('Please wait...');
-
-                this.startMulti((id:string) => {
-                    d.html(`<a href=\"play.html#${id}\">Click here to start playing</a>` + 
-                        '(share this link with other players)');
-                });
+                this.start();
             });
-
         });
-        
     }
 
+    /**
+     * Initialize the page.
+     */
     init() {
 
         this.loadHomePage();
@@ -103,7 +123,7 @@ export class Index {
                 break;
             case 'architecture':
                 page = 'pages/architecture.html';
-                break; 
+                break;
             case 'about':
                 page = 'pages/about.html';
                 break;

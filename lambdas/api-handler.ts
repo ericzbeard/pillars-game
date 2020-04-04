@@ -3,6 +3,8 @@ import * as AWS from 'aws-sdk';
 import { PillarsAPIConfig } from './pillars-api-config';
 import { ApiEndpoint } from './endpoints/api-endpoint';
 import { GameEndpoint } from './endpoints/game';
+import { Lambda } from 'aws-sdk';
+import { APIGatewayEvent } from 'aws-lambda';
 
 AWS.config.update({region:PillarsAPIConfig.Region});
 
@@ -42,7 +44,7 @@ export class ApiHandler {
     /**
      * Parse the path and call the appropriate endpoint.
      */
-    handlePath = async (path: string, verb: string, data?: string): Promise<any> => {
+    handlePath = async (path: string, verb: string, params?:any, data?: string): Promise<any> => {
 
         console.log(`handlePath got path ${path}, verb ${verb}`);
 
@@ -53,7 +55,9 @@ export class ApiHandler {
         }
 
         let parsed = queryString.parseUrl(path);
-        let params = parsed.query;
+        if (!params) {
+            params = parsed.query;
+        }
         path = parsed.url;
 
         console.log(this.endpoints.keys());
@@ -106,14 +110,15 @@ export class ApiHandler {
 /**
  * Lambda proxy handler. This handles all requests.
  */
-export const handler = async (event: any): Promise<any> => { // APIGatewayEvent
+export const handler = async (event: APIGatewayEvent): Promise<any> => { // APIGatewayEvent
     try {
 
         const h: ApiHandler = new ApiHandler();
 
         console.log(`api-handler event ${JSON.stringify(event, null, 0)}`);
 
-        const resp = await h.handlePath(event.path, event.httpMethod, event.body ?? '');
+        const resp = await h.handlePath(event.path, event.httpMethod,
+            event.queryStringParameters, event.body || undefined);
 
         return {
             statusCode: 200,

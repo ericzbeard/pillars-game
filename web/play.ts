@@ -8,7 +8,6 @@ import { MouseableCard, Mouseable, IPillarsGame, Xywh } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal } from './ui-utils';
 import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
 import { ModalCardClick, PillarsSounds } from './ui-utils';
-import { LocalGame } from './local-game';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
 import { CardRender } from './card-render';
@@ -93,11 +92,6 @@ class PillarsGame implements IPillarsGame {
      * Robot chat.
      */
     aiChatter: AIChatter;
-
-    /**
-     * True if this is a non-networked solo game, Human vs AI
-     */
-    isSoloGame: boolean;
 
     /**
      * Mouse, touch screen, and keyboard input.
@@ -1006,9 +1000,7 @@ class PillarsGame implements IPillarsGame {
      */
     startLocalGame(callback:Function) {
         this.gameState = new GameState();
-        this.isSoloGame = true;
-        const localGame = new LocalGame(this.gameState);
-        localGame.start();
+        this.gameState.start(4, 6, 'Human', true);
         this.playSound(PillarsSounds.SHUFFLE);
         this.localPlayer = this.gameState.players[0];
 
@@ -1426,7 +1418,7 @@ class PillarsGame implements IPillarsGame {
      */
     renderPlayerSummaries() {
 
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < this.gameState.players.length; i++) {
             const p = this.gameState.players[i];
             let sx = 0;
             let sy = 0;

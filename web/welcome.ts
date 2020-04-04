@@ -1,22 +1,9 @@
-import { Card } from '../lambdas/card';
-import { Player } from '../lambdas/player';
 import { GameState, SerializedGameState } from '../lambdas/game-state';
-import { CanvasUtil } from './canvas-util';
-import { Howl, Howler } from 'howler';
-import { PillarsWebConfig } from './pillars-web-config';
-import { MouseableCard, Mouseable, IPillarsGame, Xywh } from './ui-utils';
-import { PillarsImages, PillarsAnimation, Modal } from './ui-utils';
-import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
-import { ModalCardClick, PillarsSounds } from './ui-utils';
-import { LocalGame } from './local-game';
-import { CardActions } from './card-actions';
+import { IPillarsGame } from './ui-utils';
+import { Button } from './ui-utils';
 import { PillarsConstants } from './constants';
-import { CardRender } from './card-render';
-import { bug } from './actions/bug';
-import { AIChatter } from './ai-chatter';
-import { PillarsInput } from './input';
-import { PillarsMenu } from './menu';
 import { uapi } from './comms';
+import * as Cookies from 'js-cookie';
 
 /**
  * Welcome screen.
@@ -41,18 +28,61 @@ export class Welcome {
         button.zindex = PillarsConstants.MODALZ + 1;
         button.onclick = () => {
 
-            let hash = window.location.hash;
-            if (hash) {
+            let id = window.location.hash;
+            if (id) {
 
-                if (hash.startsWith('#')) {
-                    hash = hash.substring(1);
+                if (id.startsWith('#')) {
+                    id = id.substring(1);
                 }
-                const path = 'game?id=' + hash;
+                const path = 'game?id=' + id;
 
                 console.log(`welcome about to get path ${path}`);
 
                 uapi(path, 'get', '', (data:SerializedGameState) => {
                     this.game.gameState = GameState.RehydrateGameState(data);
+                    
+                    const cookie = Cookies.get(id + '-name');
+                    console.log(`cookie: ${cookie}`);
+
+                    if (this.game.gameState.isSolo) {
+                        console.log('solo game');
+                        this.game.localPlayer = this.game.gameState.players[0];
+                    } else {
+                        if (cookie) {
+                            // This is the player who started the game or a 
+                            // returning player reloading the page.
+
+                            // TODO - This is totally hackable but do we care?
+
+                            for (const player of this.game.gameState.players) {
+                                if (player.name == cookie) {
+                                    console.log(`Setting local player: ${player.name}`);
+                                    this.game.localPlayer = player;
+                                }
+                            }
+
+                        } else {
+                            // This is an invited player hitting the page for the first time
+
+                            console.log('New player');
+
+                            // Ask the player to provide their name
+
+                            const name = prompt("Your name: ");
+
+                            for (const player of this.game.gameState.players) {
+                                if (!player.name) {
+                                    player.name = name || 'Anonymous';
+                                    this.game.localPlayer = player;
+                                }
+                            }
+
+                            // TODO - What if there were no open slots?
+
+                            // TODO - replace that with a real input dialog
+                        }
+                    }
+
                     this.game.closeModal();                
                     this.game.initGameScreen();
                 }, 

@@ -7,7 +7,7 @@ import {Card} from '../lambdas/card';
 import { cardDatabase } from '../lambdas/card-database';
 import { GameState, SerializedGameState } from '../lambdas/game-state';
 import {Player} from '../lambdas/player';
-import {LocalGame} from '../web/local-game';
+import { APIGatewayEvent } from 'aws-lambda';
 
 /**
  * Upvote API Unit Tests.
@@ -40,15 +40,16 @@ test('I know how RegExp works', () => {
 });
 
 test('Lambda handles path', async () => {
-    let resp = await apiLambda.handler({ 
+    let resp = await apiLambda.handler(<APIGatewayEvent>{ 
         path: 'unittest', 
         httpMethod: 'GET', 
+        queryStringParameters: null, 
         body: 'abc'
     });
     expect(resp.statusCode).toBe(200);
 
     // Handle with or without the /
-    resp = await apiLambda.handler({ 
+    resp = await apiLambda.handler(<APIGatewayEvent>{ 
         path: '/unittest', 
         httpMethod: 'GET', 
         body: 'abc'
@@ -123,7 +124,7 @@ test('Game state serialization works', () => {
     for (let i = 0; i < 3; i++) {
         const ai = new Player();
         ai.isHuman = false;
-        ai.name = LocalGame.AI_NAMES[i];
+        ai.name = GameState.AI_NAMES[i];
         ai.index = (i + 1);
         g.players.push(ai);
     }
