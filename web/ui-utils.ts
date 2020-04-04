@@ -597,7 +597,11 @@ export interface IPillarsGame {
      * Play a local game against the AI with no connection to the back end.
      */
     startLocalGame(callback:Function):any;
-    
+
+    /**
+     * Get load progress.
+     */
+    getLoadProgress(): LoadProgress;
 }
 
 /**
@@ -800,4 +804,17 @@ export class PillarsSounds {
     static readonly SHUFFLE = 'shuffle.wav';
     static readonly DING = 'ding.wav';
 
+}
+
+/**
+ * Progress of loading resources like images.
+ */
+export class LoadProgress {
+    numImages:number;
+    numImagesLoaded: number;
+
+    constructor() {
+        this.numImages = 0;
+        this.numImagesLoaded = 0;
+    }
 }

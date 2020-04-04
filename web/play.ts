@@ -17,6 +17,7 @@ import { PillarsInput } from './input';
 import { PillarsMenu } from './menu';
 import { uapi } from './comms';
 import { Welcome } from './welcome';
+import { LoadProgress } from './ui-utils';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -296,6 +297,7 @@ class PillarsGame implements IPillarsGame {
         this.initPlayerDeck();
         this.initCardAreas();
         this.initPlayerSummaries();
+        this.resizeCanvas();
     }
 
     /**
@@ -1557,6 +1559,23 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
+     * Get load progress.
+     */
+    getLoadProgress(): LoadProgress {
+        const progress = new LoadProgress();
+        progress.numImages = this.images.size;
+        let numLoaded = 0;
+        if (this.loadedImages) {
+            for (const [key, value] of this.loadedImages.entries()) {
+                if (value === true) {
+                    progress.numImagesLoaded++;
+                }
+            }
+        }
+       return progress;
+    }
+
+    /**
      * Draw the static parts of the canvas, scaling by width.
      */
     renderCanvas(w: number, h: number) {
@@ -1624,22 +1643,7 @@ class PillarsGame implements IPillarsGame {
         //this.renderDice();
 
 
-        // // Loading
-        // const numImages = this.images.size;
-        // let numLoaded = 0;
-        // if (this.loadedImages) {
-        //     for (const [key, value] of this.loadedImages.entries()) {
-        //         if (value === true) {
-        //             numLoaded++;
-        //         }
-        //     }
-        // }
-        // if (numLoaded < numImages) {
-        //     ctx.font = this.getFont(36, 'bold');
-        //     ctx.fillStyle = 'black';
-        //     ctx.fillText(`Loaded ${numLoaded} of ${numImages} images`,
-        //         (PillarsConstants.BW / 2) - 50, PillarsConstants.BH / 2);
-        // }
+       
 
 
         // Mouseables, drawn in zindex order
