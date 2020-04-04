@@ -17,6 +17,7 @@ import { AIChatter } from './ai-chatter';
 import { PillarsInput } from './input';
 import { PillarsMenu } from './menu';
 import { uapi } from './comms';
+import { Welcome } from './welcome';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -289,13 +290,13 @@ class PillarsGame implements IPillarsGame {
             self.input.handleKeyDown.call(self.input, e);
         });
 
-        this.initWelcomePage();
     }
 
     /**
      * Initialize the screen.
      */
     initGameScreen() {
+        this.welcome = false;
         this.menu = new PillarsMenu(this);
         this.menu.show();
         this.initPlayerDeck();
@@ -314,36 +315,7 @@ class PillarsGame implements IPillarsGame {
         this.addMouseable('player_summaries', m);
     }
 
-    /**
-     * Before showing the main game screen, show a welcome modal.
-     */
-    initWelcomePage() {
-        this.welcome = true;
-
-        const modal = this.showModal("Welcome");
-        modal.hideCloseButton();
-
-        const button = new Button('Start Local Game', this.ctx);
-        button.x = PillarsConstants.MODALX + PillarsConstants.MODALW / 2;
-        button.y = PillarsConstants.MODALY + 300;
-        button.w = PillarsConstants.MENU_BUTTON_W;
-        button.h = PillarsConstants.MENU_BUTTON_H;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-            
-            this.loadGameState(() => {
-                this.welcome = false;
-                this.broadcast(`Game id ${this.gameState.id}`);
-                this.closeModal();                
-                this.initGameScreen();
-            });
-
-        };
-        this.addMouseable(PillarsConstants.MODAL_KEY + '_welcome_ok_button', button);
-
-        // TODO - Tutorial, multi-player, ??
-    }
-
+   
     /**
      * Put a diagnostic message in the chat.
      */
@@ -1040,20 +1012,7 @@ class PillarsGame implements IPillarsGame {
         this.playSound(PillarsSounds.SHUFFLE);
         this.localPlayer = this.gameState.players[0];
 
-        const gs = JSON.stringify(new SerializedGameState(this.gameState));
-
-        // Send the game to the server
-        uapi('game', 'PUT', gs, (data:SerializedGameState) => {
-            console.log(data);
-            const rgs = GameState.RehydrateGameState(data);
-
-            this.gameState = rgs;
-
-            callback();
-        }, (error:string) => {
-            console.log(error);
-        });
-        
+        callback();
     }
 
     /**
@@ -1077,14 +1036,6 @@ class PillarsGame implements IPillarsGame {
      */
     loadGameState(callback:Function) {
 
-        const hash = window.location.hash;
-        if (hash) {
-
-        } else {
-
-            // For now, let's do everything locally
-            this.startLocalGame(callback);
-        }
     }
 
     /**
@@ -1850,9 +1801,15 @@ class PillarsGame implements IPillarsGame {
      */
     static init() {
         const game = new PillarsGame();
+        
         window.addEventListener('resize', function (e) {
             game.resizeCanvas.call(game);
         }, false);
+
+        const welcome = new Welcome(game);
+        game.welcome = true;
+        welcome.initWelcomePage();
+
         game.resizeCanvas();
 
     }

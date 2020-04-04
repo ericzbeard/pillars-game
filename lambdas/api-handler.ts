@@ -1,97 +1,12 @@
-import { GameState, SerializedGameState } from './game-state';
 import * as queryString from 'query-string';
-import * as uuid from 'uuid';
 import * as AWS from 'aws-sdk';
 import { PillarsAPIConfig } from './pillars-api-config';
+import { ApiEndpoint } from './endpoints/api-endpoint';
+import { GameEndpoint } from './endpoints/game';
+
 AWS.config.update({region:PillarsAPIConfig.Region});
 
 const documentClient = new AWS.DynamoDB.DocumentClient();
-
-/**
- * A base class for REST API endpoints.
- */
-class ApiEndpoint {
-
-    /**
-     * Lower case HTTP verbs like get, put, etc.
-     */
-    verbs: Map<string, Function>;
-
-    constructor() {
-        this.verbs = new Map<string, Function>();
-    }
-
-}
-
-/**
- * REST API functions for the /game path
- */
-class GameEndpoint extends ApiEndpoint {
-
-    constructor() {
-        super();
-        this.verbs.set('put', this.put);
-        this.verbs.set('get', this.get);
-        this.verbs.set('post', this.post);
-    }
-
-    /**
-     * Create a new game.
-     * 
-     * data is a stringified SerializedGameState
-     */
-    async put(params: any, data: string): Promise<SerializedGameState> {
-
-        console.log(`put data: ${data}`);
-
-        let s = <SerializedGameState>JSON.parse(data);
-
-        // Generate a unique ID
-        s.id = uuid.v4();
-
-        const item = {
-            TableName: <string>process.env.GAME_TABLE,
-            Item: s
-        };
-
-        const result = await documentClient.put(item).promise();
-        
-        console.log(`put result: ${JSON.stringify(result, null, 0)}`);
-        
-        // Return the updated game state
-        return s;
-    }
-
-    /**
-     * Get the state of a game.
-     */
-    async get(params: any, data: string): Promise<SerializedGameState> {
-        
-        const item = {
-            TableName: <string>process.env.GAME_TABLE,
-            Key: {
-                'id': params.id
-            }
-        };
-
-        const result = await documentClient.get(item).promise();
-        
-        console.log(`get result: ${JSON.stringify(result, null, 0)}`);
-
-        return <SerializedGameState>result.Item;
-    }
-
-    /**
-     * Delete a game.
-     */
-    async del(params: any, data: string) { }
-
-    /**
-     * Update game state.
-     */
-    async post(params: any, data: string) { }
-
-}
 
 /**
  * This exists to enable local unit testing.
@@ -111,6 +26,8 @@ class UnitTestEndpoint extends ApiEndpoint {
 
 /**
  * This class handles mapping between paths and imlementation functions.
+ * 
+ * TODO - Should probably just use Express...
  */
 export class ApiHandler {
 
@@ -118,7 +35,7 @@ export class ApiHandler {
 
     constructor() {
         this.endpoints = new Map<string, ApiEndpoint>();
-        this.endpoints.set('game', new GameEndpoint());
+        this.endpoints.set('game', new GameEndpoint(documentClient));
         this.endpoints.set('unittest', new UnitTestEndpoint());
     }
 
@@ -163,7 +80,7 @@ export class ApiHandler {
 
                         // Call the endpoint function
                         try {
-                            const retval = await f(params, data);
+                            const retval = await f.call(endpoint, params, data);
 
                             console.log(`${path}.${verb} retval: ${retval}`);
 
@@ -194,6 +111,8 @@ export const handler = async (event: any): Promise<any> => { // APIGatewayEvent
 
         const h: ApiHandler = new ApiHandler();
 
+        console.log(`api-handler event ${JSON.stringify(event, null, 0)}`);
+
         const resp = await h.handlePath(event.path, event.httpMethod, event.body ?? '');
 
         return {
@@ -211,9 +130,16 @@ export const handler = async (event: any): Promise<any> => { // APIGatewayEvent
 
         console.error(ex);
 
+        // TODO - 400 errors
+
         return {
             statusCode: 500,
-            headers: { 'Content-Type': 'text/plain' },
+            headers: { 
+                'Content-Type': 'text/plain',
+                'Access-Control-Allow-Headers': 'Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key',
+                'Access-Control-Allow-Origin': '*', 
+                "Access-Control-Allow-Credentials": true 
+            },
             body: `Request Failed\n`
         };
     }

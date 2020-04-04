@@ -6,7 +6,7 @@
     AWS Build is a deckbuilding game based on Amazon Web Services...
 </h2>
 
-<h3>*** This is currently a prototype and it is barely (like 10%) functional! ***</h3>
+<h3>*** This is currently a prototype and it is barely functional! ***</h3>
 
 <style>
     #play-solo {
@@ -18,14 +18,78 @@
         font-size: 36pt;
         padding-top:50px;
     }
+
+    #start-multi {
+        position: relative;
+        margin: auto;
+        width: 100%;
+        height: 500px;
+        text-align: center;
+        padding-top:50px;
+    }
 </style>
 
 <div style="width:100%">
     <div id="play-solo">
 
-        <a href="play.html">Click here to play!</a><br/>
-        <div style="font-size:9pt;">
-        (If you like to play broken games...)</div>
+        <a href="play.html">Play a solo game</a><br/>
+        <div style="font-size:9pt;"></div>
+
+    </div>
+
+    <div id="start-multi">
+
+        <h2>Start a multi-player game</h2>
+
+        <form id='multi-form' action="#" class="needs-validation" novalidate>
+            <div class="form-group">
+                <label for="txt-your-name">Your Name: </label>
+                <input class="form-control" type="text" id="txt-your-name" maxlength="20" required>
+            </div>
+            <div class="form-group">
+                <label>Players: </label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="playersRadio" id="players2" value="2" checked>
+                    <label class="form-check-label" for="players2">2</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="playersRadio" id="players3" value="3">
+                    <label class="form-check-label" for="players3">3</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="playersRadio" id="players4" value="4">
+                    <label class="form-check-label" for="players4">4</label>
+                  </div>
+            </div>
+            <div class="form-group">
+                <label>Pillar Max: </label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pillarsRadio" id="pillars2" value="2">
+                    <label class="form-check-label" for="pillars2">2</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pillarsRadio" id="pillars3" value="3">
+                    <label class="form-check-label" for="pillars3">3</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pillarsRadio" id="pillars4" value="4" checked>
+                    <label class="form-check-label" for="pillars4">4</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pillarsRadio" id="pillars5" value="5">
+                    <label class="form-check-label" for="pillars5">5</label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="pillarsRadio" id="pillars6" value="6">
+                    <label class="form-check-label" for="pillars6">6</label>
+                  </div>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary" id="btn-multi">Start</button>
+            </div>
+            <div id="game-url">
+            </div>
+        </form>
 
     </div>
 </div>

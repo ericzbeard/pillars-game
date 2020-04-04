@@ -5,8 +5,9 @@
     "pillars_api": "bin/pillars_api.js"
   },
   "scripts": {
-    "build": "cross-env SUBDOMAIN=local node copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] > web/dist/play-bundle.js && node web/copy-dist.js",
-    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard node copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] > web/dist/play-bundle.js && node web/copy-dist.js",
+    "build": "cross-env SUBDOMAIN=local node copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] > web/dist/play-bundle.js && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js && node web/copy-dist.js",
+    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard node copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] > web/dist/play-bundle.js && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js  && node web/copy-dist.js",
+    "build-index": "cross-env SUBDOMAIN=local node copy-config.js && tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js && node web/copy-dist.js",
     "watch": "tsc -w",
     "test": "jest --group=unit",
     "integration-test": "jest --group=integration",

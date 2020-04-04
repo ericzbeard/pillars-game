@@ -582,6 +582,22 @@ export interface IPillarsGame {
      * Mute or unmute.
      */
     muteSounds():any;
+
+    /**
+     * Load game state from the server.
+     */
+    loadGameState(callback:Function):any;
+
+    /**
+     * Initialize the screen.
+     */
+    initGameScreen():any;
+
+    /**
+     * Play a local game against the AI with no connection to the back end.
+     */
+    startLocalGame(callback:Function):any;
+    
 }
 
 /**
