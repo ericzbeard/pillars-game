@@ -3,12 +3,14 @@ import * as AWS from 'aws-sdk';
 import { PillarsAPIConfig } from './pillars-api-config';
 import { ApiEndpoint } from './endpoints/api-endpoint';
 import { GameEndpoint } from './endpoints/game';
+import { ChatEndpoint } from './endpoints/chat';
 import { Lambda } from 'aws-sdk';
 import { APIGatewayEvent } from 'aws-lambda';
 
 AWS.config.update({region:PillarsAPIConfig.Region});
 
 const documentClient = new AWS.DynamoDB.DocumentClient();
+const dynamo = new AWS.DynamoDB();
 
 /**
  * This exists to enable local unit testing.
@@ -38,6 +40,7 @@ export class ApiHandler {
     constructor() {
         this.endpoints = new Map<string, ApiEndpoint>();
         this.endpoints.set('game', new GameEndpoint(documentClient));
+        this.endpoints.set('chat', new ChatEndpoint(documentClient, dynamo));
         this.endpoints.set('unittest', new UnitTestEndpoint());
     }
 

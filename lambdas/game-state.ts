@@ -80,9 +80,9 @@ export class GameState {
     currentMarket: Array<Card>;
 
     /**
-     * Broadcast summaries.
+     * Chat messages and broadcast summaries.
      */
-    broadcastSummaries: Array<string>;
+    chat: Array<string>;
 
     /**
      * The 5 pillars of the Well-Architected Framework.
@@ -113,7 +113,7 @@ export class GameState {
             this.trialStacks.push(new TrialStack());
         }
         this.currentMarket = [];
-        this.broadcastSummaries = [];
+        this.chat = [];
         this.pillars = [];
         this.cardMasters = new Map<string, Card>();
         this.isSolo = false;
@@ -155,11 +155,11 @@ export class GameState {
      * Get the last broadcast summary.
      */
     getLastBroadcastSummary() {
-        if (!this.broadcastSummaries || this.broadcastSummaries.length == 0) {
+        if (!this.chat || this.chat.length == 0) {
             return '';
         }
 
-        return this.broadcastSummaries[this.broadcastSummaries.length - 1];
+        return this.chat[this.chat.length - 1];
     }
 
 
@@ -620,7 +620,7 @@ export class GameState {
             card.uniqueIndex = c.uniqueIndex;
             gameState.currentMarket.push(card);
         }
-        gameState.broadcastSummaries = s.broadcastSummaries.slice();
+        gameState.chat = s.broadcastSummaries.slice();
         gameState.pillars = new Array<Card>();
         for (const c of s.pillars) {
             const card = <Card>Object.assign(new Card(), cards.get(c.name));
@@ -790,7 +790,7 @@ export class SerializedGameState {
         for (const c of gameState.currentMarket) {
             this.currentMarket.push(new SerializedCard(c));
         }
-        this.broadcastSummaries = gameState.broadcastSummaries.slice();
+        this.broadcastSummaries = gameState.chat.slice();
         this.pillars = new Array<SerializedCard>();
         for (const c of gameState.pillars) {
             this.pillars.push(new SerializedCard(c));

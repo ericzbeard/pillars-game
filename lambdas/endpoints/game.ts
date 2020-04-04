@@ -72,6 +72,22 @@ export class GameEndpoint extends ApiEndpoint {
     /**
      * Update game state.
      */
-    async post(params: any, data: string) { }
+    async post(params: any, data: string) { 
+
+        console.log(`post data: ${data}`);
+
+        let s = <SerializedGameState>JSON.parse(data);
+
+        const item = {
+            TableName: <string>process.env.GAME_TABLE,
+            Item: s
+        };
+
+        const result = await this.documentClient.put(item).promise();
+        
+        console.log(`post result: ${JSON.stringify(result, null, 0)}`);
+        
+        return true;
+    }
 
 }

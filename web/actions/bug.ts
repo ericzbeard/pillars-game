@@ -21,7 +21,7 @@ export const bug = (game: IPillarsGame, card: Card, callback: Function) => {
     const offset = 20;
     const x = PillarsConstants.MODALX + PillarsConstants.MODALW/2 - (w * 3 + offset * 2) / 2;
 
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < game.gameState.players.length; i++) {
         const p = game.gameState.players[i];
 
         const link = new Mouseable();
@@ -43,7 +43,6 @@ export const bug = (game: IPillarsGame, card: Card, callback: Function) => {
         };
 
         link.onclick = () => {
-            // Choose a random card
             const chosenPlayer = <Player>link.data;
             
             // Add it to their discard pile

@@ -125,6 +125,11 @@ class PillarsGame implements IPillarsGame {
     welcome: boolean;
 
     /**
+     * If true, don't communicate with the server. Do everything locally.
+     */
+    isLocalGame: boolean;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -164,6 +169,7 @@ class PillarsGame implements IPillarsGame {
         this.cardRender = new CardRender(this);
 
         const imageNames = [
+            PillarsImages.IMG_BACK_BLUE,
             PillarsImages.IMG_CREDITS,
             PillarsImages.IMG_CREATIVITY,
             PillarsImages.IMG_TALENT,
@@ -175,7 +181,6 @@ class PillarsGame implements IPillarsGame {
             PillarsImages.IMG_BACK_GREEN,
             PillarsImages.IMG_BACK_ORANGE,
             PillarsImages.IMG_BACK_PINK,
-            PillarsImages.IMG_BACK_BLUE,
             PillarsImages.IMG_BLANK_ClOUD_RESOURCE,
             PillarsImages.IMG_BLANK_HUMAN_RESOURCE,
             PillarsImages.IMG_BLANK_BUG,
@@ -285,6 +290,29 @@ class PillarsGame implements IPillarsGame {
             self.input.handleKeyDown.call(self.input, e);
         });
 
+        // Poll for chat messages - TODO - replace with web sockets
+        setInterval(() => {
+            try {
+
+                // Don't bother if the tab isn't active
+                if (document.hidden || !self.gameState || self.isLocalGame) {
+                    return;
+                }
+
+                // Get the latest chat messages from the server
+                uapi('chat?gameId=' + self.gameState.id, 'get', '', 
+                    (data:Array<string>) => {
+                        self.gameState.chat = data;
+                    }, 
+                    (err: any) => {
+                        console.error(err);
+                    }
+                );
+
+            } catch (ex) {
+                console.error('Poll for chat exception: ' + ex);
+            }
+        }, 2000);
     }
 
     /**
@@ -317,7 +345,7 @@ class PillarsGame implements IPillarsGame {
      */
     diag(msg: string) {
         if (this.isDiag) {
-            this.broadcast('[Diag] ' + msg);
+            this.chat('[Diag] ' + msg);
         }
     }
 
@@ -1005,6 +1033,7 @@ class PillarsGame implements IPillarsGame {
         this.gameState.start(4, 6, 'Human', true);
         this.playSound(PillarsSounds.SHUFFLE);
         this.localPlayer = this.gameState.players[0];
+        this.isLocalGame = true;
 
         callback();
     }
@@ -1146,14 +1175,52 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
+     * Returns true if it's the local player's turn.
+     */
+    itsMyTurn(): boolean {
+        return this.localPlayer.index == this.gameState.currentPlayer.index;
+    }
+
+    /**
      * Broadcast a change to the game state.
      */
     broadcast(summary: string) {
-        
-        // TODO - Send game state to the server and deliver it to other players
 
-        this.gameState.broadcastSummaries.push(summary);
+        this.chat(summary);
+
+        if (!this.isLocalGame) {
+
+            // Send game state to the server and deliver it to other players
+            const sgs = JSON.stringify(new SerializedGameState(this.gameState));
+            uapi('game', 'post', sgs, 
+                (data:any) => {
+                    console.log('Posted game state');
+                }, 
+                (err:any) => {
+                    console.log(`Error posting game state: ${err}`);
+                }
+            );
+        }
+
         this.resizeCanvas();
+    }
+
+    /**
+     * Send a chat message.
+     */
+    chat(message:string) {
+        this.gameState.chat.push(message);
+
+        if (!this.isLocalGame) {
+            uapi('chat?gameId=' + this.gameState.id, 'put', message, 
+                (data:any) => {
+                    console.log('Put chat sucessfully');
+                }, 
+                (err:any) => {
+                    console.error(err);
+                }
+            );
+        }
     }
 
     /**
@@ -1385,7 +1452,7 @@ class PillarsGame implements IPillarsGame {
             PillarsConstants.CHATW, PillarsConstants.CHATH, 5, true, true);
 
         let numLines = 12;
-        const chat = this.gameState.broadcastSummaries;
+        const chat = this.gameState.chat;
         if (chat.length < numLines) {
             numLines = chat.length;
         }

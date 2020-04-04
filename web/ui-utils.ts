@@ -602,6 +602,16 @@ export interface IPillarsGame {
      * Get load progress.
      */
     getLoadProgress(): LoadProgress;
+
+    /**
+     * Returns true if it's the local player's turn.
+     */
+    itsMyTurn(): boolean;
+
+    /**
+     * Send a chat message.
+     */
+    chat(message:string):any;
 }
 
 /**

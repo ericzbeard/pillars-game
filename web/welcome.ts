@@ -160,16 +160,22 @@ export class Welcome {
                 } else {
                     // This is an invited player hitting the page for the first time
 
-                    console.log('New player');
+                    console.log('New player joining');
 
                     // Ask the player to provide their name
 
+                    // TODO - Replace this
                     const name = prompt("Your name: ");
 
                     for (const player of this.game.gameState.players) {
-                        if (!player.name) {
+                        console.log(`Checking player ${player.index}: ${player.name}`);
+                        if (!player.name || player.name.length == 0) {
                             player.name = name || 'Anonymous';
                             this.game.localPlayer = player;
+                            Cookies.set(id + '-name', player.name);
+                            console.log(`Set player ${player.index} to ${player.name}`);
+                            this.game.broadcast(`${player.name} just joined the game!`);
+                            break;
                         }
                     }
 
@@ -190,7 +196,7 @@ export class Welcome {
 }
 
 /**
- * Animate the die roll for a promotion.
+ * Animate the loading screen.
  */
 export class LoadingAnimation extends PillarsAnimation {
 

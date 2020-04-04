@@ -6,6 +6,7 @@ import dynamodb = require('@aws-cdk/aws-dynamodb');
 import { ProjectionType } from '@aws-cdk/aws-dynamodb';
 import { StaticSite } from './static-site';
 import { Cors } from '@aws-cdk/aws-apigateway';
+import { RemovalPolicy } from '@aws-cdk/core';
 
 /**
  * This stack defines:
@@ -24,7 +25,8 @@ export class PillarsApiStack extends cdk.Stack {
         const userTable = new dynamodb.Table(this, 'UsersTable', {
             partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-            pointInTimeRecovery: true
+            pointInTimeRecovery: true, 
+            removalPolicy: RemovalPolicy.RETAIN
         });
 
         new cdk.CfnOutput(this, 'UserTableName', {
@@ -36,7 +38,8 @@ export class PillarsApiStack extends cdk.Stack {
         const gameTable = new dynamodb.Table(this, 'GameTable', {
             partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-            pointInTimeRecovery: true
+            pointInTimeRecovery: true, 
+            removalPolicy: RemovalPolicy.RETAIN
         });
 
         new cdk.CfnOutput(this, 'GameTableName', {
@@ -44,9 +47,26 @@ export class PillarsApiStack extends cdk.Stack {
             exportName: 'GameTableName',
         });
 
+        // Chat table. Store chat and broadcast summaries.
+        // Partition Key: id (game.id) 
+        // Sort Key: time_id (isoDate_uuid)
+        const chatTable = new dynamodb.Table(this, 'ChatTable', {
+            partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'time_id', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            pointInTimeRecovery: true, 
+            removalPolicy: RemovalPolicy.RETAIN
+        });
+
+        new cdk.CfnOutput(this, 'ChatTableName', {
+            value: chatTable.tableName,
+            exportName: 'ChatTableName',
+        });
+
         const envVars = {
             "USER_TABLE": userTable.tableName,
-            "GAME_TABLE": gameTable.tableName
+            "GAME_TABLE": gameTable.tableName,
+            "CHAT_TABLE": chatTable.tableName
         };
 
         // Public REST API Lambda Function
@@ -62,6 +82,7 @@ export class PillarsApiStack extends cdk.Stack {
 
         gameTable.grantReadWriteData(apiLambda);
         userTable.grantReadWriteData(apiLambda);
+        chatTable.grantReadWriteData(apiLambda);
 
         // API Gateway for the public API (no auth)
         const api = new apigw.LambdaRestApi(this, "PillarsApi", {
