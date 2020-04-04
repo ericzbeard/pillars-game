@@ -1,5 +1,5 @@
 *.js
-!config/copy-config.js
+!copy-config.js
 
 !jest.config.js
 *.d.ts
