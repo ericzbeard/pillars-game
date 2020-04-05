@@ -3,6 +3,7 @@ import { GameState } from '../lambdas/game-state';
 import { Player } from '../lambdas/player';
 import { CanvasUtil } from './canvas-util';
 import { PillarsConstants } from './constants';
+import * as uuid from 'uuid';
 
 export class TextUtil {
 
@@ -612,6 +613,27 @@ export interface IPillarsGame {
      * Send a chat message.
      */
     chat(message:string):any;
+
+    /**
+     * Animate talent addition.
+     */
+    animateTalent(x:number, y:number, n:number):any;
+
+    /**
+     * Animate creativity addition.
+     */
+    animateCreativity(x:number, y:number, n:number):any;
+
+    /**
+     * Animate credit addition.
+     */
+    animateCredits(x:number, y:number, n:number):any;
+
+    /**
+     * Animate customer addition.
+     */
+    animateCustomer(x:number, y:number, n:number):any;
+
 }
 
 /**
@@ -813,6 +835,9 @@ export class PillarsSounds {
     static readonly PLAY = 'play.wav';
     static readonly SHUFFLE = 'shuffle.wav';
     static readonly DING = 'ding.wav';
+    static readonly CUSTOMER = 'customer.wav';
+    static readonly TURN = 'turn.wav';
+    static readonly LEVELUP = 'levelup.wav';
 
 }
 
@@ -826,5 +851,50 @@ export class LoadProgress {
     constructor() {
         this.numImages = 0;
         this.numImagesLoaded = 0;
+    }
+}
+
+
+/**
+ * Animate resource additions.
+ */
+export class ResourceAnimation extends PillarsAnimation {
+    
+    constructor(private x:number, private y:number, private img:HTMLImageElement) {
+        super();
+    }
+
+    static GetKey(x: number, y: number) {
+        return `Resource_${x}_${y}_${uuid.v4()}`;
+    }
+
+    getKey() {
+        return ResourceAnimation.GetKey(this.x, this.y);
+    }
+
+    animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
+
+        console.log(`animate`);
+
+        const elapsed = this.getElapsedTime();
+        const end = 1000;
+        if (elapsed >= end) {
+            deleteSelf(this.getKey());
+        } else {
+            this.percentComplete = elapsed / end;
+            
+            const scale = 1;
+
+            // Move x and y towards the end point
+            const endx = PillarsConstants.SUMMARYX;
+            const endy = PillarsConstants.SUMMARYY;
+            const diffx = this.x - endx;
+            const diffy = this.y - endy;
+            const curx = this.x - diffx * this.percentComplete;
+            const cury = this.y - diffy * this.percentComplete;
+
+            ctx.drawImage(this.img, curx, cury, 
+                this.img.width * scale, this.img.height * scale);
+        }
     }
 }

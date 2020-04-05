@@ -17,7 +17,8 @@ import { PillarsInput } from './input';
 import { PillarsMenu } from './menu';
 import { uapi } from './comms';
 import { Welcome } from './welcome';
-import { LoadProgress } from './ui-utils';
+import { LoadProgress, ResourceAnimation } from './ui-utils';
+import { AI } from '../lambdas/ai';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -291,6 +292,91 @@ class PillarsGame implements IPillarsGame {
         });
 
         // Poll for chat messages - TODO - replace with web sockets
+        this.pollForChatMessages();
+        
+    }
+
+    /**
+     * Poll for game state changes.
+     */
+    pollForBroadcast() {
+        const self = this;
+
+        setInterval(() => {
+            try {
+
+                // Don't bother if the tab isn't active or it's the 
+                // local player's turn.
+                if (document.hidden || 
+                    !self.gameState || 
+                    self.isLocalGame ||
+                    self.itsMyTurn() 
+                    ) {
+                    return;
+                }
+
+                // Get the latest game state from the server
+                uapi('game?id=' + self.gameState.id, 'get', '', 
+                    (data:string) => {
+                        const gs = GameState.RehydrateGameState(JSON.parse(data));
+                        self.applyNewGameState.call(self, gs);
+                    }, 
+                    (err: any) => {
+                        console.error(err);
+                    }
+                );
+
+            } catch (ex) {
+                console.error('Poll for broadast exception: ' + ex);
+            }
+        }, 2000);
+    }
+
+    /**
+     * Show a modal alerting the player that it's their turn.
+     */
+    showMyTurnModal() {
+        this.showModal("It's your turn!");
+        this.playSound(PillarsSounds.TURN);
+
+        const button = new Button('Ok', this.ctx);
+        const halfx = PillarsConstants.MODALX + PillarsConstants.MODALW / 2;
+        button.x = halfx - PillarsConstants.MENU_BUTTON_W;
+        button.y = PillarsConstants.MODALY + 300;
+        button.w = PillarsConstants.MENU_BUTTON_W * 2;
+        button.h = PillarsConstants.MENU_BUTTON_H * 2;
+        button.zindex = PillarsConstants.MODALZ + 1;
+        button.onclick = () => {
+            this.closeModal();
+            this.resizeCanvas();
+        };
+        this.addMouseable(PillarsConstants.MODAL_KEY + '_myturn_button', button);
+    }
+
+    /**
+     * Apply a game state change from the server.
+     */
+    applyNewGameState(gs: GameState) {
+
+        // Look for changes that need an animation or alert...
+
+        const wasMyTurn = this.itsMyTurn();
+
+        this.gameState = gs;
+
+        // Let the player know it's their turn
+        if (this.itsMyTurn() && !wasMyTurn) {
+            this.showMyTurnModal();
+        }
+    }
+
+    /**
+     * Poll for chat messages.
+     */
+    pollForChatMessages() {
+
+        const self = this;
+
         setInterval(() => {
             try {
 
@@ -374,6 +460,9 @@ class PillarsGame implements IPillarsGame {
             this.addSound(PillarsSounds.DISCARD);
             this.addSound(PillarsSounds.DING);
             this.addSound(PillarsSounds.PROMOTE);
+            this.addSound(PillarsSounds.CUSTOMER);
+            this.addSound(PillarsSounds.TURN);
+            this.addSound(PillarsSounds.LEVELUP);
             this.initializingSound = false;
         }
     }
@@ -417,14 +506,29 @@ class PillarsGame implements IPillarsGame {
      * Put all cards in play and hand into discard pile. Draw 6.
      */
     endTurn() {
-        const player = this.localPlayer;
+        let player = this.gameState.currentPlayer;
+        this.broadcast(`${player.name} ended their turn.`);
 
-        // TODO - Move to the next player
-        // For now while testing, keep giving the human more turns
+        let nextIndex = player.index + 1;
+        if (nextIndex >= this.gameState.players.length) {
+            nextIndex = 0;
+        }
+        player = this.gameState.players[nextIndex];
+        this.gameState.currentPlayer = player;
+        if (!player.isHuman) {
+            const ai = new AI(player, this.gameState, (message:string) => {
+                this.broadcast.call(this, message);
+            });
+            ai.takeTurn(() => {
+                this.endTurn.call(this);
+            });
+        } else {
+            if (player.index == this.localPlayer.index && this.isLocalGame) {
+                this.showMyTurnModal();
+            }
+        }
 
         this.initCardAreas();
-
-        this.broadcast(`${player.name} ended their turn.`);
     }
 
     /**
@@ -1541,11 +1645,7 @@ class PillarsGame implements IPillarsGame {
             const talent = this.getImg(PillarsImages.IMG_TALENT);
             const credits = this.getImg(PillarsImages.IMG_CREDITS);
             const creativity = this.getImg(PillarsImages.IMG_CREATIVITY);
-            const green = this.getImg(PillarsImages.IMG_CUSTOMER_GREEN);
-            const blue = this.getImg(PillarsImages.IMG_CUSTOMER_BLUE);
-            const orange = this.getImg(PillarsImages.IMG_CUSTOMER_ORANGE);
-            const yellow = this.getImg(PillarsImages.IMG_CUSTOMER_YELLOW);
-
+           
             const sw = 20;
             const sh = 30;
             const ry = sy + 30;
@@ -1578,21 +1678,8 @@ class PillarsGame implements IPillarsGame {
             renderResources(creativity, p.numCreativity, 2);
 
             // Num Customers
-            let img: HTMLImageElement = green;
-            switch (this.playerDiceColors[p.index]) {
-                case 'orange':
-                    img = orange;
-                    break;
-                case 'green':
-                    img = green;
-                    break;
-                case 'blue':
-                    img = blue;
-                    break;
-                case 'yellow':
-                    img = yellow;
-                    break;
-            }
+            let img = this.getPlayerCustomerImage(p.index);
+           
             const custx = sx + PillarsConstants.SUMMARYW - 105;
             const custy = sy + 5;
             this.ctx.drawImage(img, custx, custy, 100, 100);
@@ -1603,6 +1690,80 @@ class PillarsGame implements IPillarsGame {
         }
 
         this.renderChat();
+    }
+
+    /**
+     * Get the player's customer image.
+     */
+    getPlayerCustomerImage(index:number):HTMLImageElement {
+
+        switch (this.playerDiceColors[index]) {
+            case 'orange':
+                return this.getImg(PillarsImages.IMG_CUSTOMER_ORANGE);
+            case 'green':
+                return this.getImg(PillarsImages.IMG_CUSTOMER_GREEN);
+            case 'blue':
+                return this.getImg(PillarsImages.IMG_CUSTOMER_BLUE);
+            case 'yellow':
+                return this.getImg(PillarsImages.IMG_CUSTOMER_YELLOW);
+        }
+
+        return this.getImg(PillarsImages.IMG_CUSTOMER_ORANGE);
+    }
+
+    /**
+     * Animate resource additions.
+     */
+    animateResource(x:number, y:number, n:number, img:HTMLImageElement) {
+
+        const anim = new ResourceAnimation(x, y, img);
+
+        for (let i = 0; i < n; i++) {
+            setTimeout(() => {
+                this.registerAnimation(anim);
+            }, 200 * i + 1);
+        }
+    }
+
+    /**
+     * Animate talent addition.
+     */
+    animateTalent(x:number, y:number, n:number) {
+
+        console.log(`animateTalent`);
+
+        const img = this.getImg(PillarsImages.IMG_TALENT);
+        this.animateResource(x, y, n, img);
+    }
+
+    /**
+     * Animate creativity addition.
+     */
+    animateCreativity(x:number, y:number, n:number) {
+
+        console.log(`animateCreativity`);
+
+        const img = this.getImg(PillarsImages.IMG_CREATIVITY);
+        this.animateResource(x, y, n, img);
+    }
+
+    /**
+     * Animate credit addition.
+     */
+    animateCredits(x:number, y:number, n:number) {
+
+        console.log(`animateCredits`);
+
+        const img = this.getImg(PillarsImages.IMG_CREDITS);
+        this.animateResource(x, y, n, img);
+    }
+
+    /**
+     * Animate customer addition.
+     */
+    animateCustomer(x:number, y:number, n:number) {
+        const img = this.getPlayerCustomerImage(this.gameState.currentPlayer.index);
+        this.animateResource(x, y, n, img);
     }
 
     /**

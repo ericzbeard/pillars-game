@@ -99,6 +99,7 @@ export class PillarsMenu {
             }
             this.game.initCardAreas();
             this.game.localPlayer.numCustomers++;
+            this.game.playSound(PillarsSounds.CUSTOMER);
             this.game.resizeCanvas();
         };
         this.game.addMouseable(PillarsConstants.MENU_KEY + '_testbutton', button);

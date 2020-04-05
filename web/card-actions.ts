@@ -12,6 +12,7 @@ import { ddosAttack } from './actions/ddos-attack';
 import { talentShortage } from './actions/talent-shortage';
 import { dataCenterMigration } from './actions/data-center-migration';
 import { employeesPoached } from './actions/employees-poached';
+import { ResourceAnimation, PillarsImages } from './ui-utils';
 
 /**
  * This is the signature for a custom card effect.
@@ -89,6 +90,7 @@ export class CardActions {
                 if (card.success.customers !== undefined) {
                     const n = card.success.customers
                     player.numCustomers += n;
+                    this.game.playSound(PillarsSounds.CUSTOMER);
                     const s = n > 1 ? 's' : '';
                     this.game.broadcast(`${player.name} won ${n} customer${s}`);
                 }
@@ -242,22 +244,27 @@ export class CardActions {
                 player.numTalents += card.provides.Talent;
                 const s = card.provides.Talent > 1 ? 's' : '';
                 this.game.broadcast(`${player.name} added ${card.provides.Talent} Talent${s}`);
+                this.game.animateTalent(mcard.x, mcard.y, card.provides.Talent);
             }
             if (card.provides.Credit) {
                 player.numCredits += card.provides.Credit;
                 const s = card.provides.Credit > 1 ? 's' : '';
                 this.game.broadcast(`${player.name} added ${card.provides.Credit} Credit${s}`);
+                this.game.animateCredits(mcard.x, mcard.y, card.provides.Credit);
             }
             if (card.provides.Creativity) {
                 this.game.broadcast(
                     `${player.name} added ${card.provides.Creativity} Creativity`);
                 player.numCreativity += card.provides.Creativity;
+                this.game.animateCreativity(mcard.x, mcard.y, card.provides.Creativity);
             }
 
             if (card.provides.Customer) {
                 const s = card.provides.Customer > 1 ? 's' : '';
                 this.game.broadcast(`${player.name} added ${card.provides.Customer} Customer${s}`);
                 player.numCustomers += card.provides.Customer;
+                this.game.playSound(PillarsSounds.CUSTOMER);
+                this.game.animateCustomer(mcard.x, mcard.y, card.provides.Customer);
             }
 
             if (card.provides.TalentByPillar !== undefined) {
@@ -265,17 +272,20 @@ export class CardActions {
                 player.numTalents += n;
                 const s = n > 1 ? 's' : '';
                 this.game.broadcast(`${player.name} added ${n} Talent${s}`);
+                this.game.animateTalent(mcard.x, mcard.y, n);
             }
             if (card.provides.CreditByPillar !== undefined) {
                 const n = player.pillarRanks[card.provides.CreditByPillar]
                 player.numCredits += n;
                 const s = n > 1 ? 's' : '';
                 this.game.broadcast(`${player.name} added ${n} Credit${s}`);
+                this.game.animateCredits(mcard.x, mcard.y, n);
             }
             if (card.provides.CreativityByPillar !== undefined) {
                 const n = player.pillarRanks[card.provides.CreativityByPillar];
                 player.numCreativity += n;
                 this.game.broadcast(`${player.name} added ${n} Creativity`);
+                this.game.animateCreativity(mcard.x, mcard.y, n);
             }
         }
 
