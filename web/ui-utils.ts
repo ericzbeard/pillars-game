@@ -612,7 +612,7 @@ export interface IPillarsGame {
     /**
      * Send a chat message.
      */
-    chat(message:string):any;
+    putChat(message:string):any;
 
     /**
      * Animate talent addition.

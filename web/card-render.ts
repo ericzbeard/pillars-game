@@ -490,7 +490,7 @@ export class CardRender {
             highlight = true;
         }
         
-        if (isInHand && this.game.gameState.canPlayCard(m.card)) {
+        if (isInHand && this.game.gameState.canPlayCard(m.card, this.game.localPlayer)) {
             highlight = true;
         }
 

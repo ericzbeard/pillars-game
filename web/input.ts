@@ -452,7 +452,7 @@ export class PillarsInput {
         } else {
             if (e.key == 'Enter') {
                 const chat = this.typing;
-                this.game.chat(`[${this.game.localPlayer.name}] ${this.typing}`);
+                this.game.putChat(`[${this.game.localPlayer.name}] ${this.typing}`);
                 this.typing = '';
                 this.game.respondToChat(chat);
             }

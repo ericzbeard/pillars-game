@@ -131,6 +131,11 @@ class PillarsGame implements IPillarsGame {
     isLocalGame: boolean;
 
     /**
+     * Chat messages and broadcast summaries.
+     */
+    chat:Array<string>;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -144,6 +149,7 @@ class PillarsGame implements IPillarsGame {
         this.initializingSound = false;
         this.isDiag = false;
         this.welcome = true;
+        this.chat = [];
 
         this.playerDiceColors = [];
         this.playerDiceColors[0] = 'orange';
@@ -293,6 +299,9 @@ class PillarsGame implements IPillarsGame {
 
         // Poll for chat messages - TODO - replace with web sockets
         this.pollForChatMessages();
+
+        // Poll for game state changes. TODO - web sockets
+        this.pollForBroadcast();
         
     }
 
@@ -309,16 +318,17 @@ class PillarsGame implements IPillarsGame {
                 // local player's turn.
                 if (document.hidden || 
                     !self.gameState || 
-                    self.isLocalGame ||
-                    self.itsMyTurn() 
+                    self.isLocalGame
                     ) {
                     return;
                 }
 
+                // TODO - We miss player join broadcast while it's our turn
+
                 // Get the latest game state from the server
                 uapi('game?id=' + self.gameState.id, 'get', '', 
-                    (data:string) => {
-                        const gs = GameState.RehydrateGameState(JSON.parse(data));
+                    (data:SerializedGameState) => {
+                        const gs = GameState.RehydrateGameState(data);
                         self.applyNewGameState.call(self, gs);
                     }, 
                     (err: any) => {
@@ -358,16 +368,43 @@ class PillarsGame implements IPillarsGame {
      */
     applyNewGameState(gs: GameState) {
 
+        console.log(`Applying new game state`);
+
         // Look for changes that need an animation or alert...
 
-        const wasMyTurn = this.itsMyTurn();
+        if (this.itsMyTurn()) {
+            // Don't appy game state changes, since the current player is the 
+            // only one who can change it... except new players joining...
 
-        this.gameState = gs;
+            // Iterate through local players
+            for (const player of this.gameState.players) {
 
-        // Let the player know it's their turn
-        if (this.itsMyTurn() && !wasMyTurn) {
-            this.showMyTurnModal();
+                // If the player has not joined yet
+                if (!player.name) {
+
+                    // Iterate through the players we just got broadcasted
+                    for (const newPlayer of gs.players) {
+
+                        // If the player has a name now, it's a join
+                        if (newPlayer.index == player.index && newPlayer.name) {
+                            this.gameState.players[newPlayer.index] = newPlayer;
+                        }
+                    }
+                }
+            }
+        } else {
+
+            const wasMyTurn = this.itsMyTurn();
+
+            this.gameState = gs;
+
+            // Let the local player know it's their turn
+            if (this.itsMyTurn() && !wasMyTurn) {
+                this.showMyTurnModal();
+            }
         }
+
+        this.resizeCanvas();
     }
 
     /**
@@ -388,7 +425,11 @@ class PillarsGame implements IPillarsGame {
                 // Get the latest chat messages from the server
                 uapi('chat?gameId=' + self.gameState.id, 'get', '', 
                     (data:Array<string>) => {
-                        self.gameState.chat = data;
+
+                        console.log(`Got chat: ${JSON.stringify(data, null, 0)}`);
+
+                        self.chat = data;
+                        self.resizeCanvas();
                     }, 
                     (err: any) => {
                         console.error(err);
@@ -431,7 +472,7 @@ class PillarsGame implements IPillarsGame {
      */
     diag(msg: string) {
         if (this.isDiag) {
-            this.chat('[Diag] ' + msg);
+            this.putChat('[Diag] ' + msg);
         }
     }
 
@@ -523,10 +564,12 @@ class PillarsGame implements IPillarsGame {
                 this.endTurn.call(this);
             });
         } else {
-            if (player.index == this.localPlayer.index && this.isLocalGame) {
+            if (player.index == this.localPlayer.index) {
                 this.showMyTurnModal();
             }
         }
+
+        this.broadcast(`It's ${player.name}'s turn now.`);
 
         this.initCardAreas();
     }
@@ -768,7 +811,7 @@ class PillarsGame implements IPillarsGame {
             m.origx = m.x;
             m.origy = m.y;
             m.zindex = i + 1;
-            if (isHand && this.gameState.canPlayCard(m.card)) {
+            if (isHand && this.gameState.canPlayCard(m.card, this.localPlayer)) {
                 m.draggable = true;
             }
             if (isModal === true) {
@@ -817,7 +860,7 @@ class PillarsGame implements IPillarsGame {
             } else {
                 m.onhover = hover;
                 m.onclick = () => {
-                    if (isHand && this.gameState.canPlayCard(m.card)) {
+                    if (isHand && this.gameState.canPlayCard(m.card, this.localPlayer)) {
                         this.displayCardModal(m, 'Play it!', () => {
                             this.playCard(m, () => {
                                 this.finishPlayingCard(m, m.key);
@@ -926,7 +969,7 @@ class PillarsGame implements IPillarsGame {
                     PillarsConstants.MARKET_START_KEY,
                     PillarsConstants.MARKET_HOVER_KEY,
                     i,
-                    card.canAcquire(p.numCredits, p.numTalents),
+                    card.canAcquire(p.numCredits, p.numTalents) && this.itsMyTurn(),
                     PillarsConstants.REGION_MARKET);
             }
             curx += cw;
@@ -1082,7 +1125,8 @@ class PillarsGame implements IPillarsGame {
 
         m.onhover = hover;
         m.onclick = () => {
-            if (region == PillarsConstants.REGION_MARKET &&
+            if (region == PillarsConstants.REGION_MARKET && 
+                this.itsMyTurn() && 
                 m.card.canAcquire(player.numCredits, player.numTalents)) {
                 this.displayCardModal(m, 'Acquire it!', () => {
                     this.acquireCard(m.card, m.key);
@@ -1290,7 +1334,7 @@ class PillarsGame implements IPillarsGame {
      */
     broadcast(summary: string) {
 
-        this.chat(summary);
+        this.putChat(summary);
 
         if (!this.isLocalGame) {
 
@@ -1312,8 +1356,8 @@ class PillarsGame implements IPillarsGame {
     /**
      * Send a chat message.
      */
-    chat(message:string) {
-        this.gameState.chat.push(message);
+    putChat(message:string) {
+        this.chat.push(message);
 
         if (!this.isLocalGame) {
             uapi('chat?gameId=' + this.gameState.id, 'put', message, 
@@ -1556,7 +1600,7 @@ class PillarsGame implements IPillarsGame {
             PillarsConstants.CHATW, PillarsConstants.CHATH, 5, true, true);
 
         let numLines = 12;
-        const chat = this.gameState.chat;
+        const chat = this.chat;
         if (chat.length < numLines) {
             numLines = chat.length;
         }

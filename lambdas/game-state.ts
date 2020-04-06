@@ -79,10 +79,10 @@ export class GameState {
      */
     currentMarket: Array<Card>;
 
-    /**
-     * Chat messages and broadcast summaries.
-     */
-    chat: Array<string>;
+    // /**
+    //  * Chat messages and broadcast summaries.
+    //  */
+    // chat: Array<string>;
 
     /**
      * The 5 pillars of the Well-Architected Framework.
@@ -113,7 +113,7 @@ export class GameState {
             this.trialStacks.push(new TrialStack());
         }
         this.currentMarket = [];
-        this.chat = [];
+        // this.chat = [];
         this.pillars = [];
         this.cardMasters = new Map<string, Card>();
         this.isSolo = false;
@@ -151,16 +151,16 @@ export class GameState {
         this.initializeCards();
     }
 
-    /**
-     * Get the last broadcast summary.
-     */
-    getLastBroadcastSummary() {
-        if (!this.chat || this.chat.length == 0) {
-            return '';
-        }
+    // /**
+    //  * Get the last broadcast summary.
+    //  */
+    // getLastBroadcastSummary() {
+    //     if (!this.chat || this.chat.length == 0) {
+    //         return '';
+    //     }
 
-        return this.chat[this.chat.length - 1];
-    }
+    //     return this.chat[this.chat.length - 1];
+    // }
 
 
     /**
@@ -329,18 +329,23 @@ export class GameState {
             GameState.shuffle(t.notused);
         }
         
-        // TESTING
-        // TODO - Remove this
-        const ak = Object.assign(new Card(), this.cardMasters.get('Employees Poached'));
-        ak.uniqueIndex = 1000;
-        this.trialStacks[0].notused.unshift(ak);
+        // // TESTING
+        // // TODO - Remove this
+        // const ak = Object.assign(new Card(), this.cardMasters.get('Employees Poached'));
+        // ak.uniqueIndex = 1000;
+        // this.trialStacks[0].notused.unshift(ak);
 
     }
 
     /**
      * Check to see if the current player is allowed to play the card.
      */
-    canPlayCard(card: Card) {
+    canPlayCard(card: Card, player:Player) {
+
+        if (this.currentPlayer.index != player.index) {
+            return false;
+        }
+
         if (card.subtype == "Augment Cloud") {
             let hasCloud = false;
             for (const inPlay of this.currentPlayer.inPlay) {
@@ -620,7 +625,7 @@ export class GameState {
             card.uniqueIndex = c.uniqueIndex;
             gameState.currentMarket.push(card);
         }
-        gameState.chat = s.broadcastSummaries.slice();
+        // gameState.chat = s.chat.slice();
         gameState.pillars = new Array<Card>();
         for (const c of s.pillars) {
             const card = <Card>Object.assign(new Card(), cards.get(c.name));
@@ -741,10 +746,10 @@ export class SerializedGameState {
      */
     currentMarket: Array<SerializedCard>;
 
-    /**
-     * Broadcast summaries.
-     */
-    broadcastSummaries: Array<string>;
+    // /**
+    //  * Chat and broadcast summaries.
+    //  */
+    // chat: Array<string>;
 
     /**
      * The 5 pillars of the Well-Architected Framework.
@@ -790,7 +795,7 @@ export class SerializedGameState {
         for (const c of gameState.currentMarket) {
             this.currentMarket.push(new SerializedCard(c));
         }
-        this.broadcastSummaries = gameState.chat.slice();
+        // this.chat = gameState.chat.slice();
         this.pillars = new Array<SerializedCard>();
         for (const c of gameState.pillars) {
             this.pillars.push(new SerializedCard(c));
