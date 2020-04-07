@@ -60,6 +60,9 @@ npm run deploy-{env}
 - Tutorial
 - Finish card actions
 - Safari/iOS drag and drop
-- Safari scaling
+- Drag bugs
+- Highlight locked dice
+- If no markets cards purchased, give option to shuffle
+
 
 

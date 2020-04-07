@@ -27,22 +27,31 @@ export class Welcome {
      */
     initWelcomePage() {
 
-        const game = this.game;
-        const ctx = game.ctx;
-
-        // Animate the card back for a short delay to let fonts load
-        const a = new LoadingAnimation(game);
-        game.registerAnimation(a);
-
         // Load progress
         this.initLoadProgress();
 
+    }
+
+    /**
+     * Show the loading animation after the card back image loads.
+     * 
+     * (Called from play.loadImg)
+     */
+    showLoadingAnimation() {
+
+        // Animate the card back for a short delay to let fonts load
+        const a = new LoadingAnimation(this.game);
+        this.game.registerAnimation(a);
+        
         // Delay for
         setTimeout(() => {
             this.afterDelay();
         }, Welcome.LOAD_MS);
     }
 
+    /**
+     * Show a string with resource loading progress.
+     */
     initLoadProgress() {
 
         const game = this.game;

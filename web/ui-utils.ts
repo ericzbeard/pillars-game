@@ -3,7 +3,6 @@ import { GameState } from '../lambdas/game-state';
 import { Player } from '../lambdas/player';
 import { CanvasUtil } from './canvas-util';
 import { PillarsConstants } from './constants';
-import * as uuid from 'uuid';
 
 export class TextUtil {
 
@@ -634,6 +633,10 @@ export interface IPillarsGame {
      */
     animateCustomer(x:number, y:number, n:number):any;
 
+    /**
+     * Returns true if the image load event has fired.
+     */
+    isImageLoaded(name:string):boolean;
 }
 
 /**
@@ -865,7 +868,7 @@ export class ResourceAnimation extends PillarsAnimation {
     }
 
     static GetKey(x: number, y: number) {
-        return `Resource_${x}_${y}_${uuid.v4()}`;
+        return `Resource_${x}_${y}_${Math.random()}`;
     }
 
     getKey() {

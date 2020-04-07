@@ -136,6 +136,11 @@ class PillarsGame implements IPillarsGame {
     chat:Array<string>;
 
     /**
+     * The welcome page.
+     */
+    welcomePage: Welcome;
+
+    /**
      * PillarsGame constructor.
      */
     constructor() {
@@ -148,6 +153,7 @@ class PillarsGame implements IPillarsGame {
         this.images = new Map<string, HTMLImageElement>();
         this.initializingSound = false;
         this.isDiag = false;
+        this.welcomePage = new Welcome(this);
         this.welcome = true;
         this.chat = [];
 
@@ -303,6 +309,14 @@ class PillarsGame implements IPillarsGame {
         // Poll for game state changes. TODO - web sockets
         this.pollForBroadcast();
         
+    }
+
+    /**
+     * Show the welcome page.
+     */
+    showWelcome() {
+        this.welcome = true;
+        this.welcomePage.initWelcomePage();
     }
 
     /**
@@ -714,6 +728,7 @@ class PillarsGame implements IPillarsGame {
      * Display a modal that shows a magnified copy of the card.
      */
     displayCardModal(mcard: MouseableCard, actionText?: string, action?: Function) {
+        
         const card = mcard.card;
 
         const w = 600;
@@ -727,28 +742,58 @@ class PillarsGame implements IPillarsGame {
         const mag = new MouseableCard(card);
         const scale = 2.5;
         const sw = cw * scale;
+        const sh = ch * scale;
         mag.x = x + w / 2 - sw / 2;
         mag.y = y + 50;
         mag.zindex = PillarsConstants.MODALZ + 1;
         mag.render = () => {
             this.renderCard(mag, false, scale);
-
-            if (actionText && action) {
-                // Play/Acquire
-                const button = new Button(actionText, this.ctx);
-                button.x = mag.x + (cw / 2) * scale - 100;
-                button.y = mag.y + ch * scale + 50;
-                button.w = 200;
-                button.h = 100;
-                button.zindex = PillarsConstants.MODALZ + 1;
-                button.onclick = () => {
-                    this.closeModal();
-                    setTimeout(action, 200);
-                };
-                this.addMouseable(PillarsConstants.MODAL_KEY + '_mag_button', button);
-            }
         }
         this.addMouseable(PillarsConstants.MODAL_KEY + '_magnified_card', mag);
+
+        // Play/Acquire
+        if (actionText && action) {
+            const button = new Button(actionText, this.ctx);
+            button.x = mag.x + (cw / 2) * scale - 100;
+            button.y = mag.y + ch * scale + 50;
+            button.w = 200;
+            button.h = 100;
+            button.zindex = PillarsConstants.MODALZ + 1;
+            button.onclick = () => {
+                this.closeModal();
+                setTimeout(action, 200);
+            };
+            this.addMouseable(PillarsConstants.MODAL_KEY + '_mag_button', button);
+        }
+        
+        // Info hyperlink
+        if (card.info) {
+
+            const infoLink = new Mouseable();
+            const infox = mag.x + 5 * scale;
+            const infoy = mag.y + sh - 25 * scale;
+            const infow = 20 * scale;
+            const infoh = 20 * scale;
+            infoLink.x = infox;
+            infoLink.y = infoy;
+            infoLink.w = infow;
+            infoLink.h = infoh;
+            infoLink.zindex = mag.zindex + 1;
+            infoLink.render = () => {
+                const infoimg = this.getImg(PillarsImages.IMG_INFO);
+                if (infoimg) {
+                    this.ctx.drawImage(infoimg, infox, infoy, infow, infoh);
+                } else {
+                    console.log(`Unable to get img ${PillarsImages.IMG_INFO}`);
+                }
+            };
+            infoLink.onclick = () => {
+                this.closeModal();
+                this.showModal(<string>card.info, card.href);
+                this.playSound(PillarsSounds.CLICK);
+            };
+            this.addMouseable(mag.getInfoKey(), infoLink);
+        }
     }
 
     /**
@@ -1477,6 +1522,13 @@ class PillarsGame implements IPillarsGame {
     }
 
     /**
+     * Returns true if the image load event has fired.
+     */
+    isImageLoaded(name:string):boolean {
+        return this.loadedImages.get(name) || false;
+    }
+
+    /**
      * Get the image element and add an event listener to redraw 
      * once it is loaded.
      */
@@ -1489,6 +1541,9 @@ class PillarsGame implements IPillarsGame {
             this.loadedImages.set(name, false);
             img.addEventListener("load", function (e) {
                 self.loadedImages.set(name, true);
+                if (name == PillarsImages.IMG_BACK_BLUE) {
+                    self.welcomePage.showLoadingAnimation();
+                }
             }, false);
         } else {
             throw Error(`${name} does not exist`);
@@ -2074,9 +2129,7 @@ class PillarsGame implements IPillarsGame {
             game.resizeCanvas.call(game);
         }, false);
 
-        const welcome = new Welcome(game);
-        game.welcome = true;
-        welcome.initWelcomePage();
+        game.showWelcome();
 
         game.resizeCanvas();
 

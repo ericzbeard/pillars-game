@@ -193,7 +193,7 @@ export class CardActions {
 
                 // 0-4 means that pillar
                 if (card.action.Promote < 5) {
-                    this.promotePillar(card.action.Promote, true);
+                    this.promotePillar(card.action.Promote, false);
                 }
 
                 // 5 means any

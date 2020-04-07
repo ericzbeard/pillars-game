@@ -537,34 +537,6 @@ export class CardRender {
             ctx.fillText(card.name, namex, namey, PillarsConstants.CARD_WIDTH * scale - 5);
         }
 
-        // Info hyperlink
-        if (card.info) {
-            const infoLink = new Mouseable();
-            const infox = x + w - 25;
-            const infoy = y + 5;
-            const infow = 20 * scale;
-            const infoh = 20 * scale;
-            infoLink.x = infox;
-            infoLink.y = infoy;
-            infoLink.w = infow;
-            infoLink.h = infoh;
-            infoLink.zindex = m.zindex + 0.1;
-            infoLink.render = () => {
-                const infoimg = this.game.getImg(PillarsImages.IMG_INFO);
-                if (infoimg) {
-                    ctx.drawImage(infoimg, infox, infoy, infow, infoh);
-                } else {
-                    console.log(`Unable to get img ${PillarsImages.IMG_INFO}`);
-                }
-            };
-            infoLink.onclick = () => {
-                this.game.closeModal();
-                this.game.showModal(<string>card.info, card.href);
-                this.game.playSound(PillarsSounds.CLICK);
-            };
-            this.game.addMouseable(m.getInfoKey(), infoLink);
-        }
-
         fontSize = 9 * scale;
 
         // Marketing
@@ -652,9 +624,9 @@ export class CardRender {
 
         // Cloud Category
         if (card.category) {
-            ctx.font = this.game.getFont(6 * scale);
+            ctx.font = this.game.getFont(8 * scale);
             ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
-            ctx.fillText(card.category.toUpperCase(), x + (32 * scale), y + (207 * scale));
+            ctx.fillText(card.category.toUpperCase(), x + (32 * scale), y + (237 * scale));
         }
 
         // Big Text
