@@ -270,7 +270,6 @@ class PillarsGame implements IPillarsGame {
         self.gameCanvas.addEventListener('touchstart', function (e) {
             e.stopPropagation();
             e.preventDefault();
-            self.diag('touchstart');
             self.input.handleTouchStart.call(self.input, e);
         });
 
@@ -278,7 +277,6 @@ class PillarsGame implements IPillarsGame {
         self.gameCanvas.addEventListener('touchmove', function (e) {
             e.stopPropagation();
             e.preventDefault();
-            self.diag('touchmove');
             self.input.handleTouchMove.call(self.input, e);
         });
 
@@ -286,7 +284,6 @@ class PillarsGame implements IPillarsGame {
         self.gameCanvas.addEventListener('touchend', function (e) {
             e.stopPropagation();
             e.preventDefault();
-            self.diag('touchend');
             self.input.handleTouchUp.call(self.input, e);
         });
 
@@ -294,7 +291,6 @@ class PillarsGame implements IPillarsGame {
         self.gameCanvas.addEventListener('touchcancel', function (e) {
             e.stopPropagation();
             e.preventDefault();
-            self.diag('touchcancel');
             self.input.handleTouchUp.call(self.input, e);
         });
 
@@ -382,7 +378,8 @@ class PillarsGame implements IPillarsGame {
      */
     applyNewGameState(gs: GameState) {
 
-        console.log(`Applying new game state`);
+        console.log(`applyNewGameState currentPlayer: ${gs.currentPlayer.name}, ` + 
+            `itsMyTurn(): ${this.itsMyTurn()}`);
 
         // Look for changes that need an animation or alert...
 
@@ -408,6 +405,8 @@ class PillarsGame implements IPillarsGame {
             }
         } else {
 
+            // TODO - race!
+
             const wasMyTurn = this.itsMyTurn();
 
             this.gameState = gs;
@@ -416,6 +415,8 @@ class PillarsGame implements IPillarsGame {
             if (this.itsMyTurn() && !wasMyTurn) {
                 this.showMyTurnModal();
             }
+
+            this.initCardAreas();
         }
 
         this.resizeCanvas();
@@ -439,9 +440,6 @@ class PillarsGame implements IPillarsGame {
                 // Get the latest chat messages from the server
                 uapi('chat?gameId=' + self.gameState.id, 'get', '', 
                     (data:Array<string>) => {
-
-                        console.log(`Got chat: ${JSON.stringify(data, null, 0)}`);
-
                         self.chat = data;
                         self.resizeCanvas();
                     }, 
@@ -568,8 +566,12 @@ class PillarsGame implements IPillarsGame {
         if (nextIndex >= this.gameState.players.length) {
             nextIndex = 0;
         }
+
+        console.log(`nextIndex: ${nextIndex}`);
+
         player = this.gameState.players[nextIndex];
         this.gameState.currentPlayer = player;
+
         if (!player.isHuman) {
             const ai = new AI(player, this.gameState, (message:string) => {
                 this.broadcast.call(this, message);
@@ -582,6 +584,8 @@ class PillarsGame implements IPillarsGame {
                 this.showMyTurnModal();
             }
         }
+
+        // TODO - race!
 
         this.broadcast(`It's ${player.name}'s turn now.`);
 
@@ -729,6 +733,9 @@ class PillarsGame implements IPillarsGame {
      */
     displayCardModal(mcard: MouseableCard, actionText?: string, action?: Function) {
         
+        console.log(`mag ${mcard.card.name}, ` + 
+            `canPlay: ${this.gameState.canPlayCard(mcard.card, this.localPlayer)}`);
+
         const card = mcard.card;
 
         const w = 600;
@@ -1371,6 +1378,7 @@ class PillarsGame implements IPillarsGame {
      * Returns true if it's the local player's turn.
      */
     itsMyTurn(): boolean {
+        console.log(`itsMyTurn local:${this.localPlayer.index} current:${this.gameState.currentPlayer.index}`);
         return this.localPlayer.index == this.gameState.currentPlayer.index;
     }
 

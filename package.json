@@ -6,7 +6,7 @@
   },
   "scripts": {
     "build": "cross-env SUBDOMAIN=local node copy-config.js && tsc && browserify -r howler -r jquery -r js-cookie -o web/dist/vendor-bundle.js && browserify web/play.ts -p [ tsify --noImplicitAny ] -x jquery -x howler -x js-cookie > web/dist/play-bundle.js && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js && node web/copy-dist.js",
-    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard copy-config.js && tsc && browserify -r howler -r jquery -r js-cookie -o web/dist/vendor-bundle.js && browserify web/play.ts -p [ tsify --noImplicitAny ] -x jquery -x howler -x js-cookie > web/dist/play-bundle.js && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js && node web/copy-dist.js",
+    "build-ezbeard": "cross-env SUBDOMAIN=ezbeard node copy-config.js && tsc && browserify -r howler -r jquery -r js-cookie -o web/dist/vendor-bundle.js && browserify web/play.ts -p [ tsify --noImplicitAny ] -x jquery -x howler -x js-cookie > web/dist/play-bundle.js && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js && node web/copy-dist.js",
     "build-play": "cross-env SUBDOMAIN=local node copy-config.js && tsc && browserify web/play.ts -p [ tsify --noImplicitAny ] -x jquery -x howler -x js-cookie > web/dist/play-bundle.js && node web/copy-dist.js",
     "build-index": "cross-env SUBDOMAIN=local node copy-config.js && tsc && browserify web/index.ts -p [ tsify --noImplicitAny ] > web/dist/index-bundle.js && node web/copy-dist.js",
     "watch": "tsc -w",

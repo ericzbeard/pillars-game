@@ -63,6 +63,6 @@ npm run deploy-{env}
 - Drag bugs
 - Highlight locked dice
 - If no markets cards purchased, give option to shuffle
-
+- Animate card to player during other turns
 
 
