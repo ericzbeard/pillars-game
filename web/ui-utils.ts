@@ -584,11 +584,6 @@ export interface IPillarsGame {
     muteSounds():any;
 
     /**
-     * Load game state from the server.
-     */
-    loadGameState(callback:Function):any;
-
-    /**
      * Initialize the screen.
      */
     initGameScreen():any;
@@ -637,6 +632,13 @@ export interface IPillarsGame {
      * Returns true if the image load event has fired.
      */
     isImageLoaded(name:string):boolean;
+    
+    /**
+     * Start polling for changes from the server.
+     * 
+     * TODO - websockets
+     */
+    startComms():any;
 }
 
 /**

@@ -8,6 +8,7 @@ import { cardDatabase } from '../lambdas/card-database';
 import { GameState, SerializedGameState } from '../lambdas/game-state';
 import {Player} from '../lambdas/player';
 import { APIGatewayEvent } from 'aws-lambda';
+import { Q } from '../web/comms';
 
 /**
  * Upvote API Unit Tests.
@@ -177,6 +178,31 @@ test('Game state serialization works', () => {
 
     // TODO - Check everything
 
+});
+
+test('Q works', async () => {
+    const q = new Q(); 
+   
+    const timeout = (ms: number) => {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    let slowFinished = false;
+   
+    const slow = async () => {
+        await timeout(1000);
+        slowFinished = true;
+        return 'slow';
+    }
+   
+    const fast = async () => {
+        // This should not even be called before slow finishes
+        expect(slowFinished).toBe(true);
+        return 'fast';
+    }
+   
+    q.add(slow);
+    await q.add(fast);
 });
 
 

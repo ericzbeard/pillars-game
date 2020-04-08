@@ -21,20 +21,19 @@ export class Index {
     /**
      * Start a game by sending it to the server and getting a unique id.
      */
-    put(gameState: GameState, callback: Function) {
+    async put(gameState: GameState, callback: Function) {
 
         const gs = JSON.stringify(new SerializedGameState(gameState));
 
-        // Send the game to the server
-        uapi('game', 'PUT', gs, (data: SerializedGameState) => {
+        try {
+            // Send the game to the server
+            const data = await uapi('game', 'PUT', gs,);
             console.log(data);
-            const rgs = GameState.RehydrateGameState(data);
-
+            const rgs = GameState.RehydrateGameState(<SerializedGameState>data);
             callback(rgs.id);
-
-        }, (error: string) => {
-            console.log(error);
-        });
+        } catch (ex) {
+            console.log(ex);
+        }
     }
 
     /**

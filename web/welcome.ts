@@ -135,14 +135,15 @@ export class Welcome {
     /**
      * Load a game when an id is provided.
      */
-    loadGame(id:string) {
+    async loadGame(id:string) {
 
         this.state = 'loading';
 
         const path = 'game?id=' + id;
 
-        uapi(path, 'get', '', (data:SerializedGameState) => {
-            this.game.gameState = GameState.RehydrateGameState(data);
+        try {
+            const data = await uapi(path, 'get', '');
+            this.game.gameState = GameState.RehydrateGameState(<SerializedGameState>data);
             
             const cookie = Cookies.get(id + '-name');
             console.log(`cookie: ${cookie}`);
@@ -192,12 +193,13 @@ export class Welcome {
                 }
             }
 
+            
+            this.game.startComms();
             this.game.closeModal();                
             this.game.initGameScreen();
-        }, 
-        (err:any) => {
-            console.error(err);
-        });
+        } catch (ex) {
+            console.error(ex);
+        }
     
     }
 }

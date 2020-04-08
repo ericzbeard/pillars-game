@@ -2,11 +2,10 @@ import { Card } from '../lambdas/card';
 import { Player } from '../lambdas/player';
 import { GameState, SerializedGameState } from '../lambdas/game-state';
 import { CanvasUtil } from './canvas-util';
-import { Howl, Howler } from 'howler';
-import { PillarsWebConfig } from './pillars-web-config';
+import { Howl } from 'howler';
 import { MouseableCard, Mouseable, IPillarsGame, Xywh } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal } from './ui-utils';
-import { PillarDieAnimation, FrameRate, TextUtil, Button } from './ui-utils';
+import { PillarDieAnimation, FrameRate, Button } from './ui-utils';
 import { ModalCardClick, PillarsSounds } from './ui-utils';
 import { CardActions } from './card-actions';
 import { PillarsConstants } from './constants';
@@ -15,7 +14,7 @@ import { bug } from './actions/bug';
 import { AIChatter } from './ai-chatter';
 import { PillarsInput } from './input';
 import { PillarsMenu } from './menu';
-import { uapi } from './comms';
+import { Comms } from './comms';
 import { Welcome } from './welcome';
 import { LoadProgress, ResourceAnimation } from './ui-utils';
 import { AI } from '../lambdas/ai';
@@ -144,6 +143,11 @@ class PillarsGame implements IPillarsGame {
      * If true we are ending the turn and should ignore broadcasts.
      */
     endingTurn: boolean;
+    
+    /**
+     * Communictions with the server.
+     */
+    comms: Comms;
 
     /**
      * PillarsGame constructor.
@@ -162,6 +166,7 @@ class PillarsGame implements IPillarsGame {
         this.welcome = true;
         this.chat = [];
         this.endingTurn = false;
+        this.comms = new Comms();
 
         this.playerDiceColors = [];
         this.playerDiceColors[0] = 'orange';
@@ -233,7 +238,7 @@ class PillarsGame implements IPillarsGame {
         }
 
         // Wait for images to load
-        setTimeout(function (e) {
+        setTimeout(function () {
             self.checkImagesLoaded.call(self);
         }, 100);
 
@@ -305,12 +310,41 @@ class PillarsGame implements IPillarsGame {
             self.input.handleKeyDown.call(self.input, e);
         });
 
-        // Poll for chat messages - TODO - replace with web sockets
-        this.pollForChatMessages();
+    }
 
-        // Poll for game state changes. TODO - web sockets
-        this.pollForBroadcast();
+    /**
+     * Start polling for changes from the server.
+     * 
+     * TODO - websockets
+     */
+    startComms() {
         
+        const self = this;
+        
+        const shouldPollForChat = () => {
+            if (document.hidden || !self.gameState || self.isLocalGame) {
+                return false;
+            }
+            return true;
+        }
+        const applyChat = (data:Array<string>) => {
+            self.chat = data;
+            self.resizeCanvas();
+        };
+        this.comms.pollForChatMessages(this.gameState?.id, shouldPollForChat, applyChat);
+
+        const shouldPollForBroadcast = () => {
+            if (document.hidden || !self.gameState || self.isLocalGame) {
+                return false;
+            }
+            return true;
+        }
+        const applyBroadcast = (data:SerializedGameState) => {
+            const gs = GameState.RehydrateGameState(data);
+            self.applyNewGameState.call(self, gs);
+        };
+        this.comms.pollForBroadcast(this.gameState?.id, shouldPollForBroadcast, applyBroadcast);
+    
     }
 
     /**
@@ -319,40 +353,6 @@ class PillarsGame implements IPillarsGame {
     showWelcome() {
         this.welcome = true;
         this.welcomePage.initWelcomePage();
-    }
-
-    /**
-     * Poll for game state changes.
-     */
-    pollForBroadcast() {
-        const self = this;
-
-        setInterval(() => {
-            try {
-
-                // Don't bother if the tab isn't active or it's a local game
-                if (document.hidden || 
-                    !self.gameState || 
-                    self.isLocalGame
-                    ) {
-                    return;
-                }
-
-                // Get the latest game state from the server
-                uapi('game?id=' + self.gameState.id, 'get', '', 
-                    (data:SerializedGameState) => {
-                        const gs = GameState.RehydrateGameState(data);
-                        self.applyNewGameState.call(self, gs);
-                    }, 
-                    (err: any) => {
-                        console.error(err);
-                    }
-                );
-
-            } catch (ex) {
-                console.error('Poll for broadast exception: ' + ex);
-            }
-        }, 2000);
     }
 
     /**
@@ -424,8 +424,6 @@ class PillarsGame implements IPillarsGame {
             }
         } else {
 
-            const oldGameState = this.gameState;
-            
             // Apply new game state
             this.gameState = gs;
 
@@ -488,38 +486,6 @@ class PillarsGame implements IPillarsGame {
         }
 
         this.initCardAreas();
-    }
-
-    /**
-     * Poll for chat messages.
-     */
-    pollForChatMessages() {
-
-        const self = this;
-
-        setInterval(() => {
-            try {
-
-                // Don't bother if the tab isn't active
-                if (document.hidden || !self.gameState || self.isLocalGame) {
-                    return;
-                }
-
-                // Get the latest chat messages from the server
-                uapi('chat?gameId=' + self.gameState.id, 'get', '', 
-                    (data:Array<string>) => {
-                        self.chat = data;
-                        self.resizeCanvas();
-                    }, 
-                    (err: any) => {
-                        console.error(err);
-                    }
-                );
-
-            } catch (ex) {
-                console.error('Poll for chat exception: ' + ex);
-            }
-        }, 2000);
     }
 
     /**
@@ -968,7 +934,6 @@ class PillarsGame implements IPillarsGame {
         this.removeMouseableKeys(PillarsConstants.PILLAR_START_KEY);
 
         for (let i = 0; i < this.gameState.pillars.length; i++) {
-            const pillar = this.gameState.pillars[i];
             const m = new MouseableCard(this.gameState.pillars[i]);
             m.x = PillarsConstants.PILLARX;
             const offset = i * (PillarsConstants.CARD_HEIGHT * PillarsConstants.PILLAR_SCALE + 5);
@@ -1111,7 +1076,7 @@ class PillarsGame implements IPillarsGame {
             //     PillarsConstants.INPLAY_HOVER_KEY, i, false,
             //     PillarsConstants.REGION_INPLAY);
 
-            const m = this.initHoverCard(card,
+            this.initHoverCard(card,
                 PillarsConstants.INPLAYX + 30 + (50 * i),
                 PillarsConstants.INPLAYY + 15,
                 PillarsConstants.INPLAY_START_KEY,
@@ -1143,7 +1108,7 @@ class PillarsGame implements IPillarsGame {
      */
     closeModal(clickedClose?:boolean) {
         if (this.modal) {
-            for (const [k, v] of this.mouseables.entries()) {
+            for (const k of this.mouseables.keys()) {
                 if (k.startsWith(PillarsConstants.MODAL_KEY)) {
                     this.removeMouseable(k);
                 }
@@ -1237,7 +1202,7 @@ class PillarsGame implements IPillarsGame {
         let allLoaded: boolean = true;
 
         if (this.loadedImages) {
-            for (const [key, value] of this.loadedImages.entries()) {
+            for (const value of this.loadedImages.values()) {
                 if (!value === true) allLoaded = false;
             }
         } else {
@@ -1281,14 +1246,6 @@ class PillarsGame implements IPillarsGame {
         this.isDiag = !this.isDiag;
     }
 
-
-    /**
-     * Load game state from the server.
-     */
-    loadGameState(callback:Function) {
-
-    }
-
     /**
      * Register a running animation.
      */
@@ -1309,7 +1266,7 @@ class PillarsGame implements IPillarsGame {
      */
     sortMouseables(reverse?: boolean): Array<Mouseable> {
         const marray = new Array<Mouseable>();
-        for (const [key, m] of this.mouseables.entries()) {
+        for (const m of this.mouseables.values()) {
             marray.push(m);
         }
         if (reverse === true) {
@@ -1406,35 +1363,23 @@ class PillarsGame implements IPillarsGame {
     itsMyTurn(): boolean {
         return this.localPlayer.index == this.gameState.currentPlayer.index;
     }
-
+    
     /**
-     * Broadcast a change to the game state.
+     * Broadcast a game state change.
      */
     broadcast(summary: string) {
-        
+    
         console.log(`broadcast v${this.gameState.version}: ${summary}`);
         
-        // TODO - Race condition when we broadcast twice quickly, 
-        // before the response comes back. Need to queue them.
-
         this.putChat(summary);
-
+    
         if (!this.isLocalGame) {
-
-            // Send game state to the server and deliver it to other players
-            const sgs = JSON.stringify(new SerializedGameState(this.gameState));
-            uapi('game', 'post', sgs, 
-                (newVersion:number) => {
-                    console.log(`Posted game state version ${this.gameState.version}, got new version: ${newVersion}`);
-                    this.gameState.version = newVersion
-                }, 
-                (err:any) => {
-                    console.error(`Error posting game state: ${err}`);
-                }
-            );
+            this.comms.sendBroadcast(() => { return this.gameState }, (newVersion:number) => {
+                console.log(`Posted game state version ${this.gameState.version}, got new version: ${newVersion}`);
+                this.gameState.version = newVersion
+                this.resizeCanvas();
+            });
         }
-
-        this.resizeCanvas();
     }
 
     /**
@@ -1442,16 +1387,9 @@ class PillarsGame implements IPillarsGame {
      */
     putChat(message:string) {
         this.chat.push(message);
-
+         
         if (!this.isLocalGame) {
-            uapi('chat?gameId=' + this.gameState.id, 'put', message, 
-                (data:any) => {
-                    console.log('Put chat sucessfully');
-                }, 
-                (err:any) => {
-                    console.error(err);
-                }
-            );
+            this.comms.putChat(message, this.gameState.id);   
         }
     }
 
@@ -1553,7 +1491,7 @@ class PillarsGame implements IPillarsGame {
     deleteAnimation(key: string) {
         this.animations.delete(key);
         var self = this;
-        setTimeout(function (e) {
+        setTimeout(function () {
             self.resizeCanvas();
         }, 5);
     }
@@ -1576,7 +1514,7 @@ class PillarsGame implements IPillarsGame {
         if (img) {
             this.images.set(name, <HTMLImageElement>img);
             this.loadedImages.set(name, false);
-            img.addEventListener("load", function (e) {
+            img.addEventListener("load", function () {
                 self.loadedImages.set(name, true);
                 if (name == PillarsImages.IMG_BACK_BLUE) {
                     self.welcomePage.showLoadingAnimation();
@@ -1922,9 +1860,8 @@ class PillarsGame implements IPillarsGame {
     getLoadProgress(): LoadProgress {
         const progress = new LoadProgress();
         progress.numImages = this.images.size;
-        let numLoaded = 0;
         if (this.loadedImages) {
-            for (const [key, value] of this.loadedImages.entries()) {
+            for (const value of this.loadedImages.values()) {
                 if (value === true) {
                     progress.numImagesLoaded++;
                 }
@@ -2088,9 +2025,6 @@ class PillarsGame implements IPillarsGame {
             w = h * PillarsConstants.PROPORTION;
         }
 
-        // Width and height scale
-        const s = 1 / (PillarsConstants.BW / w);
-
         this.gameCanvas.width = w;
         this.gameCanvas.height = h;
         this.gameCanvas.style.top = "10px";
@@ -2114,7 +2048,7 @@ class PillarsGame implements IPillarsGame {
         // Call this every time the browser decides to redraw the screen, 
         // while we are animating something.
         if (this.isAnimating()) {
-            window.requestAnimationFrame(function (e) {
+            window.requestAnimationFrame(function () {
                 self.resizeCanvas.call(self);
             });
         }
@@ -2156,7 +2090,7 @@ class PillarsGame implements IPillarsGame {
     static init() {
         const game = new PillarsGame();
         
-        window.addEventListener('resize', function (e) {
+        window.addEventListener('resize', function () {
             game.resizeCanvas.call(game);
         }, false);
 
