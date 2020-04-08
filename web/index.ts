@@ -65,11 +65,13 @@ export class Index {
             // Set a cookie so we know which player this is later
             Cookies.set(id + '-name', <string>name);
 
-            let msg = `Click here to start playing: <a href=${url}>${url}</a>`;
+            let msg = `Redirecting to: <a href=${url}>${url}</a>`;
             if (!isSolo) {
                 msg += '<br/>(Share this link with other players)';
             }
             d.html(msg);
+            
+            window.location.href = `play.html#${id}`;
         });
 
     }

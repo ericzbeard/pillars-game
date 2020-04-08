@@ -877,8 +877,6 @@ export class ResourceAnimation extends PillarsAnimation {
 
     animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
 
-        console.log(`animate`);
-
         const elapsed = this.getElapsedTime();
         const end = 1000;
         if (elapsed >= end) {

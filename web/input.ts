@@ -364,8 +364,6 @@ export class PillarsInput {
 
         // Clear dragging flags
 
-        console.log(`up clearing all dragging flags`);
-
         this.dragging = false;
         this.draggingKey = '';
         for (let i = 0; i < marray.length; i++) {

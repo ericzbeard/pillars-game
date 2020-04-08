@@ -49,12 +49,8 @@ export class ApiHandler {
      */
     handlePath = async (path: string, verb: string, params?:any, data?: string): Promise<any> => {
 
-        console.log(`handlePath got path ${path}, verb ${verb}`);
-
         if (path.startsWith('/')) {
             path = path.substr(1, path.length - 1);
-
-            console.log(`Stripped / from path: ${path}`);
         }
 
         let parsed = queryString.parseUrl(path);
@@ -63,8 +59,6 @@ export class ApiHandler {
         }
         path = parsed.url;
 
-        console.log(this.endpoints.keys());
-
         // e.g.
         // GET /game?gameId=x
         // PUT /game
@@ -72,13 +66,9 @@ export class ApiHandler {
         // Iterate over endpoints and look for a matching key
         for (const [key, value] of this.endpoints.entries()) {
 
-            console.log(`Testing path ${path} with key ${key}`);
-
             const r = new RegExp(`^${key}\$`);
 
             if (r.test(path)) {
-
-                console.log(`Path ${path} matches`);
 
                 const endpoint = value;
                 if (endpoint) {
@@ -89,11 +79,9 @@ export class ApiHandler {
                         try {
                             const retval = await f.call(endpoint, params, data);
 
-                            console.log(`${path}.${verb} retval: ${retval}`);
-
                             return retval;
                         } catch (apiError) {
-                            console.log(apiError);
+                            console.error(apiError);
                             throw Error(`API call ${path} failed`);
                         }
                     } else {
@@ -117,8 +105,6 @@ export const handler = async (event: APIGatewayEvent): Promise<any> => { // APIG
     try {
 
         const h: ApiHandler = new ApiHandler();
-
-        console.log(`api-handler event ${JSON.stringify(event, null, 0)}`);
 
         const resp = await h.handlePath(event.path, event.httpMethod,
             event.queryStringParameters, event.body || undefined);

@@ -172,6 +172,7 @@ test('Game state serialization works', () => {
     expect(h.startDateTime).toEqual(g.shareURL);
     expect(h.status).toEqual(g.status);
     expect(h.trialStacks.length).toEqual(g.trialStacks.length);
+    expect(h.version).toEqual(g.version);
     // TODO
 
     // TODO - Check everything

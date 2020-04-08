@@ -55,6 +55,9 @@ export class PillarsMenu {
         // Mute
         this.initMuteButton();
         
+        // Invite
+        this.initInviteButton();
+        
         // };
         // this.addMouseable('manubutton', button);
     }
@@ -237,7 +240,6 @@ export class PillarsMenu {
      * Free resources, for testing.
      */
     initMuteButton() {
-        const self = this;
         const button = new Button('Mute', this.game.ctx);
         button.x = PillarsConstants.MENUX + 10;
         button.y = PillarsConstants.MENUY + 120;
@@ -252,5 +254,22 @@ export class PillarsMenu {
 
     }
 
+    /**
+     * Invite other players.
+     */
+    initInviteButton() {
+        const button = new Button('Invite', this.game.ctx);
+        button.x = PillarsConstants.MENUX + PillarsConstants.MENU_BUTTON_W + 20;
+        button.y = PillarsConstants.MENUY + 120;
+        button.w = PillarsConstants.MENU_BUTTON_W;
+        button.h = PillarsConstants.MENU_BUTTON_H;
+        button.zindex = 1;
+        button.onclick = () => {
+            this.game.showModal("Share the URL from your browser's address bar to invite other players.");
+        };
+        this.game.addMouseable(PillarsConstants.MENU_KEY + '_invitebutton', button);
+
+    
+    }
 
 }

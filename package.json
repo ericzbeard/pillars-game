@@ -18,8 +18,8 @@
     "deploy-ezbeard": "cdk deploy -c subdomain=ezbeard"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "^1.31.0",
-    "@aws-cdk/aws-s3-deployment": "^1.31.0",
+    "@aws-cdk/assert": "^1.32.0",
+    "@aws-cdk/aws-s3-deployment": "^1.32.0",
     "@types/aws-lambda": "^8.10.47",
     "@types/aws-sdk": "^2.7.0",
     "@types/howler": "^2.1.2",
@@ -29,7 +29,7 @@
     "@types/node": "^13.11.0",
     "@types/query-string": "^6.3.0",
     "@types/uuid": "^7.0.2",
-    "aws-cdk": "^1.31.0",
+    "aws-cdk": "^1.32.0",
     "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "howler": "^2.1.3",

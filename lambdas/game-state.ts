@@ -98,6 +98,11 @@ export class GameState {
      * Solo game.
      */
     isSolo: boolean;
+    
+    /**
+     * Incremented after each change on the server.
+     */
+    version:number;
 
     // *** If you add new fields here, don't forget SerializedGameState! ***
 
@@ -117,6 +122,7 @@ export class GameState {
         this.pillars = [];
         this.cardMasters = new Map<string, Card>();
         this.isSolo = false;
+        this.version = 0;
     }
 
     // TODO - 1 player game? Play against the clock? Win in x turns?
@@ -411,8 +417,6 @@ export class GameState {
      */
     removeCardFromHand(player:Player, card:Card) {
 
-        console.log(`About to remove ${card.name} from hand. ${card.uniqueIndex}`);
-
         // Remove it from hand
         let indexToRemove = -1;
         for (let i = 0; i < player.hand.length; i++) {
@@ -431,8 +435,6 @@ export class GameState {
      * Remove the card from in play.
      */
     removeCardFromInPlay(player:Player, card:Card) {
-
-        console.log(`About to remove ${card.name} from in play. ${card.uniqueIndex}`);
 
         // Remove it from hand
         let indexToRemove = -1;
@@ -633,6 +635,7 @@ export class GameState {
             gameState.pillars.push(card);
         }
         gameState.isSolo = s.isSolo;
+        gameState.version = s.version;
 
         return gameState;
     }
@@ -760,6 +763,11 @@ export class SerializedGameState {
      * Solo game.
      */
     isSolo: boolean;
+    
+    /**
+     * Incremented after each change on the server.
+     */
+    version: number;
 
     /**
      * Constructor.
@@ -801,6 +809,7 @@ export class SerializedGameState {
             this.pillars.push(new SerializedCard(c));
         }
         this.isSolo = gameState.isSolo;
+        this.version = gameState.version;
     }
 
 }

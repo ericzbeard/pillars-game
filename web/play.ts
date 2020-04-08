@@ -139,6 +139,11 @@ class PillarsGame implements IPillarsGame {
      * The welcome page.
      */
     welcomePage: Welcome;
+    
+    /**
+     * If true we are ending the turn and should ignore broadcasts.
+     */
+    endingTurn: boolean;
 
     /**
      * PillarsGame constructor.
@@ -156,6 +161,7 @@ class PillarsGame implements IPillarsGame {
         this.welcomePage = new Welcome(this);
         this.welcome = true;
         this.chat = [];
+        this.endingTurn = false;
 
         this.playerDiceColors = [];
         this.playerDiceColors[0] = 'orange';
@@ -324,16 +330,13 @@ class PillarsGame implements IPillarsGame {
         setInterval(() => {
             try {
 
-                // Don't bother if the tab isn't active or it's the 
-                // local player's turn.
+                // Don't bother if the tab isn't active or it's a local game
                 if (document.hidden || 
                     !self.gameState || 
                     self.isLocalGame
                     ) {
                     return;
                 }
-
-                // TODO - We miss player join broadcast while it's our turn
 
                 // Get the latest game state from the server
                 uapi('game?id=' + self.gameState.id, 'get', '', 
@@ -377,9 +380,22 @@ class PillarsGame implements IPillarsGame {
      * Apply a game state change from the server.
      */
     applyNewGameState(gs: GameState) {
-
-        console.log(`applyNewGameState currentPlayer: ${gs.currentPlayer.name}, ` + 
-            `itsMyTurn(): ${this.itsMyTurn()}`);
+        
+        if (this.endingTurn) {
+            console.log('Ending turn, ignoring new game state');
+            return;
+        }
+        
+        // Ignore stale game states
+        if (gs.version < this.gameState.version) {
+            console.log(`new game state version ${gs.version} ` + 
+                `less than current version ${this.gameState.version} ???`);    
+            return;
+        }
+        
+        if (gs.version == this.gameState.version) {
+            return;
+        }
 
         // Look for changes that need an animation or alert...
 
@@ -399,20 +415,24 @@ class PillarsGame implements IPillarsGame {
                         // If the player has a name now, it's a join
                         if (newPlayer.index == player.index && newPlayer.name) {
                             this.gameState.players[newPlayer.index] = newPlayer;
+                            if (this.gameState.version < gs.version) {
+                                this.gameState.version = gs.version;
+                            }
                         }
                     }
                 }
             }
         } else {
 
-            // TODO - race!
-
-            const wasMyTurn = this.itsMyTurn();
-
+            const oldGameState = this.gameState;
+            
+            // Apply new game state
             this.gameState = gs;
 
             // Let the local player know it's their turn
-            if (this.itsMyTurn() && !wasMyTurn) {
+            if (this.itsMyTurn()) {
+                
+                // TODO - This is happening when it shouldn't
                 this.showMyTurnModal();
             }
 
@@ -420,6 +440,54 @@ class PillarsGame implements IPillarsGame {
         }
 
         this.resizeCanvas();
+    }
+    
+    /**
+     * End the local player's turn.
+     */
+    endTurn() {
+        
+        this.endingTurn = true;
+        
+        let player = this.gameState.currentPlayer;
+        this.broadcast(`${player.name} ended their turn.`);
+
+        let nextIndex = player.index + 1;
+        if (nextIndex >= this.gameState.players.length) {
+            nextIndex = 0;
+        }
+
+        player = this.gameState.players[nextIndex];
+        this.gameState.currentPlayer = player;
+
+        this.broadcast(`It's ${player.name}'s turn now.`);
+        
+        this.endingTurn = false;
+
+        if (this.isLocalGame) {
+            if (!player.isHuman) {
+                
+                console.log('About to let ai take a turn');
+                
+                const ai = new AI(player, this.gameState, (message:string) => {
+                    this.broadcast.call(this, message);
+                });
+                ai.takeTurn(() => {
+                    this.endTurn.call(this);
+                });
+            } else {
+                
+                if (player.index == this.localPlayer.index) {
+                    
+                    console.log(`endTurn player.index == this.localPlayer.index` + 
+                        `(${player.index} == ${this.localPlayer.index})`);
+                    
+                    this.showMyTurnModal();
+                }
+            }
+        }
+
+        this.initCardAreas();
     }
 
     /**
@@ -553,43 +621,6 @@ class PillarsGame implements IPillarsGame {
      */
     renderCard(m: MouseableCard, isPopup?: boolean, scale?: number): any {
         this.cardRender.renderCard(m, isPopup, scale);
-    }
-
-    /**
-     * Put all cards in play and hand into discard pile. Draw 6.
-     */
-    endTurn() {
-        let player = this.gameState.currentPlayer;
-        this.broadcast(`${player.name} ended their turn.`);
-
-        let nextIndex = player.index + 1;
-        if (nextIndex >= this.gameState.players.length) {
-            nextIndex = 0;
-        }
-
-        console.log(`nextIndex: ${nextIndex}`);
-
-        player = this.gameState.players[nextIndex];
-        this.gameState.currentPlayer = player;
-
-        if (!player.isHuman) {
-            const ai = new AI(player, this.gameState, (message:string) => {
-                this.broadcast.call(this, message);
-            });
-            ai.takeTurn(() => {
-                this.endTurn.call(this);
-            });
-        } else {
-            if (player.index == this.localPlayer.index) {
-                this.showMyTurnModal();
-            }
-        }
-
-        // TODO - race!
-
-        this.broadcast(`It's ${player.name}'s turn now.`);
-
-        this.initCardAreas();
     }
 
     /**
@@ -733,9 +764,6 @@ class PillarsGame implements IPillarsGame {
      */
     displayCardModal(mcard: MouseableCard, actionText?: string, action?: Function) {
         
-        console.log(`mag ${mcard.card.name}, ` + 
-            `canPlay: ${this.gameState.canPlayCard(mcard.card, this.localPlayer)}`);
-
         const card = mcard.card;
 
         const w = 600;
@@ -1329,8 +1357,6 @@ class PillarsGame implements IPillarsGame {
      */
     playCard(mcard: MouseableCard, callback: Function) {
 
-        console.log(`About to play ${mcard.card.name}. ${mcard.card.uniqueIndex}`);
-
         this.playSound(PillarsSounds.PLAY);
         const actions = new CardActions(this, mcard, callback);
 
@@ -1378,7 +1404,6 @@ class PillarsGame implements IPillarsGame {
      * Returns true if it's the local player's turn.
      */
     itsMyTurn(): boolean {
-        console.log(`itsMyTurn local:${this.localPlayer.index} current:${this.gameState.currentPlayer.index}`);
         return this.localPlayer.index == this.gameState.currentPlayer.index;
     }
 
@@ -1386,6 +1411,11 @@ class PillarsGame implements IPillarsGame {
      * Broadcast a change to the game state.
      */
     broadcast(summary: string) {
+        
+        console.log(`broadcast v${this.gameState.version}: ${summary}`);
+        
+        // TODO - Race condition when we broadcast twice quickly, 
+        // before the response comes back. Need to queue them.
 
         this.putChat(summary);
 
@@ -1394,11 +1424,12 @@ class PillarsGame implements IPillarsGame {
             // Send game state to the server and deliver it to other players
             const sgs = JSON.stringify(new SerializedGameState(this.gameState));
             uapi('game', 'post', sgs, 
-                (data:any) => {
-                    console.log('Posted game state');
+                (newVersion:number) => {
+                    console.log(`Posted game state version ${this.gameState.version}, got new version: ${newVersion}`);
+                    this.gameState.version = newVersion
                 }, 
                 (err:any) => {
-                    console.log(`Error posting game state: ${err}`);
+                    console.error(`Error posting game state: ${err}`);
                 }
             );
         }
@@ -1478,8 +1509,6 @@ class PillarsGame implements IPillarsGame {
      * Acquire a card from the marketplace.
      */
     acquireCard(card: Card, key: string, free?:boolean, callback?:Function) {
-
-        console.log(`About to acquire ${card.name}. ${card.uniqueIndex}`);
 
         if (card.subtype == 'Bug') {
             bug(this, card, () => {
@@ -1837,8 +1866,6 @@ class PillarsGame implements IPillarsGame {
      */
     animateTalent(x:number, y:number, n:number) {
 
-        console.log(`animateTalent`);
-
         const img = this.getImg(PillarsImages.IMG_TALENT);
         this.animateResource(x, y, n, img);
     }
@@ -1848,8 +1875,6 @@ class PillarsGame implements IPillarsGame {
      */
     animateCreativity(x:number, y:number, n:number) {
 
-        console.log(`animateCreativity`);
-
         const img = this.getImg(PillarsImages.IMG_CREATIVITY);
         this.animateResource(x, y, n, img);
     }
@@ -1858,8 +1883,6 @@ class PillarsGame implements IPillarsGame {
      * Animate credit addition.
      */
     animateCredits(x:number, y:number, n:number) {
-
-        console.log(`animateCredits`);
 
         const img = this.getImg(PillarsImages.IMG_CREDITS);
         this.animateResource(x, y, n, img);

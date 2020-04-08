@@ -141,8 +141,6 @@ export class Welcome {
 
         const path = 'game?id=' + id;
 
-        console.log(`welcome about to get path ${path}`);
-
         uapi(path, 'get', '', (data:SerializedGameState) => {
             this.game.gameState = GameState.RehydrateGameState(data);
             

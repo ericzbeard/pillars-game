@@ -25,9 +25,11 @@ export class GameEndpoint extends ApiEndpoint {
      */
     async put(params: any, data: string): Promise<SerializedGameState> {
 
-        console.log(`put data: ${data}`);
-
         let s = <SerializedGameState>JSON.parse(data);
+        
+        if (s.id) {
+            throw Error("Game State id should be undefined when creating a new game");
+        }
 
         // Generate a unique ID
         s.id = uuid.v4();
@@ -38,8 +40,6 @@ export class GameEndpoint extends ApiEndpoint {
         };
 
         const result = await this.documentClient.put(item).promise();
-        
-        console.log(`put result: ${JSON.stringify(result, null, 0)}`);
         
         // Return the updated game state
         return s;
@@ -59,8 +59,6 @@ export class GameEndpoint extends ApiEndpoint {
 
         const result = await this.documentClient.get(item).promise();
         
-        console.log(`get result: ${JSON.stringify(result, null, 0)}`);
-
         return <SerializedGameState>result.Item;
     }
 
@@ -74,20 +72,49 @@ export class GameEndpoint extends ApiEndpoint {
      */
     async post(params: any, data: string) { 
 
-        console.log(`post data: ${data}`);
+        let newGameState = <SerializedGameState>JSON.parse(data);
+        
+        console.log(`game.post newGameState.version: ${newGameState.version}`);
 
-        let s = <SerializedGameState>JSON.parse(data);
-
-        const item = {
+        // First get the current game state and check the version
+        const getItem = {
             TableName: <string>process.env.GAME_TABLE,
-            Item: s
+            Key: {
+                'id': newGameState.id
+            }
         };
+        let result = await this.documentClient.get(getItem).promise();
+        
+        let currentGameState = <SerializedGameState>result.Item;
+        let currentVersion = currentGameState.version;
+        
+        console.log(`game.post currentVersion ${currentVersion}`);
+        
+        if (newGameState.version < currentVersion) {
+            // This game state update is stale, ignore it
+            console.log(`game.post got old version ${newGameState.version} ` + 
+                `but stored version is ${currentVersion}`);
+            return currentVersion;
+        }
+        
+        if (newGameState.version > currentVersion) {
+            // This should not be possible, since clients never change the version
+            console.log(`game.post got higher version ${newGameState.version} ` + 
+                `but stored version is ${currentVersion}`);
+            // TODO - 400?
+            return currentVersion;
+        }
+        
+        newGameState.version += 1;
 
-        const result = await this.documentClient.put(item).promise();
+        // Update the game state
+        const postItem = {
+            TableName: <string>process.env.GAME_TABLE,
+            Item: newGameState
+        };
+        result = await this.documentClient.put(postItem).promise();
         
-        console.log(`post result: ${JSON.stringify(result, null, 0)}`);
-        
-        return true;
+        return newGameState.version;
     }
 
 }

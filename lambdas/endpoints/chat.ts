@@ -27,8 +27,6 @@ export class ChatEndpoint extends ApiEndpoint {
      */
     async put(params: any, data: string): Promise<boolean> {
 
-        console.log(`put data: ${data}`);
-
         // Generate a unique ID
         const id = uuid.v4();
         const isoDate = new Date().toISOString();
@@ -43,8 +41,6 @@ export class ChatEndpoint extends ApiEndpoint {
         };
 
         const result = await this.documentClient.put(item).promise();
-
-        console.log(`put result: ${JSON.stringify(result, null, 0)}`);
 
         return true;
     }
@@ -70,8 +66,6 @@ export class ChatEndpoint extends ApiEndpoint {
         };
 
         const result = await this.client.query(q).promise();
-
-        console.log(`get result: ${JSON.stringify(result, null, 0)}`);
 
         const retval = new Array<string>();
 

@@ -5,7 +5,10 @@ require('dotenv').config();
 /**
  * Pillars API Integration Tests.
  * 
- * These tests run after deployment by making web requests to the API.
+ * These tests use the lambda API code to make calls to DDB, but the 
+ * actual REST API is not called. It goes directly from here to the database.
+ * 
+ * TODO - Make a separate test file for API tests that actually make HTTP calls.
  * 
  * You need to create a .env file to run this (See sample-dotenv)
  * 
@@ -37,6 +40,7 @@ test('Put post get game ddb', async () => {
     const gameState3 = GameState.RehydrateGameState(<SerializedGameState>resp);
     expect(gameState3.id).toBeDefined();
     expect(gameState3.name).toEqual(gameState.name);
+    expect(gameState3.version).toEqual(gameState2.version);
 
     resp = await h.handlePath('/game', 'get', {id: gameState2.id}, undefined);
     const gameState4 = GameState.RehydrateGameState(<SerializedGameState>resp);
@@ -45,12 +49,16 @@ test('Put post get game ddb', async () => {
 
     // POST, then GET to make sure it hasn't changed
     const sgs = JSON.stringify(new SerializedGameState(gameState4));
-    resp = await h.handlePath('/game', 'post', null, sgs);
+    let postResp = await h.handlePath('/game', 'post', null, sgs);
     resp = await h.handlePath('/game?id=' + gameState4.id, 'get', null, undefined); 
     const gameState5 = GameState.RehydrateGameState(<SerializedGameState>resp);
     expect(gameState5.id).toBeDefined();
     expect(gameState5.id).toEqual(gameState2.id);
     expect(gameState5.name).toEqual(gameState.name);
+    
+    // Make sure version is incremented as expected
+    expect(postResp).toEqual(gameState5.version);
+    expect(gameState5.version).toBe(gameState4.version + 1);
 
 
 });
