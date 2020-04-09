@@ -62,13 +62,39 @@ export class PillarsApiStack extends cdk.Stack {
             value: chatTable.tableName,
             exportName: 'ChatTableName',
         });
-
-        const envVars = {
+        
+        const envVars:any = {
             "USER_TABLE": userTable.tableName,
             "GAME_TABLE": gameTable.tableName,
             "CHAT_TABLE": chatTable.tableName
         };
+        
+        const grantAccessToTables = (f:lambda.Function) => {
+            gameTable.grantReadWriteData(f);
+            userTable.grantReadWriteData(f);
+            chatTable.grantReadWriteData(f);
+        }
 
+        // Lambda that handles server AI
+        const serverAiLambda = new lambda.Function(this, 'AiLambda', {
+            runtime: lambda.Runtime.NODEJS_12_X,
+            code: lambda.Code.asset('lambdas'),
+            handler: 'server-ai-handler.handler',
+            memorySize: 1536,
+            timeout: cdk.Duration.minutes(10),
+            description: 'Pillars Server AI',
+            environment: envVars
+        });
+        
+        grantAccessToTables(serverAiLambda);
+        
+        const apiEnvVars:any = {
+            "USER_TABLE": userTable.tableName,
+            "GAME_TABLE": gameTable.tableName,
+            "CHAT_TABLE": chatTable.tableName, 
+            "SERVER_AI_LAMBDA": serverAiLambda.functionName
+        };
+            
         // Public REST API Lambda Function
         const apiLambda = new lambda.Function(this, 'ApiLambda', {
             runtime: lambda.Runtime.NODEJS_12_X,
@@ -77,13 +103,11 @@ export class PillarsApiStack extends cdk.Stack {
             memorySize: 1536,
             timeout: cdk.Duration.minutes(1),
             description: 'Pillars API',
-            environment: envVars
+            environment: apiEnvVars
         });
-
-        gameTable.grantReadWriteData(apiLambda);
-        userTable.grantReadWriteData(apiLambda);
-        chatTable.grantReadWriteData(apiLambda);
-
+        
+        grantAccessToTables(apiLambda);
+        
         // API Gateway for the public API (no auth)
         const api = new apigw.LambdaRestApi(this, "PillarsApi", {
             handler: apiLambda,
@@ -106,4 +130,5 @@ export class PillarsApiStack extends cdk.Stack {
         });
 
     }
+    
 }

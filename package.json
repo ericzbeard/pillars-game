@@ -12,6 +12,7 @@
     "watch": "tsc -w",
     "test": "jest --group=unit",
     "integration-test": "jest --group=integration",
+    "api-test": "jest --group=api",
     "cdk": "cdk",
     "clean": "node web/clean-dist.js",
     "synth-ezbeard": "cdk synth -c subdomain=ezbeard",

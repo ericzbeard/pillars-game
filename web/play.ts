@@ -17,7 +17,7 @@ import { PillarsMenu } from './menu';
 import { Comms } from './comms';
 import { Welcome } from './welcome';
 import { LoadProgress, ResourceAnimation } from './ui-utils';
-import { AI } from '../lambdas/ai';
+import { LocalAI } from './local-ai';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -461,27 +461,22 @@ class PillarsGame implements IPillarsGame {
         this.broadcast(`It's ${player.name}'s turn now.`);
         
         this.endingTurn = false;
-
+        
         if (this.isLocalGame) {
             if (!player.isHuman) {
                 
                 console.log('About to let ai take a turn');
                 
-                const ai = new AI(player, this.gameState, (message:string) => {
+                const ai = new LocalAI(player, this.gameState, (message:string) => {
                     this.broadcast.call(this, message);
                 });
                 ai.takeTurn(() => {
                     this.endTurn.call(this);
                 });
-            } else {
-                
-                if (player.index == this.localPlayer.index) {
-                    
-                    console.log(`endTurn player.index == this.localPlayer.index` + 
-                        `(${player.index} == ${this.localPlayer.index})`);
-                    
-                    this.showMyTurnModal();
-                }
+            }
+            
+            if (this.isLocalGame && player.index == this.localPlayer.index) {
+                this.showMyTurnModal();
             }
         }
 

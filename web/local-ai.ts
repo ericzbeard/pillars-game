@@ -1,12 +1,14 @@
-import { GameState } from './game-state';
-import { Player } from './player';
+import { GameState } from '../lambdas/game-state';
+import { Player } from '../lambdas/player';
 
 export type BroadcastFunction = (message:string) => any;
 
 /**
- * AI Player Logic.
+ * AI Player Logic for local games. 
+ * 
+ * Server games are handled by a Lambda.
  */
-export class AI {
+export class LocalAI {
 
     constructor(
         private player:Player, 

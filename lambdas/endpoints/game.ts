@@ -1,17 +1,16 @@
-import * as AWS from 'aws-sdk';
 import { PillarsAPIConfig } from '../pillars-api-config';
 import { ApiEndpoint } from './api-endpoint';
 import * as uuid from 'uuid';
 import { GameState, SerializedGameState } from '../game-state';
-
-AWS.config.update({region:PillarsAPIConfig.Region});
+import { Database } from '../database';
+import { RPC } from '../rpc';
 
 /**
  * REST API functions for the /game path
  */
 export class GameEndpoint extends ApiEndpoint {
 
-    constructor(private documentClient:AWS.DynamoDB.DocumentClient) {
+    constructor(private database:Database, private rpc:RPC) {
         super();
         this.verbs.set('put', this.put);
         this.verbs.set('get', this.get);
@@ -34,12 +33,9 @@ export class GameEndpoint extends ApiEndpoint {
         // Generate a unique ID
         s.id = uuid.v4();
 
-        const item = {
-            TableName: <string>process.env.GAME_TABLE,
-            Item: s
-        };
-
-        const result = await this.documentClient.put(item).promise();
+        await this.database.gameCreate(s);
+        
+        // TODO - Start the server AI
         
         // Return the updated game state
         return s;
@@ -50,16 +46,9 @@ export class GameEndpoint extends ApiEndpoint {
      */
     async get(params: any, data: string): Promise<SerializedGameState> {
         
-        const item = {
-            TableName: <string>process.env.GAME_TABLE,
-            Key: {
-                'id': params.id
-            }
-        };
-
-        const result = await this.documentClient.get(item).promise();
+        console.log('game get ' + params.id);
         
-        return <SerializedGameState>result.Item;
+        return await this.database.gameGet(params.id);
     }
 
     /**
@@ -76,43 +65,44 @@ export class GameEndpoint extends ApiEndpoint {
         
         console.log(`game.post newGameState.version: ${newGameState.version}`);
 
-        // First get the current game state and check the version
-        const getItem = {
-            TableName: <string>process.env.GAME_TABLE,
-            Key: {
-                'id': newGameState.id
-            }
-        };
-        let result = await this.documentClient.get(getItem).promise();
+        let oldGameState = await this.database.gameGet(newGameState.id);
+        let oldVersion = oldGameState.version;
         
-        let currentGameState = <SerializedGameState>result.Item;
-        let currentVersion = currentGameState.version;
+        console.log(`game.post oldVersion ${oldVersion}`);
         
-        console.log(`game.post currentVersion ${currentVersion}`);
-        
-        if (newGameState.version < currentVersion) {
+        if (newGameState.version < oldVersion) {
             // This game state update is stale, ignore it
             console.log(`game.post got old version ${newGameState.version} ` + 
-                `but stored version is ${currentVersion}`);
-            return currentVersion;
+                `but stored version is ${oldVersion}`);
+            return oldVersion;
         }
         
-        if (newGameState.version > currentVersion) {
+        if (newGameState.version > oldVersion) {
             // This should not be possible, since clients never change the version
             console.log(`game.post got higher version ${newGameState.version} ` + 
-                `but stored version is ${currentVersion}`);
+                `but stored version is ${oldVersion}`);
             // TODO - 400?
-            return currentVersion;
+            return oldVersion;
         }
         
         newGameState.version += 1;
 
         // Update the game state
-        const postItem = {
-            TableName: <string>process.env.GAME_TABLE,
-            Item: newGameState
-        };
-        result = await this.documentClient.put(postItem).promise();
+        await this.database.gameUpdate(newGameState);
+        
+        // If it is now the AI player's turn, start the AI handler
+        if (oldGameState.currentPlayer != newGameState.currentPlayer) {
+            
+            if (!newGameState.players[newGameState.currentPlayer].isHuman) {
+                
+                // It's a new player's turn and the player is AI
+                console.log(`game.post new player ${newGameState.currentPlayer} is AI`);
+                
+                this.rpc.aiTurn(newGameState.id);
+            
+            }     
+        
+        }
         
         return newGameState.version;
     }

@@ -1,18 +1,15 @@
-import * as AWS from 'aws-sdk';
 import { PillarsAPIConfig } from '../pillars-api-config';
 import { ApiEndpoint } from './api-endpoint';
 import * as uuid from 'uuid';
 import { GameState, SerializedGameState } from '../game-state';
-
-AWS.config.update({ region: PillarsAPIConfig.Region });
+import { Database } from '../database';
 
 /**
  * REST API functions for the /chat path
  */
 export class ChatEndpoint extends ApiEndpoint {
 
-    constructor(private documentClient: AWS.DynamoDB.DocumentClient,
-        private client: AWS.DynamoDB) {
+    constructor(private database:Database) {
         super();
         this.verbs.set('put', this.put);
         this.verbs.set('get', this.get);
@@ -27,21 +24,8 @@ export class ChatEndpoint extends ApiEndpoint {
      */
     async put(params: any, data: string): Promise<boolean> {
 
-        // Generate a unique ID
-        const id = uuid.v4();
-        const isoDate = new Date().toISOString();
-
-        const item = {
-            TableName: <string>process.env.CHAT_TABLE,
-            Item: {
-                id: params.gameId,
-                time_id: `${isoDate}_${uuid.v4()}`,
-                message: data
-            }
-        };
-
-        const result = await this.documentClient.put(item).promise();
-
+        await this.database.chatAdd(params.gameId, data);
+        
         return true;
     }
 
@@ -52,40 +36,9 @@ export class ChatEndpoint extends ApiEndpoint {
      */
     async get(params: any, data: string): Promise<Array<string>> {
 
-        const q: AWS.DynamoDB.QueryInput = {
-            ExpressionAttributeValues: {
-                ":gid": {
-                    S: params.gameId
-                }
-            },
-            KeyConditionExpression: "id = :gid",
-            ProjectionExpression: "message",
-            TableName: <string>process.env.CHAT_TABLE,
-            Limit: 20,
-            ScanIndexForward: false
-        };
-
-        const result = await this.client.query(q).promise();
-
-        const retval = new Array<string>();
-
-        if (result.Items) {
-            for (const m of result.Items) {
-                retval.unshift(<string>m.message.S);
-            }
-        }
-
-        return retval;
+        return await this.database.chatGet(params.gameId);
+        
     }
 
-    /**
-     * 
-     */
-    async del(params: any, data: string) { }
-
-    /**
-     * 
-     */
-    async post(params: any, data: string) { }
 
 }
