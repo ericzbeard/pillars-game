@@ -3,16 +3,20 @@ import { Card } from '../../lambdas/card';
 import { Player } from '../../lambdas/player';
 import { PillarsConstants } from '../constants';
 import { CanvasUtil } from '../canvas-util';
+import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * Competitive Research.
  * 
  * Acquire a random card from an opponent's hand.
  */
-export const competitiveResearch = (game: IPillarsGame, 
-                                    mcard: MouseableCard, 
-                                    callback: Function) => {
+export const competitiveResearch = (g:IGame, 
+    m: ICardContainer, 
+    callback:Function) => {
 
+    const game = <IPillarsGame>g;
+    const mcard = <MouseableCard>m;
+    
     // Show a modal that allows the player to select an opponent.
     // Show how many cards are in that opponent's hand
 

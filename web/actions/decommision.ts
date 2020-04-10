@@ -1,16 +1,21 @@
-import { IPillarsGame, Modal, MouseableCard, PillarsSounds } from '../ui-utils';
+import { IPillarsGame, Modal, MouseableCard } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { PillarsConstants } from '../constants';
-import { retireCardFromHand } from './retire';
+import { PillarsSounds } from '../../lambdas/sounds';
+import { StandardActions } from '../standard-actions';
+import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * Decommision.
  * 
  * Retire 1 or Retire this and add one credit.
  */
-export const decommision = (game:IPillarsGame, 
-                            mcard: MouseableCard, 
+export const decommision = (g:IGame, 
+                            m: ICardContainer, 
                             callback:Function) => {
+
+    const game = <IPillarsGame>g;
+    const mcard = <MouseableCard>m;
 
     const modal = game.showModal(
         "Choose whether to retire a card from hand or " + 
@@ -27,7 +32,8 @@ export const decommision = (game:IPillarsGame,
 
     choice1.onclick = () => {
         game.closeModal();
-        retireCardFromHand(game, mcard, callback);
+        const sa = new StandardActions();
+        sa.retireCardFromHand(game, mcard, callback);
     };
 
     choice1.render = () => {

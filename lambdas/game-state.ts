@@ -451,6 +451,23 @@ export class GameState {
     }
 
     /**
+     * Remove a card from the market.
+     */
+    removeCardFromMarket(card:Card) {
+        let indexToRemove = -1;
+        for (let i = 0; i < this.currentMarket.length; i++) {
+            if (this.currentMarket[i].uniqueIndex == card.uniqueIndex) {
+                indexToRemove = i;
+            }
+        }
+        if (indexToRemove > -1) {
+            this.currentMarket.splice(indexToRemove, 1);
+        } else {
+            throw Error('Unable to remove card from current market');
+        }
+    }
+
+    /**
      * Promote or demote the current player.
      */
     promote(pillarIndex: number, isDemote: boolean) {

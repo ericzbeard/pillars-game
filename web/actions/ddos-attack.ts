@@ -1,16 +1,20 @@
 import { IPillarsGame, Mouseable, MouseableCard, Button } from '../ui-utils';
 import { PillarsConstants } from '../constants';
+import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * DDoS Attack.
  * 
  * You may retire a card you played this turn.
  */
-export const ddosAttack = (game: IPillarsGame, 
-    mcard: MouseableCard, 
-    callback: Function, 
+export const ddosAttack = (g:IGame, 
+    m: ICardContainer, 
+    callback:Function, 
     winner?: boolean) => {
 
+    const game = <IPillarsGame>g;
+    const mcard = <MouseableCard>m;
+    
     if (!winner) {
         if (callback) callback();
         return;

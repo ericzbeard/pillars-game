@@ -1,7 +1,7 @@
 import { Card } from '../lambdas/card';
 import { CanvasUtil } from './canvas-util';
 import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
-import { PillarsImages, PillarsAnimation, PillarsSounds } from './ui-utils';
+import { PillarsImages, PillarsAnimation } from './ui-utils';
 import { PillarDieAnimation, TextUtil } from './ui-utils';
 import { PillarsConstants } from './constants';
 

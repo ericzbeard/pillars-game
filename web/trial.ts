@@ -1,8 +1,10 @@
 import { MouseableCard, IPillarsGame, Button, DieRollAnimation, Mouseable } from './ui-utils';
-import { PillarsSounds } from './ui-utils';
+import { PillarsSounds } from '../lambdas/sounds';
 import { PillarsConstants } from './constants';
-import { CardActions } from './card-actions';  
+import { CardActions } from '../lambdas/card-actions';  
 import { ThrottledBandwidth } from './actions/throttled-bandwidth';
+import { CustomActions } from './custom-actions';
+import { StandardActions } from './standard-actions';
 
 export class Trial {
 
@@ -120,7 +122,10 @@ export class Trial {
                     modal.text = `You rolled ${roll}. Your total is ${total}. ${sf}!`;
                     button.text = 'Ok';
                     button.onclick = () => {
-                        const actions = new CardActions(this.game, m, (drawNum?:number) => {
+                        const actions = new CardActions(this.game, 
+                            new CustomActions(), new StandardActions());
+                        game.closeModal();
+                        actions.endTrial(winner, m, (drawNum?:number) => {
                             const shuffled = game.gameState.endTrial(stack, winner, drawNum);
                             if (shuffled) {
                                 game.playSound(PillarsSounds.SHUFFLE);
@@ -128,7 +133,6 @@ export class Trial {
                             game.closeModal();
                             game.endTurn();
                         });
-                        actions.endTrial(winner);
                     }
                 }, 990);
             };

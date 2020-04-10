@@ -3,6 +3,7 @@ import { GameState } from '../lambdas/game-state';
 import { Player } from '../lambdas/player';
 import { CanvasUtil } from './canvas-util';
 import { PillarsConstants } from './constants';
+import { ICardContainer, IGame } from '../lambdas/card-actions';
 
 export class TextUtil {
 
@@ -264,7 +265,7 @@ export class Mouseable {
 /**
  * A card.
  */
-export class MouseableCard extends Mouseable {
+export class MouseableCard extends Mouseable implements ICardContainer {
 
     card: Card;
 
@@ -374,7 +375,7 @@ export class FrameRate {
 /**
  * Function exports got the main class so other classes can make callbacks.
  */
-export interface IPillarsGame {
+export interface IPillarsGame extends IGame {
 
     /**
      * The canvas context.
@@ -611,22 +612,22 @@ export interface IPillarsGame {
     /**
      * Animate talent addition.
      */
-    animateTalent(x:number, y:number, n:number):any;
+    animateTalent(mcard:MouseableCard, n:number):any;
 
     /**
      * Animate creativity addition.
      */
-    animateCreativity(x:number, y:number, n:number):any;
+    animateCreativity(mcard:MouseableCard, n:number):any;
 
     /**
      * Animate credit addition.
      */
-    animateCredits(x:number, y:number, n:number):any;
+    animateCredits(mcard:MouseableCard, n:number):any;
 
     /**
      * Animate customer addition.
      */
-    animateCustomer(x:number, y:number, n:number):any;
+    animateCustomer(mcard:MouseableCard, n:number):any;
 
     /**
      * Returns true if the image load event has fired.
@@ -823,28 +824,6 @@ export class Modal {
  */
 export type ModalCardClick = (cardToDiscard:MouseableCard) => any;
 
-/**
- * Sound file names.
- */
-export class PillarsSounds {
-    constructor() {}
-
-    static readonly FAIL = 'gameover.wav';
-    static readonly SUCCESS = 'jingle.wav';
-    static readonly CLOSE = 'hint.wav';
-    static readonly SWOOSH = 'swoosh.wav';
-    static readonly CLICK = 'menuselect.wav';
-    static readonly PROMOTE = 'promote.wav';
-    static readonly DICE = 'dice.wav';
-    static readonly DISCARD = 'discard.wav';
-    static readonly PLAY = 'play.wav';
-    static readonly SHUFFLE = 'shuffle.wav';
-    static readonly DING = 'ding.wav';
-    static readonly CUSTOMER = 'customer.wav';
-    static readonly TURN = 'turn.wav';
-    static readonly LEVELUP = 'levelup.wav';
-
-}
 
 /**
  * Progress of loading resources like images.

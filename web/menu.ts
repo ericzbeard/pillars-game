@@ -1,6 +1,6 @@
 import { MouseableCard, IPillarsGame } from './ui-utils';
 import { Button } from './ui-utils';
-import { PillarsSounds } from './ui-utils';
+import { PillarsSounds } from '../lambdas/sounds';
 import { PillarsConstants } from './constants';
 import { Trial } from './trial';
 

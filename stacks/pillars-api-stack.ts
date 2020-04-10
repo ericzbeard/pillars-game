@@ -107,6 +107,8 @@ export class PillarsApiStack extends cdk.Stack {
         });
         
         grantAccessToTables(apiLambda);
+
+        serverAiLambda.grantInvoke(apiLambda);
         
         // API Gateway for the public API (no auth)
         const api = new apigw.LambdaRestApi(this, "PillarsApi", {

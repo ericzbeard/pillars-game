@@ -98,7 +98,7 @@ export class GameEndpoint extends ApiEndpoint {
                 // It's a new player's turn and the player is AI
                 console.log(`game.post new player ${newGameState.currentPlayer} is AI`);
                 
-                this.rpc.aiTurn(newGameState.id);
+                await this.rpc.aiTurn(newGameState.id);
             
             }     
         

@@ -1,6 +1,7 @@
-import { IPillarsGame, PillarsSounds, MouseableCard } from '../ui-utils';
+import { IPillarsGame, MouseableCard } from '../ui-utils';
 import { PillarsConstants } from '../constants';
-import { promote } from './promote';
+import { StandardActions } from '../standard-actions';
+import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * Employees Poached
@@ -8,11 +9,14 @@ import { promote } from './promote';
  * Success: Acquire a resource card from the market for free
  * Fail: Demote twice
  */
-export const employeesPoached = (game: IPillarsGame, 
-    mcard: MouseableCard, 
-    callback: Function, 
+export const employeesPoached = (g:IGame, 
+    m: ICardContainer, 
+    callback:Function, 
     winner?: boolean) => {
 
+    const game = <IPillarsGame>g;
+    const mcard = <MouseableCard>m;
+    
     if (winner) {
         const modal = game.showModal('Acquire a resource card from the market for free');
         modal.hideCloseButton();
@@ -53,9 +57,11 @@ export const employeesPoached = (game: IPillarsGame,
 
     } else {
 
+        const sa = new StandardActions();
+
         // Demote twice
-        promote(game, () => {
-            promote(game, callback, true);
+        sa.promote(game, () => {
+            sa.promote(game, callback, true);
         }, true);
     }
 }

@@ -2,14 +2,20 @@ import { IPillarsGame, Mouseable, MouseableCard, PillarsImages } from '../ui-uti
 import { Card } from '../../lambdas/card';
 import { PillarsConstants } from '../constants';
 import { CardRender } from '../card-render';
+import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * Look at the top card of any trial stack. 
  * You may put it on the bottom of that stack face up.
  */
-export const predictiveAutoscaling = (game: IPillarsGame, 
-                                      mcard: MouseableCard, 
-                                      callback: Function) => {
+export const predictiveAutoscaling = (
+    g:IGame, 
+    m: ICardContainer, 
+    callback:Function) => {
+
+    const game = <IPillarsGame>g;
+    const mcard = <MouseableCard>m;
+
 
     const modal = game.showModal(
         "Look at the top card of any trial stack. " +

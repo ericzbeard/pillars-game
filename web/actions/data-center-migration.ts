@@ -1,16 +1,20 @@
-import { IPillarsGame, PillarsSounds, MouseableCard } from '../ui-utils';
-import { PillarsConstants } from '../constants';
+import { IPillarsGame, MouseableCard } from '../ui-utils';
+import { PillarsSounds } from '../../lambdas/sounds';
+import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * Data Center Migration
  * 
  * Success: Promote your lowest pillars
  */
-export const dataCenterMigration = (game: IPillarsGame, 
-    mcard: MouseableCard, 
-    callback: Function, 
+export const dataCenterMigration = (g:IGame, 
+    m: ICardContainer, 
+    callback:Function, 
     winner?: boolean) => {
 
+    const game = <IPillarsGame>g;
+    const mcard = <MouseableCard>m;
+    
     if (!winner) {
         callback?.();
         return;

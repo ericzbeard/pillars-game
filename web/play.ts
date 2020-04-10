@@ -6,8 +6,8 @@ import { Howl } from 'howler';
 import { MouseableCard, Mouseable, IPillarsGame, Xywh } from './ui-utils';
 import { PillarsImages, PillarsAnimation, Modal } from './ui-utils';
 import { PillarDieAnimation, FrameRate, Button } from './ui-utils';
-import { ModalCardClick, PillarsSounds } from './ui-utils';
-import { CardActions } from './card-actions';
+import { ModalCardClick } from './ui-utils';
+import { CardActions } from '../lambdas/card-actions';
 import { PillarsConstants } from './constants';
 import { CardRender } from './card-render';
 import { bug } from './actions/bug';
@@ -18,6 +18,9 @@ import { Comms } from './comms';
 import { Welcome } from './welcome';
 import { LoadProgress, ResourceAnimation } from './ui-utils';
 import { LocalAI } from './local-ai';
+import { CustomActions } from './custom-actions';
+import { StandardActions } from './standard-actions';
+import { PillarsSounds } from '../lambdas/sounds';
 
 /**
  * Pillars game  Initialized from index.html.
@@ -1310,7 +1313,7 @@ class PillarsGame implements IPillarsGame {
     playCard(mcard: MouseableCard, callback: Function) {
 
         this.playSound(PillarsSounds.PLAY);
-        const actions = new CardActions(this, mcard, callback);
+        const actions = new CardActions(this, new CustomActions(), new StandardActions());
 
         // TODO - When we open a dialog, the player can choose to close it
         // without taking an action, but this means we can't let them
@@ -1318,7 +1321,7 @@ class PillarsGame implements IPillarsGame {
         // In the real game, you do the main action first, like drawing a card
         // or gaining resources.
 
-        actions.play();
+        actions.play(mcard, callback);
     }
 
     /**
@@ -1414,17 +1417,7 @@ class PillarsGame implements IPillarsGame {
 
         this.removeMouseableKeys(key);
 
-        let indexToRemove = -1;
-        for (let i = 0; i < this.gameState.currentMarket.length; i++) {
-            if (this.gameState.currentMarket[i].uniqueIndex == card.uniqueIndex) {
-                indexToRemove = i;
-            }
-        }
-        if (indexToRemove > -1) {
-            this.gameState.currentMarket.splice(indexToRemove, 1);
-        } else {
-            throw Error('Unable to remove card from current market');
-        }
+        this.gameState.removeCardFromMarket(card);
 
         if (!free) {
             // Subtract the cost from the player's current resources
@@ -1783,7 +1776,10 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate resource additions.
      */
-    animateResource(x:number, y:number, n:number, img:HTMLImageElement) {
+    animateResource(mcard:MouseableCard, n:number, img:HTMLImageElement) {
+        
+        const x = mcard.x;
+        const y = mcard.y;
 
         const anim = new ResourceAnimation(x, y, img);
 
@@ -1797,36 +1793,37 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate talent addition.
      */
-    animateTalent(x:number, y:number, n:number) {
+    animateTalent(mcard:MouseableCard, n:number) {
 
         const img = this.getImg(PillarsImages.IMG_TALENT);
-        this.animateResource(x, y, n, img);
+        this.animateResource(mcard, n, img);
     }
 
     /**
      * Animate creativity addition.
      */
-    animateCreativity(x:number, y:number, n:number) {
+    animateCreativity(mcard:MouseableCard, n:number) {
 
         const img = this.getImg(PillarsImages.IMG_CREATIVITY);
-        this.animateResource(x, y, n, img);
+        this.animateResource(mcard, n, img);
     }
 
     /**
      * Animate credit addition.
      */
-    animateCredits(x:number, y:number, n:number) {
+    animateCredits(mcard:MouseableCard, n:number) {
 
         const img = this.getImg(PillarsImages.IMG_CREDITS);
-        this.animateResource(x, y, n, img);
+        this.animateResource(mcard, n, img);
     }
 
     /**
      * Animate customer addition.
      */
-    animateCustomer(x:number, y:number, n:number) {
+    animateCustomer(mcard:MouseableCard, n:number) {
+
         const img = this.getPlayerCustomerImage(this.gameState.currentPlayer.index);
-        this.animateResource(x, y, n, img);
+        this.animateResource(mcard, n, img);
     }
 
     /**
