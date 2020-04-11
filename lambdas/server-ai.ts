@@ -53,6 +53,8 @@ export class ServerAi {
 
     /**
      * Take a single turn for the current AI player.
+     * 
+     * Returns false if the game is over.
      */
     async takeTurn() {
         // See whose turn it is, make sure it's AI
@@ -61,7 +63,7 @@ export class ServerAi {
             throw Error('Current player is human!');
         }
 
-        await this.game.chat(`${greeting()}`);
+        await this.game.chat(`[${player.name}] ${greeting()}`);
 
         await sleep(2000);
 
@@ -109,6 +111,8 @@ export class ServerAi {
                     await this.game.broadcast(`${player.name} put ${card.name} ` + 
                         `into ${chosenPlayer.name}'s discard pile!`);
 
+                    await this.game.chat(`[${player.name}] Ha ha! Hope you enjoy that bug`);
+                    
                     afterAcquireCard(card, free);
 
                     this.game.playSound(PillarsSounds.FAIL);
@@ -126,9 +130,52 @@ export class ServerAi {
         }
 
         // Face a trial
-        // TODO
+        const phase = player.getCurrentTrialPhase();
+        const stack = this.game.gameState.trialStacks[phase - 1];
+        this.game.gameState.checkTrialStack(stack);
+        const card = stack.notused[0];
+        await this.game.broadcast(`${player.name} is facing a trial: ${card.name}`);
+        await sleep(2000);
+        const add = card.add ? player.pillarRanks[card.pillarIndex || 0] : 0;
+        let numCreativity = player.numCreativity + add;
+        const roll0 = Math.floor(Math.random() * 6) + 1;
+        const roll1 = Math.floor(Math.random() * 6) + 1;
+        const roll = roll0 + roll1;
+        const total = roll + numCreativity;
+        await this.game.playSound(PillarsSounds.DICE);
+
+        const winner = total >= card.trial;
+        const wonlost = winner ? 'won' : 'lost';
+        this.game.broadcast(`${player.name} rolled ${roll} (+${numCreativity} ` + 
+            `Creativity) and ${wonlost} the trial!`);
+
+        if (winner) {
+            this.game.playSound(PillarsSounds.SUCCESS);
+            await this.game.chat(`[${player.name}] Yessssss. Evil wins again.`);
+        } else {
+            this.game.playSound(PillarsSounds.FAIL);
+            await this.game.chat(`[${player.name}] Not fair!. These dice are rigged.`);
+        }
+
+        const p = new Promise((resolve, reject) => {
+                
+            console.log(`server-ai ending trial`);
+
+            this.actions.endTrial(winner, { card: card }, async (drawNum?:number) => {
+                const shuffled = this.game.gameState.endTrial(stack, winner, drawNum);
+                if (shuffled) {
+                    await this.game.playSound(PillarsSounds.SHUFFLE);
+                }
+                const keepPlaying = await this.game.endTurn();
+
+                console.log(`resolve ${keepPlaying}`);
+
+                resolve(keepPlaying);
+            });
+
+        });
 
         // End the turn
-        await this.game.endTurn();
+        return await p;
     }
 }

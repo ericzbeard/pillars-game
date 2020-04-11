@@ -83,8 +83,10 @@ export interface IGame {
 
     /**
      * End the turn.
+     * 
+     * Returns false if the game is over.
      */
-    endTurn(): Promise<any>;
+    endTurn(): Promise<boolean>;
 }
 
 

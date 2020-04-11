@@ -228,9 +228,11 @@ export class PillarsMenu {
         button.h = PillarsConstants.MENU_BUTTON_H * 2;
         button.zindex = 1;
         button.onclick = () => {
-            this.game.closeModal();
-            const t = new Trial(this.game);
-            t.show();
+            if (this.game.itsMyTurn()) {
+                this.game.closeModal();
+                const t = new Trial(this.game);
+                t.show();
+            }
         };
         this.game.addMouseable(PillarsConstants.MENU_KEY + '_trialbutton', button);
     }

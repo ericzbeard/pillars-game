@@ -61,9 +61,8 @@ npm run deploy-{env}
 - Finish card actions
 - Safari/iOS drag and drop
 - Drag bugs
-- Highlight locked dice
 - If no markets cards purchased, give option to shuffle
 - Animate card to player during other turns
-- Turn switch race condition
+- Retire bugs from hand
 
 

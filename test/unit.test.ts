@@ -205,5 +205,38 @@ test('Q works', async () => {
     await q.add(fast);
 });
 
+test('Maxed', () => {
+
+    const g = new GameState();
+    g.initializeCards();
+    g.pillarMax = 6;
+
+    // Create players (1 human and 3 AI)
+    const human = new Player();
+    human.isHuman = true;
+    human.name = "Human";
+    human.index = 0;
+
+    g.players.push(human);
+
+    for (let i = 0; i < 3; i++) {
+        const ai = new Player();
+        ai.isHuman = false;
+        ai.name = GameState.AI_NAMES[i];
+        ai.index = (i + 1);
+        g.players.push(ai);
+    }
+
+    expect(g.isMaxed()).toBeFalsy();
+
+    for (const player of g.players) {
+        for (let i = 0; i < player.pillarRanks.length; i++) {
+            player.pillarRanks[i] = g.pillarMax;
+        }
+    }
+
+    expect(g.isMaxed()).toBeTruthy();
+});
+
 
 // See integration.test.ts where we actually test the running API post-deployment.

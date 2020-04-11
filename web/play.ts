@@ -445,6 +445,8 @@ class PillarsGame implements IPillarsGame {
     
     /**
      * End the local player's turn.
+     * 
+     * Returns false if the game is over.
      */
     async endTurn() {
         
@@ -453,13 +455,13 @@ class PillarsGame implements IPillarsGame {
         let player = this.gameState.currentPlayer;
         this.broadcast(`${player.name} ended their turn.`);
 
-        let nextIndex = player.index + 1;
-        if (nextIndex >= this.gameState.players.length) {
-            nextIndex = 0;
+        if (!this.gameState.nextPlayer()) {
+            // Game over!
+            console.log('play.endTurn game over');
+            return false;
         }
 
-        player = this.gameState.players[nextIndex];
-        this.gameState.currentPlayer = player;
+        player = this.gameState.currentPlayer;
 
         this.broadcast(`It's ${player.name}'s turn now.`);
         
@@ -471,7 +473,13 @@ class PillarsGame implements IPillarsGame {
                 console.log('About to let ai take a turn');
                 
                 const ai = new ServerAi(this);
-                await ai.takeTurn();
+                const keepPlaying = await ai.takeTurn();
+                if (!keepPlaying) {
+                    console.log('play.endTurn game over after ai turn');
+                    return false;
+                }
+
+                this.initCardAreas();
             }
             
             if (this.isLocalGame && player.index == this.localPlayer.index) {
@@ -480,6 +488,10 @@ class PillarsGame implements IPillarsGame {
         }
 
         this.initCardAreas();
+
+        console.log('play.endTurn game continues');
+
+        return true;
     }
 
     /**
@@ -926,6 +938,19 @@ class PillarsGame implements IPillarsGame {
      */
     initPillars() {
         this.removeMouseableKeys(PillarsConstants.PILLAR_START_KEY);
+
+        const max = new Mouseable();
+        const cw = PillarsConstants.PILLAR_SCALE * PillarsConstants.CARD_WIDTH;
+        const halfx = cw / 2;
+        max.x = PillarsConstants.PILLARX + halfx;
+        max.y = PillarsConstants.PILLARY - 10;
+        max.render = () => {
+            this.ctx.fillStyle = PillarsConstants.COLOR_WHITEISH;
+            this.ctx.font = this.getFont(14);
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('MAX: ' + this.gameState.pillarMax, max.x, max.y);
+        };
+        this.addMouseable(PillarsConstants.PILLAR_START_KEY, max);
 
         for (let i = 0; i < this.gameState.pillars.length; i++) {
             const m = new MouseableCard(this.gameState.pillars[i]);

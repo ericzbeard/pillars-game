@@ -33,7 +33,7 @@ export class ServerGame implements IGame {
 
     async chat(msg: string) {
         const player = this.gameState.currentPlayer;
-        await this.database.chatAdd(this.gameState.id, `[${player.name}] ${msg}`);
+        await this.database.chatAdd(this.gameState.id, msg);
     }
 
     // We'll need websockets to send the below signals out while
@@ -82,14 +82,17 @@ export class ServerGame implements IGame {
 
         await this.broadcast(`${player.name} ended their turn.`);
 
-        let nextIndex = player.index + 1;
-        if (nextIndex >= this.gameState.players.length) {
-            nextIndex = 0;
+        if (!this.gameState.nextPlayer()) {
+            // Game over!
+            // TODO
+            return false;
         }
 
-        const nextPlayer = this.gameState.players[nextIndex];
-        this.gameState.currentPlayer = nextPlayer;
+        const nextPlayer = this.gameState.currentPlayer;
+
         await this.broadcast(`It's ${nextPlayer.name}'s turn now.`);
+
+        return true;
     }
 }
 
@@ -198,6 +201,7 @@ export class StandardServerActions implements IStandardActions {
             await this.broadcastPromotion(game, player, pillarToPromote, isDemote, didSomething);
         }
 
+        callback?.();
     }
 }
 

@@ -254,6 +254,8 @@ export class CardRender {
      */
     renderDie(x: number, y: number, playerIndex: number, rank: number,
         scale: number, a?: PillarsAnimation) {
+        
+        const pillarMax = this.game.gameState.pillarMax;
         const img = this.game.getImg(this.game.getDieName(playerIndex, rank));
 
         let w = img.width * scale;
@@ -270,6 +272,7 @@ export class CardRender {
             this.ctx.drawImage(img, x, y, w, h);
         }
 
+
         if (a) {
             let pct = a.percentComplete;
             let ax = x - (pct * 5);
@@ -278,6 +281,17 @@ export class CardRender {
             h = h + (pct * 10);
             this.ctx.strokeStyle = 'white';
             CanvasUtil.roundRect(this.ctx, ax, ay, w, h, 5, false, true);
+
+            // TODO - Lock animation
+
+        } else {
+            if (rank == pillarMax) {
+                // This die is locked and can't change
+                this.ctx.strokeStyle = 'gray';
+                this.ctx.lineWidth = 2;
+                CanvasUtil.roundRect(this.ctx, x - 1, y - 1, w + 2, h + 2, 5, false, true);
+                this.ctx.lineWidth = 1;
+            }
         }
     }
 

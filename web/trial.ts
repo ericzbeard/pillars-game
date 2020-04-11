@@ -5,9 +5,9 @@ import { CardActions } from '../lambdas/card-actions';
 import { ThrottledBandwidth } from './actions/throttled-bandwidth';
 import { CustomActions } from './custom-actions';
 import { StandardActions } from './standard-actions';
+import { gameOver } from './game-over';
 
 export class Trial {
-
 
     /**
      * 
@@ -24,7 +24,6 @@ export class Trial {
         const player = this.game.localPlayer;
         const ctx = this.game.ctx;
         const game = this.game;
-
 
         // We only need to show a single card, the trial being faced
         const phase = this.game.localPlayer.getCurrentTrialPhase();
@@ -125,13 +124,15 @@ export class Trial {
                         const actions = new CardActions(this.game, 
                             new CustomActions(), new StandardActions());
                         game.closeModal();
-                        actions.endTrial(winner, m, (drawNum?:number) => {
+                        actions.endTrial(winner, m, async (drawNum?:number) => {
                             const shuffled = game.gameState.endTrial(stack, winner, drawNum);
                             if (shuffled) {
                                 game.playSound(PillarsSounds.SHUFFLE);
                             }
                             game.closeModal();
-                            game.endTurn();
+                            if (!(await game.endTurn())) {
+                                gameOver(game);
+                            }
                         });
                     }
                 }, 990);

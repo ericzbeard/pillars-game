@@ -528,6 +528,57 @@ export class GameState {
     }
 
     /**
+     * Returns true if pillars are maxed and the game should end when this
+     * round is over.
+     * 
+     * Only one die needs to be maxed on each pillar, regardless of whose it is.
+     */
+    isMaxed() {
+        const maxed = [false, false, false, false, false];
+
+        for (const player of this.players) {
+            for (let i = 0; i < player.pillarRanks.length; i++) {
+                if (player.pillarRanks[i] == this.pillarMax) {
+                    maxed[i] = true;
+                }
+            }
+        }
+
+        let allMaxed = true;
+        for (const m of maxed) {
+            if (!m) allMaxed = false;
+        }
+
+        return allMaxed;
+    }
+
+    /**
+     * Move to the next player.
+     * 
+     * If the game is over, return false.
+     */
+    nextPlayer(): boolean {
+
+        let gameOver = false;
+
+        const player = this.currentPlayer;
+
+        let nextIndex = player.index + 1;
+        if (nextIndex >= this.players.length) {
+            if (this.isMaxed()) {
+                gameOver = true;
+            }
+            nextIndex = 0;
+        }
+        const newPlayer = this.players[nextIndex];
+        this.currentPlayer = newPlayer;
+
+        console.log(`gameState.nextPlayer ${this.currentPlayer.name}, returning ${!gameOver}`);
+
+        return !gameOver;
+    }
+
+    /**
      * Create a real player object.
      */
     public static RehydratePlayer(s: SerializedPlayer, 
