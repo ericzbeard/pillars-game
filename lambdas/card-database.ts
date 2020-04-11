@@ -698,7 +698,7 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Code Pipeline",
+            name: "AWS Code Pipeline",
             type: "Resource",
             subtype: "Cloud",
             cost: "$$T",
@@ -709,7 +709,9 @@ export const cardDatabase = {
             pillarNumeral: 'I', 
             provides: {
                 "CreditByPillar": 0
-            }
+            }, 
+            info: "AWS CodePipeline is a fully managed continuous delivery service that helps you automate your release pipelines for fast and reliable application and infrastructure updates. CodePipeline automates the build, test, and deploy phases of your release process every time there is a code change, based on the release model you define.",
+            href: "https://aws.amazon.com/codepipeline/"
         },
         {
             name: "Access Control List",
@@ -740,7 +742,8 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Elasticache",
+            name: "Amazon Elasticache",
+            marketing: "Fully managed in-memory data store",
             type: "Resource",
             subtype: "Cloud",
             cost: "$$T",
@@ -751,10 +754,13 @@ export const cardDatabase = {
             pillarNumeral: 'IV', 
             provides: {
                 "CreditByPillar": 3
-            }
+            }, 
+            href: "https://aws.amazon.com/elasticache/", 
+            info: "Amazon ElastiCache allows you to seamlessly set up, run, and scale popular open-Source compatible in-memory data stores in the cloud. Build data-intensive apps or boost the performance of your existing databases by retrieving data from high throughput and low latency in-memory data stores. Amazon ElastiCache is a popular choice for real-time use cases like Caching, Session Stores, Gaming, Geospatial Services, Real-Time Analytics, and Queuing."
         },
         {
-            name: "Trusted Advisor",
+            name: "AWS Trusted Advisor",
+            marketing: "Reduce Costs, Increase Performance, Improve Security",
             type: "Resource",
             subtype: "Cloud",
             cost: "$$T",
@@ -765,7 +771,9 @@ export const cardDatabase = {
             pillarNumeral: 'V', 
             provides: {
                 "CreditByPillar": 4
-            }
+            }, 
+            href: "https://aws.amazon.com/premiumsupport/technology/trusted-advisor/", 
+            info: "AWS Trusted Advisor is an online tool that provides you real time guidance to help you provision your resources following AWS best practices. Whether establishing new workflows, developing applications, or as part of ongoing improvement, take advantage of the recommendations provided by Trusted Advisor on a regular basis to help keep your solutions provisioned optimally."
         },
         {
             name: "Ops Manager",
@@ -833,7 +841,8 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Fargate",
+            name: "AWS Fargate",
+            marketing: "Serverless compute for containers",
             type: "Resource",
             subtype: "Cloud",
             cost: "$TT",
@@ -844,10 +853,13 @@ export const cardDatabase = {
             pillarNumeral: 'I', 
             provides: {
                 "CreativityByPillar": 0
-            }
+            }, 
+            info: "AWS Fargate is a serverless compute engine for containers that works with both Amazon Elastic Container Service (ECS) and Amazon Elastic Kubernetes Service (EKS). Fargate makes it easy for you to focus on building your applications. Fargate removes the need to provision and manage servers, lets you specify and pay for resources per application, and improves security through application isolation by design.", 
+            href: "https://aws.amazon.com/fargate/"
         },
         {
-            name: "KMS",
+            name: "AWS KMS",
+            marketing: "Key Management Service",
             type: "Resource",
             subtype: "Cloud",
             cost: "$TT",
@@ -858,7 +870,9 @@ export const cardDatabase = {
             pillarNumeral: 'II', 
             provides: {
                 "CreativityByPillar": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/kms/", 
+            info: "AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications. AWS KMS is a secure and resilient service that uses hardware security modules that have been validated under FIPS 140-2, or are in the process of being validated, to protect your keys. AWS KMS is integrated with AWS CloudTrail to provide you with logs of all key usage to help meet your regulatory and compliance needs."
         },
         {
             name: "Automation Engineer",
@@ -888,6 +902,7 @@ export const cardDatabase = {
         },
         {
             name: "Athena",
+            marketing: "Start querying data instantly",
             type: "Resource",
             subtype: "Cloud",
             cost: "$TT",
@@ -898,10 +913,13 @@ export const cardDatabase = {
             pillarNumeral: 'V', 
             provides: {
                 "CreativityByPillar": 4
-            }
+            }, 
+            info: "Amazon Athena is an interactive query service that makes it easy to analyze data in Amazon S3 using standard SQL. Athena is serverless, so there is no infrastructure to manage, and you pay only for the queries that you run.", 
+            href: "https://aws.amazon.com/athena/"
         },
         {
-            name: "Predictive Autoscaling",
+            name: "AWS Autoscaling",
+            marketing: "Optimize performance and costs",
             type: "Resource",
             subtype: "Cloud",
             text: "Look at the top card of any trial stack. You may put it on the bottom of that stack face up.",
@@ -911,7 +929,9 @@ export const cardDatabase = {
             category: "Compute",
             action: {
                 "Draw": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/autoscaling/", 
+            info: "AWS Auto Scaling monitors your applications and automatically adjusts capacity to maintain steady, predictable performance at the lowest possible cost. Using AWS Auto Scaling, it’s easy to setup application scaling for multiple resources across multiple services in minutes."
         },
         {
             name: "Competitive Research",
@@ -1042,7 +1062,8 @@ export const cardDatabase = {
             marketing: "High performance managed relational database service"
         },
         {
-            name: "CloudFormation",
+            name: "AWS CloudFormation",
+            marketing: "Model and provision all your cloud infrastructure resources",
             type: "Resource",
             subtype: "Cloud",
             bigtext: "Discard X",
@@ -1050,7 +1071,9 @@ export const cardDatabase = {
             cost: "$TTT",
             starter: false,
             copies: 2,
-            category: "Management"
+            category: "Management", 
+            href: "https://aws.amazon.com/cloudformation/", 
+            info: "AWS CloudFormation provides a common language for you to model and provision AWS and third party application resources in your cloud environment. AWS CloudFormation allows you to use programming languages or a simple text file to model and provision, in an automated and secure manner, all the resources needed for your applications across all regions and accounts. This gives you a single source of truth for your AWS and third party resources."
         },
         {
             name: "re:Invent",
@@ -1195,7 +1218,8 @@ export const cardDatabase = {
             }
         },
         {
-            name: "Cloud 9",
+            name: "AWS Cloud9",
+            marketing: "A cloud IDE for writing, running, and debugging code",
             type: "Resource",
             subtype: "Cloud",
             text: "All opponents discard 1, then you retire 1 from your hand.",
@@ -1205,7 +1229,9 @@ export const cardDatabase = {
             category: "Development", 
             action: {
                 "Draw": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/cloud9/",
+            info: "AWS Cloud9 is a cloud-based integrated development environment (IDE) that lets you write, run, and debug your code with just a browser. It includes a code editor, debugger, and terminal. Cloud9 comes prepackaged with essential tools for popular programming languages, including JavaScript, Python, PHP, and more, so you don’t need to install files or configure your development machine to start new projects."
         },
         {
             name: "Solutions Architect",
@@ -1235,6 +1261,7 @@ export const cardDatabase = {
         },
         {
             name: "AWS Lambda",
+            marketing: "Run code without thinking about servers.",
             type: "Resource",
             subtype: "Cloud",
             text: "Draw 2, then retire or discard 1 from your hand",
@@ -1245,7 +1272,9 @@ export const cardDatabase = {
             category: "Compute", 
             provides: {
                 "Customer": 1
-            }
+            },
+            href: "https://aws.amazon.com/lambda/", 
+            info: "With Lambda, you can run code for virtually any type of application or backend service - all with zero administration. Just upload your code and Lambda takes care of everything required to run and scale your code with high availability. You can set up your code to automatically trigger from other AWS services or call it directly from any web or mobile app."
         },
         {
             name: "Senior Developer",
@@ -1405,7 +1434,8 @@ export const cardDatabase = {
             copies: 1
         },
         {
-            name: "Forecast",
+            name: "Amazon Forecast",
+            marketing: "Accurate time-series forecasting service",
             type: "Resource",
             subtype: "Cloud",
             text: "Look at the top card of any trial stack. If you pass a trial this turn, gain an extra customer",
@@ -1415,10 +1445,13 @@ export const cardDatabase = {
             category: "AI-ML", 
             action: {
                 "Draw": 1
-            }
+            }, 
+            href: "https://aws.amazon.com/forecast/",
+            info: "Based on the same technology used at Amazon.com, Amazon Forecast uses machine learning to combine time series data with additional variables to build forecasts. Amazon Forecast requires no machine learning experience to get started. You only need to provide historical data, plus any additional data that you believe may impact your forecasts."
         },
         {
-            name: "Sagemaker",
+            name: "Amazon Sagemaker",
+            marketing: "Machine learning for every developer and data scientist",
             type: "Resource",
             subtype: "Cloud",
             text: "Draw a card. You must face a Phase 3 trial this turn.",
@@ -1431,7 +1464,9 @@ export const cardDatabase = {
                 "Credit": 1, 
                 "Talent": 1, 
                 "Creativity": 1
-            }
+            },
+            href: "https://aws.amazon.com/sagemaker/", 
+            info: "Amazon SageMaker is a fully managed service that provides every developer and data scientist with the ability to build, train, and deploy machine learning (ML) models quickly. SageMaker removes the heavy lifting from each step of the machine learning process to make it easier to develop high quality models."
         },
         {
             name: "Database Migration",
