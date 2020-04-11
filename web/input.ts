@@ -281,9 +281,8 @@ export class PillarsInput {
      * Handle touch up events.
      */
     handleTouchUp(e: TouchEvent) {
-        const poz = this.game.getTouchPos(e);
-        this.mx = poz.x;
-        this.my = poz.y;
+
+        this.game.getCanvas().focus();
 
         this.game.diag(`handleTouchup ${this.mx}, ${this.my}`);
 
@@ -451,6 +450,9 @@ export class PillarsInput {
             if (e.key == 'Enter') {
                 const chat = this.typing;
                 this.game.chat(`[${this.game.localPlayer.name}] ${this.typing}`);
+                if (this.typing == 'diag') {
+                    this.game.toggleDiag();
+                }
                 this.typing = '';
                 this.game.respondToChat(chat);
             }
@@ -460,6 +462,11 @@ export class PillarsInput {
                 this.typing = this.typing.substr(0, this.typing.length - 1);
             }
         }
+
+        for (const m of this.game.getMouseables().values()) {
+            if (m.onanykey) m.onanykey();
+        }
+
         this.game.resizeCanvas();
     }
 

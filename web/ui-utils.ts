@@ -208,6 +208,7 @@ export class Mouseable {
     h: number;
     zindex: number;
     onclick: Function;
+    onanykey: Function;
     onhover: Function;
     onmousedown: Function;
     onmouseup: Function;

@@ -21,6 +21,7 @@ import { ServerAi } from '../lambdas/server-ai';
 import { CustomActions } from './custom-actions';
 import { StandardActions } from './standard-actions';
 import { PillarsSounds } from '../lambdas/sounds';
+const $ = require("jquery");
 
 /**
  * Pillars game  Initialized from index.html.
@@ -186,6 +187,9 @@ class PillarsGame implements IPillarsGame {
             throw new Error('No canvas');
         }
 
+        $(cel).attr("contentEditable", "true")
+        //$(cel)[0].contentEditable = true;
+
         const el = this.gameCanvas.getContext('2d');
         if (el) {
             this.ctx = el;
@@ -296,10 +300,13 @@ class PillarsGame implements IPillarsGame {
 
         // THIS NEVER FIRES!  ARGGH!
         self.gameCanvas.addEventListener('touchend', function (e) {
+
+            self.diag('touchend');
+
             e.stopPropagation();
             e.preventDefault();
             self.input.handleTouchUp.call(self.input, e);
-        });
+        }, false);
 
         // Listen for touch cancel events
         self.gameCanvas.addEventListener('touchcancel', function (e) {

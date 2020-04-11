@@ -99,34 +99,41 @@ export class Welcome {
                 id = id.substring(1);
             }
             msg = "You are about to join game " + id;
+
+            this.modal = this.game.showModal(msg);
+            this.modal.hideCloseButton();
+
+
+            const button = new Button('Start Game', this.game.ctx);
+            button.x = Welcome.HALFX - PillarsConstants.MENU_BUTTON_W * 2;
+            button.y = PillarsConstants.MODALY + 400;
+            button.w = PillarsConstants.MENU_BUTTON_W * 4;
+            button.h = PillarsConstants.MENU_BUTTON_H * 4;
+            button.zindex = PillarsConstants.MODALZ + 1;
+
+            const click = () => {
+                this.loadGame(id);
+            };
+
+            button.onclick = click;
+            button.onanykey = click;
+            this.game.addMouseable(PillarsConstants.MODAL_KEY + '_welcome_start_button', button);
+
         } else {
             msg = "You are about to start a local solo game";
-        }
 
-
-        this.modal = this.game.showModal(msg);
-        this.modal.hideCloseButton();
-
-
-        const button = new Button('Start Game', this.game.ctx);
-        button.x = Welcome.HALFX - PillarsConstants.MENU_BUTTON_W * 2;
-        button.y = PillarsConstants.MODALY + 400;
-        button.w = PillarsConstants.MENU_BUTTON_W * 4;
-        button.h = PillarsConstants.MENU_BUTTON_H * 4;
-        button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
-
-            if (id) {
-                this.loadGame(id);
-            } else {
-                this.game.startLocalGame(() => {
+            this.modal = this.game.showModal(msg);
+            this.modal.hideCloseButton();
+            
+            this.game.startLocalGame(() => {
+                setTimeout(() => {
                     this.game.closeModal();                
                     this.game.initGameScreen();
-                });
-            }
+                }, 2000);
+            });
 
-        };
-        this.game.addMouseable(PillarsConstants.MODAL_KEY + '_welcome_start_button', button);
+        }
+
 
         
         // TODO - Tutorial, multi-player, ??
