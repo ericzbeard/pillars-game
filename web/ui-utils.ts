@@ -431,12 +431,12 @@ export interface IPillarsGame extends IGame {
     /**
      * Play a sound.
      */
-    playSound(name: string): any;
+    playSound(name: string): Promise<any>;
 
     /**
      * Broadcast a change to the game state.
      */
-    broadcast(summary: string):any ;
+    broadcast(summary: string):Promise<any> ;
 
     /**
      * Register a running animation.
@@ -466,7 +466,7 @@ export interface IPillarsGame extends IGame {
     /**
      * Put all cards in play and hand into discard pile. Draw 6.
      */
-    endTurn():any;
+    endTurn():Promise<any>;
 
     /**
      * Get the position of the mouse within the canvas.
@@ -607,27 +607,27 @@ export interface IPillarsGame extends IGame {
     /**
      * Send a chat message.
      */
-    putChat(message:string):any;
+    chat(message:string):any;
 
     /**
      * Animate talent addition.
      */
-    animateTalent(mcard:MouseableCard, n:number):any;
+    animateTalent(mcard:MouseableCard, n:number):Promise<any>;
 
     /**
      * Animate creativity addition.
      */
-    animateCreativity(mcard:MouseableCard, n:number):any;
+    animateCreativity(mcard:MouseableCard, n:number):Promise<any>;
 
     /**
      * Animate credit addition.
      */
-    animateCredits(mcard:MouseableCard, n:number):any;
+    animateCredits(mcard:MouseableCard, n:number):Promise<any>;
 
     /**
      * Animate customer addition.
      */
-    animateCustomer(mcard:MouseableCard, n:number):any;
+    animateCustomer(mcard:MouseableCard, n:number):Promise<any>;
 
     /**
      * Returns true if the image load event has fired.

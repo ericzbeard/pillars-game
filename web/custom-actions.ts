@@ -1,4 +1,3 @@
-import { IPillarsGame, MouseableCard, } from './ui-utils';
 import { decommision } from './actions/decommision';
 import { predictiveAutoscaling } from './actions/predictive-autoscaling';
 import { competitiveResearch } from './actions/competitive-research';

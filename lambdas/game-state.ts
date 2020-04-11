@@ -469,19 +469,28 @@ export class GameState {
 
     /**
      * Promote or demote the current player.
+     * 
+     * Returns true if we actually did something, since you can't go 
+     * below 1 or above pillar max, and you can't demote when at max.
      */
-    promote(pillarIndex: number, isDemote: boolean) {
+    promote(pillarIndex: number, isDemote: boolean):boolean {
         const r = this.currentPlayer.pillarRanks[pillarIndex];
 
+        let didSomething = false;
+
         if (isDemote) {
-            if (r > 1) {
+            if (r > 1 && r != this.pillarMax) {
                 this.currentPlayer.pillarRanks[pillarIndex]--;
+                didSomething = true;
             }
         } else {
             if (r < this.pillarMax) {
                 this.currentPlayer.pillarRanks[pillarIndex]++;
+                didSomething = true;
             }
         }
+
+        return didSomething;
     }
 
     /**

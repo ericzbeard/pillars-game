@@ -17,7 +17,7 @@ import { PillarsMenu } from './menu';
 import { Comms } from './comms';
 import { Welcome } from './welcome';
 import { LoadProgress, ResourceAnimation } from './ui-utils';
-import { LocalAI } from './local-ai';
+import { ServerAi } from '../lambdas/server-ai';
 import { CustomActions } from './custom-actions';
 import { StandardActions } from './standard-actions';
 import { PillarsSounds } from '../lambdas/sounds';
@@ -135,7 +135,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Chat messages and broadcast summaries.
      */
-    chat:Array<string>;
+    chatMessages:Array<string>;
 
     /**
      * The welcome page.
@@ -167,7 +167,7 @@ class PillarsGame implements IPillarsGame {
         this.isDiag = false;
         this.welcomePage = new Welcome(this);
         this.welcome = true;
-        this.chat = [];
+        this.chatMessages = [];
         this.endingTurn = false;
         this.comms = new Comms();
 
@@ -331,7 +331,7 @@ class PillarsGame implements IPillarsGame {
             return true;
         }
         const applyChat = (data:Array<string>) => {
-            self.chat = data;
+            self.chatMessages = data;
             self.resizeCanvas();
         };
         this.comms.pollForChatMessages(this.gameState?.id, shouldPollForChat, applyChat);
@@ -446,7 +446,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * End the local player's turn.
      */
-    endTurn() {
+    async endTurn() {
         
         this.endingTurn = true;
         
@@ -470,12 +470,8 @@ class PillarsGame implements IPillarsGame {
                 
                 console.log('About to let ai take a turn');
                 
-                const ai = new LocalAI(player, this.gameState, (message:string) => {
-                    this.broadcast.call(this, message);
-                });
-                ai.takeTurn(() => {
-                    this.endTurn.call(this);
-                });
+                const ai = new ServerAi(this);
+                await ai.takeTurn();
             }
             
             if (this.isLocalGame && player.index == this.localPlayer.index) {
@@ -516,7 +512,7 @@ class PillarsGame implements IPillarsGame {
      */
     diag(msg: string) {
         if (this.isDiag) {
-            this.putChat('[Diag] ' + msg);
+            this.chat('[Diag] ' + msg);
         }
     }
 
@@ -1221,7 +1217,7 @@ class PillarsGame implements IPillarsGame {
      */
     startLocalGame(callback:Function) {
         this.gameState = new GameState();
-        this.gameState.start(4, 6, 'Human', true);
+        this.gameState.start(2, 3, 'Human', true);
         this.playSound(PillarsSounds.SHUFFLE);
         this.localPlayer = this.gameState.players[0];
         this.isLocalGame = true;
@@ -1365,30 +1361,34 @@ class PillarsGame implements IPillarsGame {
     /**
      * Broadcast a game state change.
      */
-    broadcast(summary: string) {
+    async broadcast(summary: string) {
     
         console.log(`broadcast v${this.gameState.version}: ${summary}`);
         
-        this.putChat(summary);
+        this.chat(summary);
     
         if (!this.isLocalGame) {
-            this.comms.sendBroadcast(() => { return this.gameState }, (newVersion:number) => {
+            await this.comms.sendBroadcast(() => { return this.gameState }, (newVersion:number) => {
                 console.log(`Posted game state version ${this.gameState.version}, got new version: ${newVersion}`);
                 this.gameState.version = newVersion
                 this.resizeCanvas();
             });
         }
+
+        this.resizeCanvas();
     }
 
     /**
      * Send a chat message.
      */
-    putChat(message:string) {
-        this.chat.push(message);
+    async chat(message:string) {
+        this.chatMessages.push(message);
          
         if (!this.isLocalGame) {
-            this.comms.putChat(message, this.gameState.id);   
+            await this.comms.putChat(message, this.gameState.id);   
         }
+
+        this.resizeCanvas();
     }
 
     /**
@@ -1463,7 +1463,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Play a sound.
      */
-    playSound(name: string): any {
+    async playSound(name: string) {
         if (this.sounds && !this.muted) {
             const s = this.sounds.get(name);
             if (s) {
@@ -1618,7 +1618,7 @@ class PillarsGame implements IPillarsGame {
             PillarsConstants.CHATW, PillarsConstants.CHATH, 5, true, true);
 
         let numLines = 12;
-        const chat = this.chat;
+        const chat = this.chatMessages;
         if (chat.length < numLines) {
             numLines = chat.length;
         }
@@ -1776,7 +1776,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate resource additions.
      */
-    animateResource(mcard:MouseableCard, n:number, img:HTMLImageElement) {
+    async animateResource(mcard:MouseableCard, n:number, img:HTMLImageElement) {
         
         const x = mcard.x;
         const y = mcard.y;
@@ -1793,7 +1793,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate talent addition.
      */
-    animateTalent(mcard:MouseableCard, n:number) {
+    async animateTalent(mcard:MouseableCard, n:number) {
 
         const img = this.getImg(PillarsImages.IMG_TALENT);
         this.animateResource(mcard, n, img);
@@ -1802,7 +1802,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate creativity addition.
      */
-    animateCreativity(mcard:MouseableCard, n:number) {
+    async animateCreativity(mcard:MouseableCard, n:number) {
 
         const img = this.getImg(PillarsImages.IMG_CREATIVITY);
         this.animateResource(mcard, n, img);
@@ -1811,7 +1811,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate credit addition.
      */
-    animateCredits(mcard:MouseableCard, n:number) {
+    async animateCredits(mcard:MouseableCard, n:number) {
 
         const img = this.getImg(PillarsImages.IMG_CREDITS);
         this.animateResource(mcard, n, img);
@@ -1820,7 +1820,7 @@ class PillarsGame implements IPillarsGame {
     /**
      * Animate customer addition.
      */
-    animateCustomer(mcard:MouseableCard, n:number) {
+    async animateCustomer(mcard:MouseableCard, n:number) {
 
         const img = this.getPlayerCustomerImage(this.gameState.currentPlayer.index);
         this.animateResource(mcard, n, img);

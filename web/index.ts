@@ -104,6 +104,10 @@ export class Index {
 
                 this.start();
             });
+
+            $('#btn-tutorial').on('click', (e) => {
+                window.location.href = 'play.html';
+            });
         });
     }
 

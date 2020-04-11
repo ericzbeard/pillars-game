@@ -3,6 +3,7 @@ import { PillarsAPIConfig } from './pillars-api-config';
 import { Database } from './database';
 import { GameState, SerializedGameState } from './game-state';
 import { ServerAi } from './server-ai';
+import { ServerGame } from './server-game';
 
 AWS.config.update({region:PillarsAPIConfig.Region});
 
@@ -23,12 +24,11 @@ export const handler = async (event: any): Promise<any> => {
 
         console.log(`server-ai-handler invoked with event: ${JSON.stringify(event, null, 0)}`);
       
-        // Load game state
         const id = event.id;
         const sgs = await database.gameGet(id);
         const gameState = GameState.RehydrateGameState(sgs);
-
-        const ai = new ServerAi(gameState, database);
+        const game = new ServerGame(gameState, database);
+        const ai = new ServerAi(game);
         await ai.takeTurn();
 
     } catch (ex) {

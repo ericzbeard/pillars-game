@@ -50,7 +50,8 @@ export interface ICustomActions {
  */
 export interface IGame {
     gameState: GameState;
-    broadcast(message:string):any;
+    broadcast(message:string):Promise<any>;
+    chat(message:string):Promise<any>;
 
     // We'll need websockets to send the below signals out while
     // AI is taking a turn and we want to animate or play a sound.
@@ -58,27 +59,32 @@ export interface IGame {
     /**
      * Animate talent addition.
      */
-    animateTalent(mcard:ICardContainer, n:number):any;
+    animateTalent(mcard:ICardContainer, n:number):Promise<any>;
 
     /**
      * Animate creativity addition.
      */
-    animateCreativity(mcard:ICardContainer, n:number):any;
+    animateCreativity(mcard:ICardContainer, n:number):Promise<any>;
 
     /**
      * Animate credit addition.
      */
-    animateCredits(mcard:ICardContainer, n:number):any;
+    animateCredits(mcard:ICardContainer, n:number):Promise<any>;
 
     /**
      * Animate customer addition.
      */
-    animateCustomer(mcard:ICardContainer, n:number):any;
+    animateCustomer(mcard:ICardContainer, n:number):Promise<any>;
 
     /**
      * Play a sound.
      */
-    playSound(fileName:string):any;
+    playSound(fileName:string):Promise<any>;
+
+    /**
+     * End the turn.
+     */
+    endTurn(): Promise<any>;
 }
 
 
@@ -89,8 +95,6 @@ export interface IGame {
  */
 export class CardActions {
 
-    card: Card;
-
     /**
      * The callback is called when we are done with all actions.
      */
@@ -98,21 +102,19 @@ export class CardActions {
         public game: IGame,
         private customActions: ICustomActions, 
         private standardActions: IStandardActions) {
-
-
     }
 
     /**
      * Do success or fail actions.
      */
-    endTrial(winner: boolean, mcard: ICardContainer, callback: Function) {
+    async endTrial(winner: boolean, mcard: ICardContainer, callback: Function) {
 
         const a = this.customActions.get(mcard.card.name);
         if (a) {
-            this.doTrialEffects(winner, mcard);
-            a.call(this, this.game, mcard, callback, winner);
+            await this.doTrialEffects(winner, mcard);
+            await a.call(this, this.game, mcard, callback, winner);
         } else {
-            this.doTrialEffects(winner, mcard, callback);
+            await this.doTrialEffects(winner, mcard, callback);
         }
 
     }
@@ -120,10 +122,10 @@ export class CardActions {
     /**
      * Do the standard trial effects.
      */
-    doTrialEffects(winner:boolean, mcard:ICardContainer, trialCallback?:Function) {
+    async doTrialEffects(winner:boolean, mcard:ICardContainer, trialCallback?:Function) {
 
         const player = this.game.gameState.currentPlayer;
-        const card = this.card;
+        const card = mcard.card;
         let delegatedCallback = false;
 
         if (winner) {
@@ -131,20 +133,20 @@ export class CardActions {
                 if (card.success.customers !== undefined) {
                     const n = card.success.customers
                     player.numCustomers += n;
-                    this.game.playSound(PillarsSounds.CUSTOMER);
+                    await this.game.playSound(PillarsSounds.CUSTOMER);
                     const s = n > 1 ? 's' : '';
-                    this.game.broadcast(`${player.name} won ${n} customer${s}`);
+                    await this.game.broadcast(`${player.name} won ${n} customer${s}`);
                 }
                 if (card.success.promote !== undefined) {
                     if (card.success.promote == 6) {
-                        this.standardActions.promote(this.game, trialCallback);
+                        await this.standardActions.promote(this.game, trialCallback);
                         delegatedCallback = true;
                     }
                     if (card.success.promote < 5) {
-                        this.promotePillar(card.success.promote, false);
+                        await this.promotePillar(card.success.promote, false);
                     }
                     if (card.success.promote == 5) {
-                        this.standardActions.promoteAny(this.game, trialCallback);
+                        await this.standardActions.promoteAny(this.game, trialCallback);
                         delegatedCallback = true;
                     }
                 }
@@ -156,21 +158,21 @@ export class CardActions {
                     if (player.numCustomers > 0) {
                         player.numCustomers -= n;
                         const s = n > 1 ? 's' : '';
-                        this.game.broadcast(`${player.name} lost ${n} customer${s}.`);
+                        await this.game.broadcast(`${player.name} lost ${n} customer${s}.`);
                     } else {
-                        this.game.broadcast(`${player.name} is already at zero customers.`);
+                        await this.game.broadcast(`${player.name} is already at zero customers.`);
                     }
                 }
                 if (card.fail.demote !== undefined) {
                     if (card.fail.demote < 5) {
-                        this.standardActions.promote(this.game, trialCallback, true);
+                        await this.standardActions.promote(this.game, trialCallback, true);
                         delegatedCallback = true;
                     }
                     if (card.fail.demote == 5) {
-                        this.promotePillar(card.fail.demote, true);
+                        await this.promotePillar(card.fail.demote, true);
                     }
                     if (card.fail.demote == 6) {
-                        this.standardActions.promoteAny(this.game, trialCallback, true);
+                        await this.standardActions.promoteAny(this.game, trialCallback, true);
                         delegatedCallback = true;
                     }
                 }
@@ -185,32 +187,38 @@ export class CardActions {
     /**
      * Play the card's effects.
      */
-    play(mcard: ICardContainer, callback: Function) {
+    async play(mcard: ICardContainer, callback: Function) {
         // Some cards need special handling for custom conditions
         const a = this.customActions.get(mcard.card.name);
         if (a) {
-            this.doStandardEffects(mcard);
-            a.call(this, this.game, mcard, callback);
+            await this.doStandardEffects(mcard);
+            await a.call(this, this.game, mcard, callback);
         } else {
-            this.doStandardEffects(mcard, callback);
+            await this.doStandardEffects(mcard, callback);
         }
     }
 
     /**
      * Promote a specific pillar.
      */
-    promotePillar(index: number, isDemote:boolean) {
+    async promotePillar(index: number, isDemote:boolean) {
 
         // Modify game state
-        this.game.gameState.promote(index, isDemote);
+        const didSomething = this.game.gameState.promote(index, isDemote);
 
         const pd = isDemote ? 'demote' : 'promote';
 
         const NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
 
         const numeral = NUMERALS[index];
-        this.game.broadcast(`${this.game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
-        this.game.playSound(PillarsSounds.PROMOTE);
+        if (didSomething) {
+            await this.game.broadcast(
+                `${this.game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
+            await this.game.playSound(PillarsSounds.PROMOTE);
+        } else {
+            await this.game.broadcast(
+                `${this.game.gameState.currentPlayer.name} could not ${pd} pillar ${numeral}`);
+        }
     }
 
     /**
@@ -218,7 +226,7 @@ export class CardActions {
      * 
      * Returns false if we should cancel
      */
-    doStandardEffects(mcard: ICardContainer, standardCallback?: Function) {
+    async doStandardEffects(mcard: ICardContainer, standardCallback?: Function) {
 
         const player = this.game.gameState.currentPlayer;
         let delegatedCallback = false;
@@ -236,12 +244,12 @@ export class CardActions {
 
                 // 0-4 means that pillar
                 if (card.action.Promote < 5) {
-                    this.promotePillar(card.action.Promote, false);
+                    await this.promotePillar(card.action.Promote, false);
                 }
 
                 // 5 means any
                 if (card.action.Promote == 5) {
-                    this.standardActions.promoteAny(this.game, standardCallback);
+                    await this.standardActions.promoteAny(this.game, standardCallback);
                     if (standardCallback) {
                         delegatedCallback = true;
                     }
@@ -250,7 +258,7 @@ export class CardActions {
                 // 6 means roll a d6 (6 means any)
                 if (card.action.Promote == 6) {
                     // Roll a d6
-                    this.standardActions.promote(this.game, standardCallback);
+                    await this.standardActions.promote(this.game, standardCallback);
                     if (standardCallback) {
                         delegatedCallback = true;
                     }
@@ -261,7 +269,7 @@ export class CardActions {
             if (card.action.Draw) {
                 for (let i = 0; i < card.action.Draw; i++) {
                     this.game.gameState.drawOne(player);
-                    this.game.broadcast(`${player.name} drew a card`);
+                    await this.game.broadcast(`${player.name} drew a card`);
                 }
             }
         }
@@ -274,7 +282,7 @@ export class CardActions {
                     if (rank >= card.conditionalAction.Pillar.Rank) {
                         for (let i = 0; i < card.conditionalAction.Draw; i++) {
                             this.game.gameState.drawOne(player);
-                            this.game.broadcast(`${player.name} drew a card`);
+                            await this.game.broadcast(`${player.name} drew a card`);
                         }
                     }
                 }
@@ -286,49 +294,51 @@ export class CardActions {
             if (card.provides.Talent) {
                 player.numTalents += card.provides.Talent;
                 const s = card.provides.Talent > 1 ? 's' : '';
-                this.game.broadcast(`${player.name} added ${card.provides.Talent} Talent${s}`);
-                this.game.animateTalent(mcard, card.provides.Talent);
+                await this.game.broadcast(
+                    `${player.name} added ${card.provides.Talent} Talent${s}`);
+                await this.game.animateTalent(mcard, card.provides.Talent);
             }
             if (card.provides.Credit) {
                 player.numCredits += card.provides.Credit;
                 const s = card.provides.Credit > 1 ? 's' : '';
-                this.game.broadcast(`${player.name} added ${card.provides.Credit} Credit${s}`);
-                this.game.animateCredits(mcard, card.provides.Credit);
+                await this.game.broadcast(
+                    `${player.name} added ${card.provides.Credit} Credit${s}`);
+                await this.game.animateCredits(mcard, card.provides.Credit);
             }
             if (card.provides.Creativity) {
-                this.game.broadcast(
+                await this.game.broadcast(
                     `${player.name} added ${card.provides.Creativity} Creativity`);
                 player.numCreativity += card.provides.Creativity;
-                this.game.animateCreativity(mcard, card.provides.Creativity);
+                await this.game.animateCreativity(mcard, card.provides.Creativity);
             }
 
             if (card.provides.Customer) {
                 const s = card.provides.Customer > 1 ? 's' : '';
                 this.game.broadcast(`${player.name} added ${card.provides.Customer} Customer${s}`);
                 player.numCustomers += card.provides.Customer;
-                this.game.playSound(PillarsSounds.CUSTOMER);
-                this.game.animateCustomer(mcard, card.provides.Customer);
+                await this.game.playSound(PillarsSounds.CUSTOMER);
+                await this.game.animateCustomer(mcard, card.provides.Customer);
             }
 
             if (card.provides.TalentByPillar !== undefined) {
                 const n = player.pillarRanks[card.provides.TalentByPillar];
                 player.numTalents += n;
                 const s = n > 1 ? 's' : '';
-                this.game.broadcast(`${player.name} added ${n} Talent${s}`);
-                this.game.animateTalent(mcard, n);
+                await this.game.broadcast(`${player.name} added ${n} Talent${s}`);
+                await this.game.animateTalent(mcard, n);
             }
             if (card.provides.CreditByPillar !== undefined) {
                 const n = player.pillarRanks[card.provides.CreditByPillar]
                 player.numCredits += n;
                 const s = n > 1 ? 's' : '';
-                this.game.broadcast(`${player.name} added ${n} Credit${s}`);
-                this.game.animateCredits(mcard, n);
+                await this.game.broadcast(`${player.name} added ${n} Credit${s}`);
+                await this.game.animateCredits(mcard, n);
             }
             if (card.provides.CreativityByPillar !== undefined) {
                 const n = player.pillarRanks[card.provides.CreativityByPillar];
                 player.numCreativity += n;
-                this.game.broadcast(`${player.name} added ${n} Creativity`);
-                this.game.animateCreativity(mcard, n);
+                await this.game.broadcast(`${player.name} added ${n} Creativity`);
+                await this.game.animateCreativity(mcard, n);
             }
         }
 

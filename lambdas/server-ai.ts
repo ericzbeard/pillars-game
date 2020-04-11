@@ -1,7 +1,7 @@
 import { Database } from './database';
 import { GameState, SerializedGameState } from './game-state';
 import { ServerGame, CustomServerActions, StandardServerActions } from './server-game';
-import { CardActions } from './card-actions';
+import { CardActions, IGame } from './card-actions';
 import { Card } from './card';
 import { PillarsSounds } from './sounds';
 
@@ -38,20 +38,16 @@ const greeting = () => {
 
 /**
  * Server-side AI.
- * 
- * TODO - Merge with local
  */
 export class ServerAi {
 
-    private game: ServerGame;
     private actions: CardActions;
+    private gameState: GameState;
 
-    constructor(private gameState: GameState, private database: Database) {
-        this.game = new ServerGame(gameState, database);
-
+    constructor(private game:IGame) {
+        this.gameState = game.gameState;
         const custom = new CustomServerActions();
         const standard = new StandardServerActions();
-
         this.actions = new CardActions(this.game, custom, standard);
     }
 
@@ -65,18 +61,17 @@ export class ServerAi {
             throw Error('Current player is human!');
         }
 
-        const chat = async (msg: string) => {
-            await this.database.chatAdd(this.gameState.id, `[${player.name}] ${msg}`);
-        }
-
-        await chat(`${greeting()}`);
+        await this.game.chat(`${greeting()}`);
 
         await sleep(2000);
 
         // Play cards, buy cards, face a trial
         for (const card of player.hand) {
             if (this.gameState.canPlayCard(card, player)) {
-                this.actions.play({ card: card }, () => { });
+
+                this.actions.play({ card: card }, async () => { 
+                    await this.game.broadcast(`${player.name} played ${card.name}`);
+                });
 
                 await sleep(2000);
 
@@ -134,15 +129,6 @@ export class ServerAi {
         // TODO
 
         // End the turn
-        await this.game.broadcast(`${player.name} ended their turn.`);
-
-        let nextIndex = player.index + 1;
-        if (nextIndex >= this.gameState.players.length) {
-            nextIndex = 0;
-        }
-
-        const nextPlayer = this.gameState.players[nextIndex];
-        this.gameState.currentPlayer = nextPlayer;
-        await this.game.broadcast(`It's ${nextPlayer.name}'s turn now.`);
+        await this.game.endTurn();
     }
 }
