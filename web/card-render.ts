@@ -210,7 +210,7 @@ export class CardRender {
                 if (card.action.Retire) {
                     text = `Retire ${card.action.Retire}`;
                 }
-                if (card.action.Promote) {
+                if (card.action.Promote !== undefined) {
                     // 0-4 means that pillar
                     // 5 means any
                     // 6 means roll a d6

@@ -298,7 +298,6 @@ class PillarsGame implements IPillarsGame {
             self.input.handleTouchMove.call(self.input, e);
         });
 
-        // THIS NEVER FIRES!  ARGGH!
         self.gameCanvas.addEventListener('touchend', function (e) {
 
             self.diag('touchend');
