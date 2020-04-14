@@ -10,6 +10,6 @@ node_modules
 cdk.out
 cdk.context.json
 
-config/*-config.ts
+*-config.ts
 dist
 .env
