@@ -1,7 +1,12 @@
+# Ignore all js
 *.js
-!copy-config.js
 
+# Except these which are not compiled
+!copy-config.js
+!clean.js
 !jest.config.js
+!copy-dist.js
+
 *.d.ts
 node_modules
 
@@ -11,5 +16,6 @@ cdk.out
 cdk.context.json
 
 *-config.ts
+build
 dist
 .env
