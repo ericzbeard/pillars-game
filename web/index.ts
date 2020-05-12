@@ -1,6 +1,5 @@
 import { uapi } from './comms';
 import { GameState, SerializedGameState } from '../lambdas/game-state';
-import { Player } from '../lambdas/player';
 import * as Cookies from 'js-cookie';
 
 export class Index {
@@ -27,7 +26,7 @@ export class Index {
 
         try {
             // Send the game to the server
-            const data = await uapi('game', 'PUT', gs,);
+            const data = await uapi('game', 'PUT', gs);
             console.log(data);
             const rgs = GameState.RehydrateGameState(<SerializedGameState>data);
             callback(rgs.id);
@@ -69,7 +68,7 @@ export class Index {
                 msg += '<br/>(Share this link with other players)';
             }
             d.html(msg);
-            
+
             window.location.href = `play.html#${id}`;
         });
 
@@ -89,8 +88,6 @@ export class Index {
             });
 
             $('#btn-start').on('click', (e) => {
-
-                //e.preventDefault();
 
                 if (form.checkValidity() === false) {
                     console.log('Invalid form');
@@ -112,17 +109,30 @@ export class Index {
     }
 
     /**
-     * Initialize the page.
+     * Link to a page in response to a click.
      */
-    init() {
+    linkTo(e: Event, page: string, callback: Function) {
 
-        this.loadHomePage();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
-        let hash = window.location.hash;
-        hash = hash.replace('#', '');
+        const loc = page;
+        history.pushState(loc, '', "#" + loc);
+        window.location.hash = loc;
 
+        console.log(`Pushed ${loc} to history`);
+
+        callback();
+    }
+
+    /**
+     * Load a page by name.
+     */
+    loadPage(name:string) {
         let page = 'pages/home.html';
-        switch (hash) {
+        switch (name) {
             case 'rules':
                 page = 'pages/rules.html';
                 break;
@@ -133,24 +143,89 @@ export class Index {
                 page = 'pages/about.html';
                 break;
             default:
+                break;
         }
 
-        $('#rules-link').on('click', () => {
-            this.loadContent('pages/rules.html');
-        });
-
-        $('#architecture-link').on('click', () => {
-            this.loadContent('pages/architecture.html');
-        });
-
-        $('#about-link').on('click', () => {
-            this.loadContent('pages/about.html');
-        });
-
-        $('#home-link').on('click', () => {
+        if (page === 'pages/home.html') {
             this.loadHomePage();
+        } else {
+            this.loadContent(page);
+        }
+    }
+
+    /**
+     * Check the hash in the URL
+     */
+    checkHash() {
+        let hash = window.location.hash;
+        hash = hash.replace('#', '');
+        this.loadPage(hash);
+    }
+
+    /**
+     * Handle the window popstate event (back button, etc)
+     */
+    popstate(e: any) { //PopStateEvent
+
+        const self = this;
+
+        console.info(e.originalEvent);
+
+        const state = e.originalEvent.state;
+
+        console.log('popstate ' + state);
+
+        if (state) {
+            this.loadPage(state);
+        } else {
+            // Look at the hash. This happens if you manually edit the URL
+
+            console.log('popstate checking hash');
+
+            self.checkHash.call(self);
+        }
+    }
+
+
+    /**
+     * Initialize the page.
+     */
+    init() {
+
+        const self = this;
+
+        // Handle history events like the back button
+        $(window).off('popstate').on('popstate', (e:any) => {
+             self.popstate.call(self, e) 
         });
 
+        // Wire up links
+        $('#rules-link').on('click', (e: Event) => {
+            this.linkTo(e, 'rules', () => {
+                this.loadContent('pages/rules.html');
+            });
+        });
+
+        $('#architecture-link').on('click', (e: Event) => {
+            this.linkTo(e, 'architecture', () => {
+                this.loadContent('pages/architecture.html');
+            });
+        });
+
+        $('#about-link').on('click', (e: Event) => {
+            this.linkTo(e, 'about', () => {
+                this.loadContent('pages/about.html');
+            });
+        });
+
+        $('#home-link').on('click', (e: Event) => {
+            this.linkTo(e, 'home', () => {
+                this.loadHomePage();
+            });
+        });
+
+        // See what page we need to load
+        this.checkHash();
     }
 }
 
