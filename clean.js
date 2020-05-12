@@ -2,7 +2,7 @@
  * Empty the dist folder.
  */
 
-import * as fs from 'fs-extra';
+const fs = require('fs-extra');
 
 fs.emptyDirSync('web/dist');
 fs.emptyDirSync('build');
