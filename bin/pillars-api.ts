@@ -5,4 +5,9 @@ import { PillarsApiStack } from '../stacks/pillars-api-stack';
 import { PillarsAPIConfig } from '../lambdas/pillars-api-config';
 
 const app = new cdk.App();
-new PillarsApiStack(app, `Pillars-${PillarsAPIConfig.Subdomain}`, { env: { account: PillarsAPIConfig.Account, region: 'us-east-1' } });
+new PillarsApiStack(app, `Pillars-${PillarsAPIConfig.Subdomain}`, { 
+    env: { 
+        account: PillarsAPIConfig.Account, 
+        region: 'us-east-1' 
+    } 
+});

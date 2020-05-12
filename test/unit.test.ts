@@ -11,7 +11,7 @@ import { APIGatewayEvent } from 'aws-lambda';
 import { Q } from '../web/comms';
 
 /**
- * Upvote API Unit Tests.
+ * Unit Tests.
  * 
  * These tests are run locally, before deployment.
  * 
