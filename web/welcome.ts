@@ -1,11 +1,13 @@
 import { GameState, SerializedGameState } from '../lambdas/game-state';
-import { IPillarsGame, Mouseable, Modal, PillarsImages } from './ui-utils';
-import { Button } from './ui-utils';
 import { PillarsConstants } from './constants';
 import { uapi } from './comms';
 import * as Cookies from 'js-cookie';
 import { CardRender } from './card-render';
-import { PillarsAnimation } from './ui-utils';
+import { Modal } from './ui-utils/modal';
+import { IPillarsGame } from './interfaces/pillars-game';
+import { LoadingAnimation } from './animations/loading-animation';
+import { Mouseable } from './ui-utils/mouseable';
+import { Button } from './ui-utils/button';
 
 /**
  * Welcome screen.
@@ -14,9 +16,6 @@ export class Welcome {
 
     modal: Modal;
     state: string;
-    static readonly HALFX = PillarsConstants.MODALX + PillarsConstants.MODALW / 2;
-    static readonly HALFY = PillarsConstants.MODALY + PillarsConstants.MODALH / 2;
-    static readonly LOAD_MS = 3000;
 
     constructor(private game:IPillarsGame) {
         this.state = 'start';
@@ -46,7 +45,7 @@ export class Welcome {
         // Delay for
         setTimeout(() => {
             this.afterDelay();
-        }, Welcome.LOAD_MS);
+        }, 3000);
     }
 
     /**
@@ -58,7 +57,7 @@ export class Welcome {
         const ctx = game.ctx;
 
         const progress = new Mouseable();
-        progress.x = Welcome.HALFX;
+        progress.x = PillarsConstants.MODAL_HALFX;
         progress.y = PillarsConstants.MODALY + PillarsConstants.MODALH - 50;
         progress.zindex = PillarsConstants.MODALZ + 1;
         progress.render = () => {
@@ -103,16 +102,15 @@ export class Welcome {
             this.modal = this.game.showModal(msg);
             this.modal.hideCloseButton();
 
-
             const button = new Button('Start Game', this.game.ctx);
-            button.x = Welcome.HALFX - PillarsConstants.MENU_BUTTON_W * 2;
+            button.x = PillarsConstants.MODAL_HALFX - PillarsConstants.MENU_BUTTON_W * 2;
             button.y = PillarsConstants.MODALY + 400;
             button.w = PillarsConstants.MENU_BUTTON_W * 4;
             button.h = PillarsConstants.MENU_BUTTON_H * 4;
             button.zindex = PillarsConstants.MODALZ + 1;
 
-            const click = () => {
-                this.loadGame(id);
+            const click = async () => {
+                await this.loadGame(id);
             };
 
             button.onclick = click;
@@ -134,9 +132,6 @@ export class Welcome {
 
         }
 
-
-        
-        // TODO - Tutorial, multi-player, ??
     }
 
     /**
@@ -150,7 +145,7 @@ export class Welcome {
 
         try {
             const data = await uapi(path, 'get', '');
-            this.game.gameState = GameState.RehydrateGameState(<SerializedGameState>data);
+            this.game.gameState = GameState.RehydrateGameState(data as SerializedGameState);
             
             const cookie = Cookies.get(id + '-name');
             console.log(`cookie: ${cookie}`);
@@ -166,7 +161,7 @@ export class Welcome {
                     // TODO - This is totally hackable but do we care?
 
                     for (const player of this.game.gameState.players) {
-                        if (player.name == cookie) {
+                        if (player.name === cookie) {
                             console.log(`Setting local player: ${player.name}`);
                             this.game.localPlayer = player;
                         }
@@ -184,12 +179,12 @@ export class Welcome {
 
                     for (const player of this.game.gameState.players) {
                         console.log(`Checking player ${player.index}: ${player.name}`);
-                        if (!player.name || player.name.length == 0) {
+                        if (!player.name || player.name.length === 0) {
                             player.name = name || 'Anonymous';
                             this.game.localPlayer = player;
                             Cookies.set(id + '-name', player.name);
                             console.log(`Set player ${player.index} to ${player.name}`);
-                            this.game.broadcast(`${player.name} just joined the game!`);
+                            await this.game.broadcast(`${player.name} just joined the game!`);
                             break;
                         }
                     }
@@ -208,42 +203,5 @@ export class Welcome {
             console.error(ex);
         }
     
-    }
-}
-
-/**
- * Animate the loading screen.
- */
-export class LoadingAnimation extends PillarsAnimation {
-
-    constructor(private game: IPillarsGame) {
-
-        super();
-    }
-
-    static GetKey() {
-        return `WelcomeLoading_Animation`;
-    }
-
-    getKey() {
-        return LoadingAnimation.GetKey();
-    }
-
-    animate(ctx: CanvasRenderingContext2D, deleteSelf: Function) {
-        const elapsed = this.getElapsedTime();
-        const end = Welcome.LOAD_MS;
-        if (elapsed >= end) {
-            deleteSelf(this.getKey());
-        } else {
-            this.percentComplete = elapsed / end;
-            const minScale = 0.1;
-            const maxScale = 3;
-            ctx.globalAlpha = this.percentComplete;
-            const scale = maxScale * this.percentComplete;
-            const x = Welcome.HALFX - (PillarsConstants.CARD_WIDTH * scale) / 2;
-            const y = Welcome.HALFY - (PillarsConstants.CARD_HEIGHT * scale) / 2;
-            const cr = new CardRender(this.game);
-            cr.renderCardImage(PillarsImages.IMG_BACK_BLUE, x, y, scale);
-        }
     }
 }

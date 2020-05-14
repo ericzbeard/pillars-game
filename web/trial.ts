@@ -1,4 +1,3 @@
-import { MouseableCard, IPillarsGame, Button, DieRollAnimation, Mouseable } from './ui-utils';
 import { PillarsSounds } from '../lambdas/sounds';
 import { PillarsConstants } from './constants';
 import { CardActions } from '../lambdas/card-actions';  
@@ -6,6 +5,11 @@ import { ThrottledBandwidth } from './actions/throttled-bandwidth';
 import { CustomActions } from './custom-actions';
 import { StandardActions } from './standard-actions';
 import { gameOver } from './game-over';
+import { IPillarsGame } from './interfaces/pillars-game';
+import { MouseableCard } from './ui-utils/mouseable-card';
+import { Button } from './ui-utils/button';
+import { DieRollAnimation } from './animations/die-roll-animation';
+import { Mouseable } from './ui-utils/mouseable';
 
 export class Trial {
 
@@ -19,7 +23,7 @@ export class Trial {
     /**
      * Show the trial.
      */
-    show() {
+    async show() {
 
         const player = this.game.localPlayer;
         const ctx = this.game.ctx;
@@ -30,7 +34,7 @@ export class Trial {
         const stack = this.game.gameState.trialStacks[phase - 1];
         this.game.gameState.checkTrialStack(stack);
         const card = stack.notused[0];
-        game.broadcast(`${player.name} is facing a trial: ${card.name}`);
+        await game.broadcast(`${player.name} is facing a trial: ${card.name}`);
 
         const add = card.add ? player.pillarRanks[card.pillarIndex || 0] : 0;
         let numCreativity = player.numCreativity + add;
@@ -77,8 +81,8 @@ export class Trial {
             button.onclick = () => {
                 const roll0 = Math.floor(Math.random() * 6) + 1;
                 const roll1 = Math.floor(Math.random() * 6) + 1;
-                const roll = roll0 + roll1;
-                const total = roll + numCreativity;
+                const rollTotal = roll0 + roll1;
+                const total = rollTotal + numCreativity;
 
                 const a0 = new DieRollAnimation(game, roll0, DIE0X, DIE0Y, 0);
                 game.registerAnimation(a0);
@@ -87,7 +91,7 @@ export class Trial {
                 game.playSound(PillarsSounds.DICE);
 
                 // Replace the animation with the actual number rolled after 1 second.
-                setTimeout(() => {
+                setTimeout(async () => {
                     const die0 = new Mouseable();
                     die0.x = DIE0X;
                     die0.y = DIE0Y;
@@ -109,7 +113,8 @@ export class Trial {
                     modal.hideCloseButton();
                     const winner = total >= card.trial;
                     const wonlost = winner ? 'won' : 'lost';
-                    this.game.broadcast(`${player.name} rolled ${roll} (+${numCreativity} ` + 
+                    await this.game.broadcast(
+                        `${player.name} rolled ${rollTotal} (+${numCreativity} ` + 
                         `Creativity) and ${wonlost} the trial!`);
 
                     if (winner) {
@@ -118,13 +123,13 @@ export class Trial {
                         this.game.playSound(PillarsSounds.FAIL);
                     }
                     const sf = winner ? 'Success' : 'Failure';
-                    modal.text = `You rolled ${roll}. Your total is ${total}. ${sf}!`;
+                    modal.text = `You rolled ${rollTotal}. Your total is ${total}. ${sf}!`;
                     button.text = 'Ok';
-                    button.onclick = () => {
+                    button.onclick = async () => {
                         const actions = new CardActions(this.game, 
                             new CustomActions(), new StandardActions());
                         game.closeModal();
-                        actions.endTrial(winner, m, async (drawNum?:number) => {
+                        await actions.endTrial(winner, m, async (drawNum?:number) => {
                             const shuffled = game.gameState.endTrial(stack, winner, drawNum);
                             if (shuffled) {
                                 game.playSound(PillarsSounds.SHUFFLE);
@@ -148,17 +153,15 @@ export class Trial {
         
         const inPlay = player.inPlay;
         let hasCreativity = false;
-        for (let i = 0; i < inPlay.length; i++) {
-            const card = inPlay[i];
-
-            if (card.provides && card.provides.Creativity) {
+        for (const c of inPlay) {
+            if (c.provides && c.provides.Creativity) {
                 hasCreativity = true;
                 break;
             }
         }
 
         // Check to see if there are any special actions to take before rolling
-        if (card.name == 'Throttled Bandwidth' && hasCreativity) {
+        if (card.name === 'Throttled Bandwidth' && hasCreativity) {
 
             let m = showTrialCard();
 

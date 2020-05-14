@@ -1,9 +1,11 @@
 import { Database } from './database';
 import { GameState, SerializedGameState } from './game-state';
-import { ServerGame, CustomServerActions, StandardServerActions } from './server-game';
-import { CardActions, IGame } from './card-actions';
+import { CardActions } from './card-actions';
 import { Card } from './card';
 import { PillarsSounds } from './sounds';
+import { IGame } from './interfaces/game';
+import { CustomServerActions } from './custom-server-actions';
+import { StandardServerActions } from './standard-server-actions';
 
 /**
  * Sleep for ms.
@@ -71,7 +73,7 @@ export class ServerAi {
         for (const card of player.hand) {
             if (this.gameState.canPlayCard(card, player)) {
 
-                this.actions.play({ card: card }, async () => { 
+                await this.actions.play({ card }, async () => { 
                     await this.game.broadcast(`${player.name} played ${card.name}`);
                 });
 
@@ -98,9 +100,9 @@ export class ServerAi {
         for (const card of this.gameState.currentMarket) {
             if (card.canAcquire(player.numCredits, player.numTalents)) {
 
-                let free = false;
+                const free = false;
 
-                if (card.subtype == 'Bug') {
+                if (card.subtype === 'Bug') {
 
                     const chosenPlayer = this.gameState.players[0]; // TODO
 
@@ -133,20 +135,20 @@ export class ServerAi {
         const phase = player.getCurrentTrialPhase();
         const stack = this.game.gameState.trialStacks[phase - 1];
         this.game.gameState.checkTrialStack(stack);
-        const card = stack.notused[0];
-        await this.game.broadcast(`${player.name} is facing a trial: ${card.name}`);
+        const trialCard = stack.notused[0];
+        await this.game.broadcast(`${player.name} is facing a trial: ${trialCard.name}`);
         await sleep(2000);
-        const add = card.add ? player.pillarRanks[card.pillarIndex || 0] : 0;
-        let numCreativity = player.numCreativity + add;
+        const add = trialCard.add ? player.pillarRanks[trialCard.pillarIndex || 0] : 0;
+        const numCreativity = player.numCreativity + add;
         const roll0 = Math.floor(Math.random() * 6) + 1;
         const roll1 = Math.floor(Math.random() * 6) + 1;
         const roll = roll0 + roll1;
         const total = roll + numCreativity;
         await this.game.playSound(PillarsSounds.DICE);
 
-        const winner = total >= card.trial;
+        const winner = total >= trialCard.trial;
         const wonlost = winner ? 'won' : 'lost';
-        this.game.broadcast(`${player.name} rolled ${roll} (+${numCreativity} ` + 
+        await this.game.broadcast(`${player.name} rolled ${roll} (+${numCreativity} ` + 
             `Creativity) and ${wonlost} the trial!`);
 
         if (winner) {
@@ -161,7 +163,8 @@ export class ServerAi {
                 
             console.log(`server-ai ending trial`);
 
-            this.actions.endTrial(winner, { card: card }, async (drawNum?:number) => {
+            // tslint:disable-next-line: no-floating-promises
+            this.actions.endTrial(winner, { card: trialCard }, async (drawNum?:number) => {
                 const shuffled = this.game.gameState.endTrial(stack, winner, drawNum);
                 if (shuffled) {
                     await this.game.playSound(PillarsSounds.SHUFFLE);

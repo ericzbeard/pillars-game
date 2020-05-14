@@ -1,6 +1,8 @@
-import { IPillarsGame, MouseableCard } from '../ui-utils';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { IGame } from '../../lambdas/interfaces/game';
+import { ICardContainer } from '../../lambdas/interfaces/card-container';
+import { MouseableCard } from '../ui-utils/mouseable-card';
 import { PillarsSounds } from '../../lambdas/sounds';
-import { IGame, ICardContainer } from '../../lambdas/card-actions';
 
 /**
  * Data Center Migration
@@ -9,11 +11,11 @@ import { IGame, ICardContainer } from '../../lambdas/card-actions';
  */
 export const dataCenterMigration = (g:IGame, 
     m: ICardContainer, 
-    callback:Function, 
+    callback:() => any, 
     winner?: boolean) => {
 
-    const game = <IPillarsGame>g;
-    const mcard = <MouseableCard>m;
+    const game = g as IPillarsGame;
+    const mcard = m as MouseableCard;
     
     if (!winner) {
         callback?.();
@@ -28,14 +30,13 @@ export const dataCenterMigration = (g:IGame,
         const player = game.gameState.currentPlayer;
         const ranks = player.pillarRanks;
         let lowest = 6;
-        for (let i = 0; i < ranks.length; i++) {
-            const rank = ranks[i];
+        for (const rank of ranks) {
             if (rank < lowest) lowest = rank;
         }
 
         for (let i = 0; i < ranks.length; i++) {
             const rank = ranks[i];
-            if (rank == lowest && rank < game.gameState.pillarMax) {
+            if (rank === lowest && rank < game.gameState.pillarMax) {
                 game.promote(player.index, i);
             }
         }

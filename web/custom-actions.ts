@@ -6,7 +6,8 @@ import { ddosAttack } from './actions/ddos-attack';
 import { talentShortage } from './actions/talent-shortage';
 import { dataCenterMigration } from './actions/data-center-migration';
 import { employeesPoached } from './actions/employees-poached';
-import { CustomEffect, ICustomActions } from '../lambdas/card-actions';
+import { ICustomActions } from '../lambdas/interfaces/custom-actions';
+import { CustomEffect } from '../lambdas/interfaces/custom-effect';
 
 export class CustomActions implements ICustomActions {
 
@@ -34,7 +35,7 @@ export class CustomActions implements ICustomActions {
      * Get the custom effect by name.
      */
     get(key:string): CustomEffect {
-        return <CustomEffect>this.customEffects.get(key);
+        return this.customEffects.get(key) as CustomEffect;
     }
 
 

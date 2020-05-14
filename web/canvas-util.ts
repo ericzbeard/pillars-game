@@ -7,7 +7,7 @@ export class CanvasUtil {
      * Draw a rounded rectangle
      */
     static roundRect(ctx:CanvasRenderingContext2D, x: number, y: number, width: number,
-        height: number, radius: number, fill: boolean, stroke: boolean) {
+        height: number, radius: number, fill: boolean, stroke: boolean, clip?:boolean) {
 
         ctx.save();
         if (typeof stroke === 'undefined') {
@@ -27,12 +27,16 @@ export class CanvasUtil {
         ctx.quadraticCurveTo(x, y + height, x, y + height - radii.bl);
         ctx.lineTo(x, y + radii.tl);
         ctx.quadraticCurveTo(x, y, x + radii.tl, y);
-        ctx.closePath();
-        if (fill) {
-            ctx.fill();
-        }
-        if (stroke) {
-            ctx.stroke();
+        if (clip) {
+            ctx.clip();
+        } else {
+            ctx.closePath();
+            if (fill) {
+                ctx.fill();
+            }
+            if (stroke) {
+                ctx.stroke();
+            }
         }
         ctx.restore();
     }

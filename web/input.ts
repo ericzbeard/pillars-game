@@ -1,6 +1,7 @@
-import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
-import { ClickAnimation } from './ui-utils';
 import { PillarsConstants } from './constants';
+import { IPillarsGame } from './interfaces/pillars-game';
+import { MouseableCard } from './ui-utils/mouseable-card';
+import { ClickAnimation } from './animations/click-animation';
 
 /**
  * Handle input like mouse and touch events.
@@ -79,13 +80,12 @@ export class PillarsInput {
      */
     handleInputMove() {
 
-        let marray = this.game.sortMouseables(true);
+        const marray = this.game.sortMouseables(true);
 
         let alreadyHit = false; // Only hover the top element by zindex
 
-        for (let i = 0; i < marray.length; i++) {
+        for (const m of marray) {
 
-            const m = marray[i];
             const key = m.key;
 
             if (m.dragging) {
@@ -112,8 +112,6 @@ export class PillarsInput {
             if (!ignore) {
                 if (m.hitTest(this.mx, this.my)) {
 
-                    //console.log(`move hit ${m.key}, zindex ${m.zindex}, already: ${alreadyHit}`);
-
                     // TODO - ? Remove hover mouseables?
 
                     if (!alreadyHit) {
@@ -123,7 +121,7 @@ export class PillarsInput {
 
                             if (m.draggable && 
                                 m.down && 
-                                (this.mx != m.downx || this.my != m.downy)) {
+                                (this.mx !== m.downx || this.my !== m.downy)) {
 
                                 if (m.ondragenter) {
                                     m.ondragenter();
@@ -153,7 +151,7 @@ export class PillarsInput {
                                 m.onhover();
                             }
 
-                            if (this.gameCanvas.style.cursor != 'grabbing') {
+                            if (this.gameCanvas.style.cursor !== 'grabbing') {
                                 this.gameCanvas.style.cursor = 'pointer';
                             }
                         }
@@ -207,17 +205,16 @@ export class PillarsInput {
         this.handleInputDown();
     }
 
-     /**
+    /**
      * Handle mouse and touch down events.
      */
     handleInputDown() {
 
-        let marray = this.game.sortMouseables(true);
+        const marray = this.game.sortMouseables(true);
 
         let alreadyHit = false; // Only hover the top element by zindex
 
-        for (let i = 0; i < marray.length; i++) {
-            const m = marray[i];
+        for (const m of marray) {
             const key = m.key;
 
             let ignore = false;
@@ -297,11 +294,10 @@ export class PillarsInput {
      */
     handleInputUp() {
 
-        let marray = this.game.sortMouseables(true);
+        const marray = this.game.sortMouseables(true);
         let dropped = false;
 
-        for (let i = 0; i < marray.length; i++) {
-            const m = marray[i];
+        for (const m of marray) {
 
             const key = m.key;
 
@@ -310,13 +306,12 @@ export class PillarsInput {
                 this.game.diag(`up hit ${m.key}, zindex ${m.zindex}`);
 
                 // Find the mouseable being dragged, and if this m in droppable, drop it
-                for (let j = 0; j < marray.length; j++) {
-                    const d = marray[j];
+                for (const d of marray) {
 
                     if (d.dragging && m.droppable) {
 
                         // Dropping a card from hand into play
-                        if (m.key == PillarsConstants.INPLAY_AREA_KEY &&
+                        if (m.key === PillarsConstants.INPLAY_AREA_KEY &&
                             d instanceof MouseableCard &&
                             this.game.gameState.isInHand(d.card)) {
 
@@ -332,7 +327,7 @@ export class PillarsInput {
                         }
 
                         // Dropping a card from the market to discard
-                        if (m.key == PillarsConstants.DISCARD_AREA_KEY &&
+                        if (m.key === PillarsConstants.DISCARD_AREA_KEY &&
                             d instanceof MouseableCard &&
                             this.game.gameState.isInMarket(d.card)) {
 
@@ -354,19 +349,15 @@ export class PillarsInput {
 
                 }
 
-            } else {
-            }
+            } 
 
         }
-
-        //this.gameCanvas.style.cursor = 'default';
 
         // Clear dragging flags
 
         this.dragging = false;
         this.draggingKey = '';
-        for (let i = 0; i < marray.length; i++) {
-            const m = marray[i];
+        for (const m of marray) {
             m.dragging = false;
             m.downx = -1;
             m.downy = -1;
@@ -401,10 +392,9 @@ export class PillarsInput {
         let clickedSomething = false;
 
         // Look at mouseables
-        let marray = this.game.sortMouseables(true);
+        const marray = this.game.sortMouseables(true);
 
-        for (let i = 0; i < marray.length; i++) {
-            const m = marray[i];
+        for (const m of marray) {
             const key = m.key;
 
             let ignore = false;
@@ -444,19 +434,19 @@ export class PillarsInput {
             return;
         }
 
-        if (e.key && e.key.length == 1) {
+        if (e.key && e.key.length === 1) {
             this.typing += e.key;
         } else {
-            if (e.key == 'Enter') {
+            if (e.key === 'Enter') {
                 const chat = this.typing;
                 this.game.chat(`[${this.game.localPlayer.name}] ${this.typing}`);
-                if (this.typing == 'diag') {
+                if (this.typing === 'diag') {
                     this.game.toggleDiag();
                 }
                 this.typing = '';
                 this.game.respondToChat(chat);
             }
-            if (e.key == 'Backspace') {
+            if (e.key === 'Backspace') {
                 e.preventDefault();
                 e.stopPropagation();
                 this.typing = this.typing.substr(0, this.typing.length - 1);
@@ -482,7 +472,7 @@ export class PillarsInput {
         this.game.diag(`handleDoubleClick ${this.mx}, ${this.my}`);
 
         // Check to see if a card in hand was clicked
-        if (this.game.localPlayer.index == this.game.gameState.currentPlayer.index) {
+        if (this.game.localPlayer.index === this.game.gameState.currentPlayer.index) {
             this.checkHandDoubleClick(mx, my);
             this.checkMarketDoubleClick(mx, my);
         }
@@ -507,7 +497,7 @@ export class PillarsInput {
 
             if (!ignore) {
                 if (k.startsWith(PillarsConstants.HAND_START_KEY)) {
-                    const m = <MouseableCard>this.game.getMouseables().get(k);
+                    const m = this.game.getMouseables().get(k) as MouseableCard;
                     if (m.hitTest(mx, my)) {
                         key = k;
                         break;
@@ -517,7 +507,7 @@ export class PillarsInput {
         }
 
         if (key && key.length > 0) {
-            const m = <MouseableCard>this.game.getMouseables().get(key);
+            const m = this.game.getMouseables().get(key) as MouseableCard;
 
             // TODO - Make sure the card can legally be played.
 
@@ -541,7 +531,7 @@ export class PillarsInput {
         let key = null;
         for (const k of this.game.getMouseables().keys()) {
             if (k.startsWith(PillarsConstants.MARKET_START_KEY)) {
-                const m = <MouseableCard>this.game.getMouseables().get(k);
+                const m = this.game.getMouseables().get(k) as MouseableCard;
                 if (m.hitTest(mx, my)) {
                     key = k;
                     break;
@@ -552,7 +542,7 @@ export class PillarsInput {
         const p = this.game.gameState.currentPlayer;
 
         if (key) {
-            const m = <MouseableCard>this.game.getMouseables().get(key);
+            const m = this.game.getMouseables().get(key) as MouseableCard;
 
             if (m.card.canAcquire(p.numCredits, p.numTalents)) {
                 const game = this.game;

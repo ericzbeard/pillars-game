@@ -1,15 +1,17 @@
-
-import { IPillarsGame, Mouseable, MouseableCard } from './ui-utils';
 import { PillarsConstants } from './constants';
-import { Button, DieRollAnimation } from './ui-utils';
 import { PillarsSounds } from '../lambdas/sounds';
+import { MouseableCard } from './ui-utils/mouseable-card';
+import { IPillarsGame } from './interfaces/pillars-game';
+import { Button } from './ui-utils/button';
+import { DieRollAnimation } from './animations/die-roll-animation';
+import { Mouseable } from './ui-utils/mouseable';
 
 export class StandardActions {
 
     /**
      * Remove a card in hand from the game.
      */
-    retireCardFromHand(game: IPillarsGame, mcard: MouseableCard, callback?: Function) {
+    retireCardFromHand(game: IPillarsGame, mcard: MouseableCard, callback?: () => any) {
 
         // Show a modal with the hand, retire the one that gets clicked
 
@@ -32,7 +34,7 @@ export class StandardActions {
      * 
      * On a 6, choose a non-maxed pillar to promote.
      */
-    promote(game: IPillarsGame, callback?: Function, isDemote?: boolean) {
+    promote(game: IPillarsGame, callback?: () => any, isDemote?: boolean) {
 
         if (isDemote === undefined) {
             isDemote = false;
@@ -77,7 +79,7 @@ export class StandardActions {
                 };
                 game.addMouseable(PillarsConstants.MODAL_KEY + '_promotedie', die);
 
-                if (roll == 6) {
+                if (roll === 6) {
                     modal.hideCloseButton();
                     modal.text = `You rolled a 6! You get to choose the pillar.`;
                     button.text = 'Ok';
@@ -89,11 +91,11 @@ export class StandardActions {
                     modal.hideCloseButton();
                     modal.text = `You rolled a ${roll}!`;
                     button.text = 'Ok';
-                    button.onclick = () => {
-                        game.gameState.promote(roll - 1, <boolean>isDemote);
+                    button.onclick = async () => {
+                        game.gameState.promote(roll - 1, isDemote as boolean);
                         const numeral = PillarsConstants.NUMERALS[roll - 1];
-                        let pd = isDemote ? 'demoted' : 'promoted';
-                        game.broadcast(`${player.name} ${pd} pillar ${numeral}`);
+                        const pd = isDemote ? 'demoted' : 'promoted';
+                        await game.broadcast(`${player.name} ${pd} pillar ${numeral}`);
                         game.playSound(PillarsSounds.PROMOTE);
                         game.closeModal();
                         if (callback) callback();
@@ -111,7 +113,7 @@ export class StandardActions {
      * 
      * Choose a non-maxed pillar to promote.
      */
-    promoteAny(game: IPillarsGame, callback?: Function, isDemote?: boolean) {
+    promoteAny(game: IPillarsGame, callback?: () => any, isDemote?: boolean) {
 
         if (isDemote === undefined) {
             isDemote = false;
@@ -137,10 +139,11 @@ export class StandardActions {
             m.render = () => {
                 game.renderCard(m);
             }
-            m.onclick = () => {
-                game.gameState.promote(m.data, <boolean>isDemote);
+            m.onclick = async () => {
+                game.gameState.promote(m.data, isDemote as boolean);
                 const numeral = PillarsConstants.NUMERALS[m.data];
-                game.broadcast(`${game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
+                await game.broadcast(
+                    `${game.gameState.currentPlayer.name} ${pd}d pillar ${numeral}`);
                 game.playSound(PillarsSounds.PROMOTE);
                 game.closeModal();
                 if (callback) callback();

@@ -1,15 +1,16 @@
-import { IPillarsGame, Mouseable, } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { Player } from '../../lambdas/player';
 import { PillarsConstants } from '../constants';
 import { CanvasUtil } from '../canvas-util';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { Mouseable } from '../ui-utils/mouseable';
 
 /**
  * Bugs.
  *
  * When you acquire a bug, it goes in an opponent's discard pile. 
  */
-export const bug = (game: IPillarsGame, card: Card, callback: Function) => {
+export const bug = (game: IPillarsGame, card: Card, callback: () => any) => {
 
     // Show a modal that allows the player to select an opponent.
     // Show how many cards are in that opponent's hand
@@ -42,8 +43,8 @@ export const bug = (game: IPillarsGame, card: Card, callback: Function) => {
             CanvasUtil.roundRect(game.ctx, link.x, link.y, w, h, 5, false, true);
         };
 
-        link.onclick = () => {
-            const chosenPlayer = <Player>link.data;
+        link.onclick = async () => {
+            const chosenPlayer = link.data as Player;
             
             // Add it to their discard pile
             chosenPlayer.discardPile.push(card);
@@ -53,7 +54,7 @@ export const bug = (game: IPillarsGame, card: Card, callback: Function) => {
             callback();
 
             // Announce what happened
-            game.broadcast(`${game.localPlayer.name} put ${card.name} ` + 
+            await game.broadcast(`${game.localPlayer.name} put ${card.name} ` + 
                 `into ${chosenPlayer.name}'s discard pile!`);
         }
 

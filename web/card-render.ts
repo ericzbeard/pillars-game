@@ -1,9 +1,12 @@
 import { Card } from '../lambdas/card';
 import { CanvasUtil } from './canvas-util';
-import { MouseableCard, Mouseable, IPillarsGame } from './ui-utils';
-import { PillarsImages, PillarsAnimation } from './ui-utils';
-import { PillarDieAnimation, TextUtil } from './ui-utils';
 import { PillarsConstants } from './constants';
+import { IPillarsGame } from './interfaces/pillars-game';
+import { TextUtil } from './ui-utils/text-util';
+import { PillarsImages } from './ui-utils/images';
+import { PillarsAnimation } from './animations/pillars-animation';
+import { MouseableCard } from './ui-utils/mouseable-card';
+import { PillarDieAnimation } from './animations/die-animation';
 
 /**
  * Handles everything to do with rendering a card on screen.
@@ -68,10 +71,10 @@ export class CardRender {
             if (card.provides) {
 
                 let augment = '';
-                if (card.subtype == 'Augment Human') {
+                if (card.subtype === 'Augment Human') {
                     augment = ' if you have a human resource in play';
                 }
-                if (card.subtype == 'Augment Cloud') {
+                if (card.subtype === 'Augment Cloud') {
                     augment = ' if you have a cloud resource in play';
                 }
 
@@ -122,15 +125,13 @@ export class CardRender {
     renderBigText(card: Card, cardx: number, cardy: number, scale: number) {
         const ctx = this.ctx;
 
-        let img = undefined;
-        let numImg = 0;
-        let imgScale = 1;
+        let img;
         let providesLen = card.getProvidesLength();
 
         if (card.provides) {
             if (card.provides.CreditByPillar !== undefined ||
-                card.provides.TalentByPillar != undefined ||
-                card.provides.CreativityByPillar != undefined) {
+                card.provides.TalentByPillar !== undefined ||
+                card.provides.CreativityByPillar !== undefined) {
 
                 providesLen = 3;
             }
@@ -218,7 +219,7 @@ export class CardRender {
                         const numerals = ['I', 'II', 'III', 'IV', 'V'];
                         const numeral = numerals[card.action.Promote];
                         text = `Promote ${numeral}`;
-                    } else if (card.action.Promote == 5) {
+                    } else if (card.action.Promote === 5) {
                         text = 'Promote Any';
                     } else {
                         text = 'Promote';
@@ -329,11 +330,11 @@ export class CardRender {
                     this.ctx.fillText(`Promote ${numeral}`, sx, cury);
                     cury += lh;
                 }
-                if (card.success.promote == 5) {
+                if (card.success.promote === 5) {
                     this.ctx.fillText('Promote Any', sx, cury);
                     cury += lh;
                 }
-                if (card.success.promote == 6) {
+                if (card.success.promote === 6) {
                     this.ctx.fillText('Promote', sx, cury);
                     cury += lh;
                 }
@@ -364,11 +365,11 @@ export class CardRender {
                     this.ctx.fillText(`Demote ${numeral}`, fx, cury);
                     cury += lh;
                 }
-                if (card.fail.demote == 5) {
+                if (card.fail.demote === 5) {
                     this.ctx.fillText('Demote Any', fx, cury); // ?
                     cury += lh;
                 }
-                if (card.fail.demote == 6) {
+                if (card.fail.demote === 6) {
                     this.ctx.fillText('Demote', fx, cury);
                     cury += lh;
                 }
@@ -429,8 +430,8 @@ export class CardRender {
 
         // Draw the image in the mask
         const img = this.game.getImg(name);
-        let imgScale = PillarsConstants.CARD_IMAGE_SCALE * scale;
-        let offset = 14 * scale;
+        const imgScale = PillarsConstants.CARD_IMAGE_SCALE * scale;
+        const offset = 14 * scale;
         ctx.drawImage(img, x - offset, y - offset, 
             img.width * imgScale, img.height * imgScale);
 
@@ -449,12 +450,12 @@ export class CardRender {
         let w = m.w;
         let h = m.h;
         let radius = PillarsConstants.CARD_RADIUS;
-        let p = this.game.localPlayer;
+        const player = this.game.localPlayer;
         if (scale === undefined) {
             scale = 1;
         }
 
-        if (card.type == 'Pillar') {
+        if (card.type === 'Pillar') {
             scale = PillarsConstants.PILLAR_SCALE;
         }
 
@@ -485,7 +486,7 @@ export class CardRender {
         // Highlight market cards if the local player can purchase it
         let isInMarket = false;
         for (const c of this.game.gameState.currentMarket) {
-            if (c.uniqueIndex == m.card.uniqueIndex) {
+            if (c.uniqueIndex === m.card.uniqueIndex) {
                 isInMarket = true;
                 break;
             }
@@ -493,14 +494,14 @@ export class CardRender {
 
         let isInHand = false;
         for (const c of this.game.localPlayer.hand) {
-            if (c.uniqueIndex == m.card.uniqueIndex) {
+            if (c.uniqueIndex === m.card.uniqueIndex) {
                 isInHand = true;
             }
         }
 
         let highlight = false;
 
-        if (isInMarket && m.card.canAcquire(p.numCredits, p.numTalents)) {
+        if (isInMarket && m.card.canAcquire(player.numCredits, player.numTalents)) {
             highlight = true;
         }
         
@@ -541,13 +542,13 @@ export class CardRender {
         ctx.fillStyle = PillarsConstants.COLOR_WHITE;
 
         // Card Name
-        if (card.type == 'Pillar') {
+        if (card.type === 'Pillar') {
             ctx.textAlign = 'center';
             ctx.fillText(card.name, x + w / 2, y + 18);
         } else {
             ctx.textAlign = 'left';
-            let namex = x + 5 * scale;
-            let namey = y + 18 * scale;
+            const namex = x + 5 * scale;
+            const namey = y + 18 * scale;
             ctx.fillText(card.name, namex, namey, PillarsConstants.CARD_WIDTH * scale - 5);
         }
 
@@ -556,12 +557,12 @@ export class CardRender {
         // Marketing
         if (card.marketing) {
             ctx.textAlign = 'left';
-            let mkx = x + 5 * scale;
-            let mky = y + 30 * scale;
+            const mkx = x + 5 * scale;
+            const mky = y + 30 * scale;
 
             ctx.font = this.game.getFont(fontSize, 'italic');
-            let maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
-            ctx.fillText(<string>card.marketing, mkx, mky, maxw);
+            const maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
+            ctx.fillText(card.marketing as string, mkx, mky, maxw);
         }
 
         // Flavor
@@ -570,14 +571,14 @@ export class CardRender {
             ctx.font = this.game.getFont(fontSize, 'italic');
             ctx.textAlign = 'center';
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
-            let fx = x + ((PillarsConstants.CARD_WIDTH * scale) / 2);
-            let fy = y + (25 * scale) + ((PillarsConstants.CARD_HEIGHT * scale) / 2);
-            let maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
-            ctx.fillText(<string>card.flavor, fx, fy, maxw);
+            const fx = x + ((PillarsConstants.CARD_WIDTH * scale) / 2);
+            const fy = y + (25 * scale) + ((PillarsConstants.CARD_HEIGHT * scale) / 2);
+            const maxw: any = PillarsConstants.CARD_WIDTH * scale - 10;
+            ctx.fillText(card.flavor as string, fx, fy, maxw);
         }
 
         // Card Type and Subtype
-        if (card.type != 'Pillar' && !card.hideType) {
+        if (card.type !== 'Pillar' && !card.hideType) {
             ctx.font = this.game.getFont(10);
             let t = card.type.toLocaleUpperCase();
             if (card.subtype) {
@@ -585,7 +586,7 @@ export class CardRender {
             }
             ctx.textAlign = 'center';
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
-            let ty = y + 70 * scale;
+            const ty = y + 70 * scale;
             ctx.font = this.game.getFont(9 * scale, 'bold');
             ctx.fillText(t, x + w / 2, ty);
         }
@@ -598,16 +599,14 @@ export class CardRender {
                 costw = 8;
                 costh = 8;
             }
-            let costoffx = 65 * scale;
-            let costoffy = 45 * scale;
+            const costoffx = 65 * scale;
+            const costoffy = 45 * scale;
             let cw = PillarsConstants.CARD_WIDTH;
             let ch = PillarsConstants.CARD_HEIGHT;
             costw *= scale;
             costh *= scale;
             cw *= scale;
             ch *= scale;
-
-            //ctx.strokeRect(x + cw - costoffx, y + ch - costoffy, 6 * costw, costh);
 
             // What a mess
 
@@ -631,8 +630,8 @@ export class CardRender {
                     default:
                         throw Error('Unexpected cost: ' + cc);
                 }
-                const img = this.game.getImg(imgName);
-                ctx.drawImage(img, costx + (i * costw), costy, costw, costh);
+                const rimg = this.game.getImg(imgName);
+                ctx.drawImage(rimg, costx + (i * costw), costy, costw, costh);
             }
         }
 
@@ -644,7 +643,7 @@ export class CardRender {
         }
 
         // Big Text
-        if (card.type != 'Pillar') {
+        if (card.type !== 'Pillar') {
             ctx.font = this.game.getFont(12 * scale);
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
             ctx.textAlign = 'center';
@@ -652,20 +651,20 @@ export class CardRender {
         }
 
         // Small text
-        if (card.type != 'Pillar') {
+        if (card.type !== 'Pillar') {
             ctx.font = this.game.getFont(10 * scale);
             ctx.fillStyle = PillarsConstants.COLOR_BLACKISH;
             ctx.textAlign = 'center';
             this.renderSmallText(card, x, y, scale);
         }
 
-        if (card.type == 'Pillar') {
+        if (card.type === 'Pillar') {
 
             const pidx: number = card.pillarIndex || 0;
 
             // Draw player rank dice
 
-            const p: Array<any> = [];
+            const p: any[] = [];
             p[0] = { x: 5 * scale, y: 45 * scale };
             p[1] = { x: w - 55 * scale, y: 45 * scale };
             p[2] = { x: 5 * scale, y: h - 55 * scale };
@@ -677,10 +676,8 @@ export class CardRender {
                 ctx.fillStyle = 'black';
                 ctx.strokeStyle = 'black';
 
-                const player = this.game.gameState.players[i];
-
                 const animKey = PillarDieAnimation.GetKey(i, pidx);
-                const a = <PillarsAnimation>this.game.getAnimation(animKey);
+                const a = this.game.getAnimation(animKey) as PillarsAnimation;
 
                 this.renderDie(x + p[i].x, y + p[i].y, 
                     i, player.pillarRanks[pidx], scale, a);

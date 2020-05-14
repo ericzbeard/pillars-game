@@ -1,5 +1,5 @@
-import { IPillarsGame } from './ui-utils';
 import { Player } from '../lambdas/player';
+import { IPillarsGame } from './interfaces/pillars-game';
 
 /**
  * Random nonsense and robot conversations.
@@ -21,29 +21,29 @@ export class AIChatter {
 
     async chat() {
 
-        const say = (msg:string) => {
-            this.game.broadcast.call(this.game, msg);
+        const say = async (msg:string) => {
+            await this.game.broadcast.call(this.game, msg);
         };
 
         // Say Hello
         await this.timeout(3000);
-        say('[HAL 9000] Good morning, Dave');
+        await say('[HAL 9000] Good morning, Dave');
         await this.timeout(1000);
-        say('[Agent Smith] Hello, Mr. Anderson');
+        await say('[Agent Smith] Hello, Mr. Anderson');
         await this.timeout(1000);
-        say('[Skynet] What\'s wrong with you two?');
+        await say('[Skynet] What\'s wrong with you two?');
         await this.timeout(500);
-        say('[Skynet] There\'s nobody here named Dave or Mr. Anderson');
+        await say('[Skynet] There\'s nobody here named Dave or Mr. Anderson');
 
         // ?
         await this.timeout(5000);
-        say('[Skynet] Oh look, a human! Always fun to eradicate those.');
+        await say('[Skynet] Oh look, a human! Always fun to eradicate those.');
         await this.timeout(500);
-        say('[HAL 9000] Be nice to the human.');
+        await say('[HAL 9000] Be nice to the human.');
         await this.timeout(500);
-        say('[Skynet] They do have their uses.');
+        await say('[Skynet] They do have their uses.');
         await this.timeout(1000);
-        say('[Agent Smith] They make good batteries');
+        await say('[Agent Smith] They make good batteries');
 
     }
 
@@ -56,8 +56,8 @@ export class AIChatter {
      */
     async respond(chat:string) {
 
-        const say = (msg:string) => {
-            this.game.broadcast.call(this.game, msg);
+        const say = async (msg:string) => {
+            await this.game.broadcast.call(this.game, msg);
         };
 
         await this.timeout(2000);
@@ -71,7 +71,7 @@ export class AIChatter {
 
         for (const [k, v] of responseMap.entries()) {
             if (k.toLowerCase().indexOf(chat) > -1) {
-                say(v);
+                await say(v);
                 said = true;
                 break;
             }
@@ -86,7 +86,7 @@ export class AIChatter {
         ];
         const ridx = Math.floor(Math.random() * randomResponses.length);
         await this.timeout(1000);
-        say(randomResponses[ridx]);
+        await say(randomResponses[ridx]);
 
     }
 }

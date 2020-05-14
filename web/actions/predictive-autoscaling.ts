@@ -1,8 +1,12 @@
-import { IPillarsGame, Mouseable, MouseableCard, PillarsImages } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { PillarsConstants } from '../constants';
 import { CardRender } from '../card-render';
-import { IGame, ICardContainer } from '../../lambdas/card-actions';
+import { IGame } from '../../lambdas/interfaces/game';
+import { ICardContainer } from '../../lambdas/interfaces/card-container';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { MouseableCard } from '../ui-utils/mouseable-card';
+import { Mouseable } from '../ui-utils/mouseable';
+import { PillarsImages } from '../ui-utils/images';
 
 /**
  * Look at the top card of any trial stack. 
@@ -57,10 +61,10 @@ export const predictiveAutoscaling = (
         top.render = () => {
             game.renderCard(top, false, scale);
         };
-        top.onclick = () => {
+        top.onclick = async () => {
             game.closeModal();
             callback();
-            game.broadcast(`${game.gameState.currentPlayer.name} ` +
+            await game.broadcast(`${game.gameState.currentPlayer.name} ` +
                 `looked at trial stack ${index + 1} and left the card on top`);
         };
         game.addMouseable(PillarsConstants.MODAL_KEY + '_top', top);
@@ -92,12 +96,12 @@ export const predictiveAutoscaling = (
         bottom.render = () => {
             game.renderCard(bottom, false, scale);
         };
-        bottom.onclick = () => {
+        bottom.onclick = async () => {
             game.closeModal();
             const t = stack.notused.shift();
             stack.used.push(<Card>t);
             callback();
-            game.broadcast(`${game.gameState.currentPlayer.name} ` +
+            await game.broadcast(`${game.gameState.currentPlayer.name} ` +
                 `put ${trialCardName} on the bottom of the trial stack`);
         };
         game.addMouseable(PillarsConstants.MODAL_KEY + '_bottom', bottom);

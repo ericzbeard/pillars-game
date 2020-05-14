@@ -1,5 +1,9 @@
-import { IPillarsGame, Mouseable, MouseableCard, Button, Modal } from '../ui-utils';
 import { PillarsConstants } from '../constants';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { Modal } from '../ui-utils/modal';
+import { MouseableCard } from '../ui-utils/mouseable-card';
+import { Mouseable } from '../ui-utils/mouseable';
+import { Button } from '../ui-utils/button';
 
 /**
  * Throttled Bandwidth.
@@ -14,7 +18,7 @@ export class ThrottledBandwidth {
     /**
      * Explain what to do.
      */
-    explain(game: IPillarsGame, callback: Function, modal: Modal, m:MouseableCard) {
+    explain(game: IPillarsGame, callback: () => any, modal: Modal, m:MouseableCard) {
 
         const bkey = PillarsConstants.MODAL_KEY + '_throttled_choose';
         const tkey = PillarsConstants.MODAL_KEY + '_txt';
@@ -54,7 +58,7 @@ export class ThrottledBandwidth {
     /**
      * Choose the card to discard.
      */
-    choose(game: IPillarsGame, callback: Function, modal:Modal) {
+    choose(game: IPillarsGame, callback: () => any, modal:Modal) {
 
         modal.text = 'Discard one of these cards';
         modal.hideCloseButton();

@@ -1,7 +1,9 @@
-import { IPillarsGame, MouseableCard } from '../ui-utils';
 import { PillarsConstants } from '../constants';
 import { StandardActions } from '../standard-actions';
-import { IGame, ICardContainer } from '../../lambdas/card-actions';
+import { IGame } from '../../lambdas/interfaces/game';
+import { ICardContainer } from '../../lambdas/interfaces/card-container';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { MouseableCard } from '../ui-utils/mouseable-card';
 
 /**
  * Employees Poached
@@ -9,13 +11,13 @@ import { IGame, ICardContainer } from '../../lambdas/card-actions';
  * Success: Acquire a resource card from the market for free
  * Fail: Demote twice
  */
-export const employeesPoached = (g:IGame, 
+export const employeesPoached =(g:IGame, 
     m: ICardContainer, 
-    callback:Function, 
+    callback:() => any, 
     winner?: boolean) => {
 
-    const game = <IPillarsGame>g;
-    const mcard = <MouseableCard>m;
+    const game = g as IPillarsGame;
+    const mcard = m as MouseableCard;
     
     if (winner) {
         const modal = game.showModal('Acquire a resource card from the market for free');
@@ -36,20 +38,20 @@ export const employeesPoached = (g:IGame,
             const card = game.gameState.currentMarket[i];
             if (card) {
                 
-                const m = new MouseableCard(card);
-                m.x = curx;
-                m.y = y;
-                m.w = cw;
-                m.h = PillarsConstants.CARD_HEIGHT * scale;
-                m.zindex = PillarsConstants.MODALZ + 1;
-                m.onclick = () => {
+                const c = new MouseableCard(card);
+                c.x = curx;
+                c.y = y;
+                c.w = cw;
+                c.h = PillarsConstants.CARD_HEIGHT * scale;
+                c.zindex = PillarsConstants.MODALZ + 1;
+                c.onclick = () => {
                     game.closeModal();
-                    game.acquireCard(card, m.key, true, callback);
+                    game.acquireCard(card, c.key, true, callback);
                 };
-                m.render = () => {
-                    game.renderCard(m, false, scale);
+                c.render = () => {
+                    game.renderCard(c, false, scale);
                 }
-                game.addMouseable(PillarsConstants.MODAL_KEY + '_market_' + i, m);
+                game.addMouseable(PillarsConstants.MODAL_KEY + '_market_' + i, c);
 
             }
             curx += cw + offset;

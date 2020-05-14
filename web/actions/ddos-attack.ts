@@ -1,6 +1,11 @@
-import { IPillarsGame, Mouseable, MouseableCard, Button } from '../ui-utils';
+import { Mouseable } from '../ui-utils/mouseable';
+import { IGame } from '../../lambdas/interfaces/game';
+import { ICardContainer } from '../../lambdas/interfaces/card-container';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { MouseableCard } from '../ui-utils/mouseable-card';
+import { Button } from '../ui-utils/button';
 import { PillarsConstants } from '../constants';
-import { IGame, ICardContainer } from '../../lambdas/card-actions';
+
 
 /**
  * DDoS Attack.
@@ -9,11 +14,11 @@ import { IGame, ICardContainer } from '../../lambdas/card-actions';
  */
 export const ddosAttack = (g:IGame, 
     m: ICardContainer, 
-    callback:Function, 
+    callback:() => any, 
     winner?: boolean) => {
 
-    const game = <IPillarsGame>g;
-    const mcard = <MouseableCard>m;
+    const game = g as IPillarsGame;
+    const mcard = m as MouseableCard;
     
     if (!winner) {
         if (callback) callback();
@@ -50,18 +55,18 @@ export const ddosAttack = (g:IGame,
     for (let i = 0; i < inPlay.length; i++) {
         const card = inPlay[i];
 
-        const m = new MouseableCard(card);
-        m.x = PillarsConstants.MODALX + 20 + ((i % numPerRow) * offset);
-        m.y = PillarsConstants.MODALY + 200 + Math.floor(i / numPerRow) * voffset; 
-        m.zindex = PillarsConstants.MODALZ + 1;
-        m.render = () => {
-            game.renderCard(m, false, scale);
+        const c = new MouseableCard(card);
+        c.x = PillarsConstants.MODALX + 20 + ((i % numPerRow) * offset);
+        c.y = PillarsConstants.MODALY + 200 + Math.floor(i / numPerRow) * voffset; 
+        c.zindex = PillarsConstants.MODALZ + 1;
+        c.render = () => {
+            game.renderCard(c, false, scale);
         };
-        m.onclick = () => {
-            game.gameState.removeCardFromInPlay(game.gameState.currentPlayer, m.card);
-            game.retireCard(m, callback);
+        c.onclick = () => {
+            game.gameState.removeCardFromInPlay(game.gameState.currentPlayer, c.card);
+            game.retireCard(c, callback);
         }
-        game.addMouseable(PillarsConstants.MODAL_KEY + '_inplay_' + i, m);
+        game.addMouseable(PillarsConstants.MODAL_KEY + '_inplay_' + i, c);
     }
 
 };

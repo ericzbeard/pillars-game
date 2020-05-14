@@ -1,6 +1,7 @@
-import { IPillarsGame, Mouseable, MouseableCard, Button } from '../ui-utils';
-import { PillarsConstants } from '../constants';
-import { IGame, ICardContainer } from '../../lambdas/card-actions';
+import { IGame } from "../../lambdas/interfaces/game";
+import { ICardContainer } from "../../lambdas/interfaces/card-container";
+import { IPillarsGame } from "../interfaces/pillars-game";
+import { MouseableCard } from "../ui-utils/mouseable-card";
 
 /**
  * Talent Shortage
@@ -9,11 +10,11 @@ import { IGame, ICardContainer } from '../../lambdas/card-actions';
  */
 export const talentShortage = (g:IGame, 
     m: ICardContainer, 
-    callback:Function, 
+    callback:(drawNum?:number) => any, 
     winner?: boolean) => {
 
-    const game = <IPillarsGame>g;
-    const mcard = <MouseableCard>m;
+    const game = g as IPillarsGame;
+    const mcard = m as MouseableCard;
     
     if (winner) {
         if (callback) callback();

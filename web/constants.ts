@@ -51,6 +51,8 @@ export class PillarsConstants {
     static readonly MODALY = 200;
     static readonly MODALW = PillarsConstants.BW - 400;
     static readonly MODALH = PillarsConstants.BH - 400;
+    static readonly MODAL_HALFX = PillarsConstants.MODALX + PillarsConstants.MODALW / 2;
+    static readonly MODAL_HALFY = PillarsConstants.MODALY + PillarsConstants.MODALH / 2;
     static readonly MODALR = 50;
     static readonly MODALZ = 900;
     static readonly MODAL_KEY = 'modal';

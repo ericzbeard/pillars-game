@@ -1,8 +1,9 @@
-import { MouseableCard, IPillarsGame } from './ui-utils';
-import { Button } from './ui-utils';
 import { PillarsSounds } from '../lambdas/sounds';
 import { PillarsConstants } from './constants';
 import { Trial } from './trial';
+import { IPillarsGame } from './interfaces/pillars-game';
+import { Button } from './ui-utils/button';
+import { MouseableCard } from './ui-utils/mouseable-card';
 
 /**
  * Menu buttons.
@@ -89,7 +90,7 @@ export class PillarsMenu {
         button.w = PillarsConstants.MENU_BUTTON_W;
         button.h = PillarsConstants.MENU_BUTTON_H;
         button.zindex = PillarsConstants.MODALZ + 1;
-        button.onclick = () => {
+        button.onclick = async () => {
             this.game.closeModal();
             this.game.playSound(PillarsSounds.CLICK);
             this.game.promote(0, 0);
@@ -98,7 +99,7 @@ export class PillarsMenu {
             this.game.promote(0, 3);
             this.game.promote(0, 4);
             if (!this.game.gameState.drawOne(this.game.localPlayer)) {
-                this.game.endTurn();
+                await this.game.endTurn();
             }
             this.game.initCardAreas();
             this.game.localPlayer.numCustomers++;
@@ -142,16 +143,16 @@ export class PillarsMenu {
 
             const modal = this.game.showModal("Retired Cards");
 
-            let cards = this.game.gameState.retiredCards;
+            const cards = this.game.gameState.retiredCards;
 
             let len = cards.length;
-            if (len == 0) {
+            if (len === 0) {
                 len = 1;
             }
 
-            let x = PillarsConstants.MODALX + 200;
-            let y = PillarsConstants.MODALY + 300;
-            let w = PillarsConstants.MODALW - 300;
+            const x = PillarsConstants.MODALX + 200;
+            const y = PillarsConstants.MODALY + 300;
+            const w = PillarsConstants.MODALW - 300;
 
             const cardOffset = (w - PillarsConstants.CARD_WIDTH) / len;
 

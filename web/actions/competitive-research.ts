@@ -1,9 +1,12 @@
-import { IPillarsGame, Mouseable, MouseableCard } from '../ui-utils';
 import { Card } from '../../lambdas/card';
 import { Player } from '../../lambdas/player';
 import { PillarsConstants } from '../constants';
 import { CanvasUtil } from '../canvas-util';
-import { IGame, ICardContainer } from '../../lambdas/card-actions';
+import { IPillarsGame } from '../interfaces/pillars-game';
+import { Mouseable } from '../ui-utils/mouseable';
+import { IGame } from '../../lambdas/interfaces/game';
+import { ICardContainer } from '../../lambdas/interfaces/card-container';
+import { MouseableCard } from '../ui-utils/mouseable-card';
 
 /**
  * Competitive Research.
@@ -48,7 +51,7 @@ export const competitiveResearch = (g:IGame,
             CanvasUtil.roundRect(game.ctx, link.x, link.y, w, h, 5, false, true);
         };
 
-        link.onclick = () => {
+        link.onclick = async () => {
             // Choose a random card
             const chosenPlayer = <Player>link.data;
             const index = Math.floor(Math.random() * chosenPlayer.hand.length);
@@ -65,7 +68,7 @@ export const competitiveResearch = (g:IGame,
             callback();
 
             // Announce what happened
-            game.broadcast(`${game.localPlayer.name} acquired ${card.name} ` + 
+            await game.broadcast(`${game.localPlayer.name} acquired ${card.name} ` + 
                 `from ${chosenPlayer.name}'s hand!`);
         }
 
